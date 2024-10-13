@@ -2,7 +2,7 @@ using Serilog;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace WishlistBot.Users;
+namespace WishlistBot.Database;
 
 public class UsersDb
 {
@@ -97,9 +97,11 @@ public class UsersDb
 
    public void Save() => SaveTo(_logger, _filePath, _users);
 
-   private void OnUserPropertyChanged(BotUser user, string propertyName)
+   private void OnUserPropertyChanged(BasePropertyChanged item, string propertyName)
    {
-      _logger.Debug("Property {propertyName} of user [{senderId}] changed", propertyName, user.SenderId);
+      if (item is BotUser user)
+         _logger.Debug("Property {propertyName} of user [{senderId}] changed", propertyName, user.SenderId);
+
       Save();
    }
 

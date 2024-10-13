@@ -1,16 +1,12 @@
 using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
-using WishlistBot.Users;
+using WishlistBot.Database;
 
 namespace WishlistBot.BotMessages;
 
 public class MainMenuMessage : BotMessage
 {
-   public override string Text { get; }
-
-   public override BotKeyboard Keyboard { get; }
-
    public MainMenuMessage(ILogger logger, BotUser user) : base(logger)
    {
       Keyboard = new BotKeyboard()

@@ -7,8 +7,8 @@ public abstract class BotMessage
 {
    protected ILogger Logger { get; }
 
-   public abstract string Text { get; }
-   public abstract BotKeyboard Keyboard { get; }
+   public string Text { get; protected set; }
+   public BotKeyboard Keyboard { get; protected set; }
 
    protected BotMessage(ILogger logger)
    {

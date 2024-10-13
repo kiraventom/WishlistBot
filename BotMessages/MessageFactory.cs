@@ -1,6 +1,6 @@
 using Serilog;
 using Telegram.Bot;
-using WishlistBot.Users;
+using WishlistBot.Database;
 using WishlistBot.Queries;
 
 namespace WishlistBot.BotMessages;
@@ -18,11 +18,19 @@ public class MessageFactory
 
    public BotMessage Build(IQuery query, BotUser user)
    {
-      return query switch
+      BotMessage botMessage = query switch
       {
          MainMenuQuery => new MainMenuMessage(Logger, user),
          MyWishesQuery => new MyWishesMessage(Logger, user),
+         AddWishQuery => new AddWishMessage(Logger, user),
+         CompactListMyWishesQuery => new CompactListMyWishesMessage(Logger, user),
+         FullListMyWishesQuery => new FullListMyWishesMessage(Logger, user),
          _ => new InvalidMessage(Logger, user),
       };
+
+      if (botMessage is InvalidMessage)
+         Logger.Error("Failed to find message for query [{queryId}]", user.LastQueryId);
+
+      return botMessage;
    }
 }

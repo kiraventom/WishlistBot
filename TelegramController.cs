@@ -5,7 +5,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
 using System.Text.RegularExpressions;
-using WishlistBot.Users;
+using WishlistBot.Database;
 using WishlistBot.Actions;
 using WishlistBot.Actions.Commands;
 using WishlistBot.Queries;
@@ -34,8 +34,13 @@ public class TelegramController
       _actions = new UserAction[]
       {
          new StartCommand(_logger, _client),
+         new SaveCommand(_logger, _client),
+         new CancelCommand(_logger, _client),
          new QueryAction<MainMenuQuery>(_logger, _client, messagesFactory),
          new QueryAction<MyWishesQuery>(_logger, _client, messagesFactory),
+         new QueryAction<AddWishQuery>(_logger, _client, messagesFactory),
+         new QueryAction<CompactListMyWishesQuery>(_logger, _client, messagesFactory),
+         new QueryAction<FullListMyWishesQuery>(_logger, _client, messagesFactory),
       };
    }
 
@@ -83,6 +88,12 @@ public class TelegramController
          await HandleBotCommandAsync(botCommand, message.Text, user);
          return;
       }
+
+      if (user.BotState == BotState.AddingWish)
+      {
+         await HandleAddingWishMessageAsync(message, user);
+         return;
+      }
    }
 
    private async Task HandleCallbackQueryAsync(ITelegramBotClient client, CallbackQuery callbackQuery)
@@ -119,6 +130,13 @@ public class TelegramController
       }
 
       await action.ExecuteAsync(user);
+   }
+
+   private Task HandleAddingWishMessageAsync(Message message, BotUser user)
+   {
+      user.CurrentWish.Messages.Add(message);
+      _logger.Information("Message [{messageId}] added to {firstName} [{userId}] wish", message.MessageId, user.FirstName, user.SenderId);
+      return Task.CompletedTask;
    }
 
    private Task OnError(ITelegramBotClient client, Exception exception, CancellationToken cts)

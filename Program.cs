@@ -1,6 +1,6 @@
 ﻿using Serilog;
 using Serilog.Events;
-using WishlistBot.Users;
+using WishlistBot.Database;
 
 namespace WishlistBot;
 
