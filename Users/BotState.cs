@@ -2,5 +2,5 @@ namespace WishlistBot.Users;
 
 public enum BotState
 {
-   Idle
+   WaitingForStart, MainMenu, MyWishes, MySubscriptions, Settings
 }

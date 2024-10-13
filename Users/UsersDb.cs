@@ -33,15 +33,15 @@ public class UsersDb
       }
    }
 
-   public BotUser GetOrAddUser(long senderId)
+   public BotUser GetOrAddUser(long senderId, string firstName)
    {
       if (_users.ContainsKey(senderId))
          return _users[senderId];
 
-      var user = new BotUser(senderId);
+      var user = new BotUser(senderId, firstName);
       _users.Add(senderId, user);
 
-      _logger.Information("New user [{senderId}] added to DB", senderId);
+      _logger.Information("New user '{firstName}' [{senderId}] added to DB", firstName, senderId);
 
       user.PropertyChanged += OnUserPropertyChanged;
       Save();
