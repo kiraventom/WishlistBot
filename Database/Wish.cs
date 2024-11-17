@@ -9,26 +9,43 @@ namespace WishlistBot.Database;
 public class Wish : BasePropertyChanged
 {
    private string _name;
+   private string _description;
 
-   [JsonInclude]
    public string Name 
    {
       get => _name;
       set => Set(ref _name, value);
    }
 
+   public string Description
+   {
+      get => _description;
+      set => Set(ref _description, value);
+   }
+
    [JsonInclude]
    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
-   public ObservableCollection<Message> Messages { get; } = new();
+   public ObservableCollection<string> FileIds { get; } = new();
+
+   [JsonInclude]
+   [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
+   public ObservableCollection<string> Links { get; } = new();
 
    [JsonConstructor]
    public Wish()
    {
-      Messages.CollectionChanged += OnMessagesCollectionChanged;
+      FileIds.CollectionChanged += OnFileIdsCollectionChanged;
+      Links.CollectionChanged += OnLinksCollectionChanged;
    }
 
-   private void OnMessagesCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
+   private void OnFileIdsCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
    {
-      RaisePropertyChanged(nameof(Messages));
+      RaisePropertyChanged(nameof(FileIds));
+   }
+
+   private void OnLinksCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
+   {
+      RaisePropertyChanged(nameof(Links));
    }
 }
+

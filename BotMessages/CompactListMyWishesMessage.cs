@@ -22,9 +22,10 @@ public class CompactListMyWishesMessage : BotMessage
       for (int i = 0; i < user.Wishes.Count; ++i)
       {
          var wish = user.Wishes[i];
-         stringBuilder.AppendLine($"{i + 1}. Test");
-         // TODO: Use Wish.Name, message.entities (images, links)
-         // stringBuilder.AppendLine($"{i + 1}. {wish.Name}");
+         stringBuilder.Append(i + 1).Append(". ");
+         stringBuilder.Append(wish.Name);
+         // TODO: Links, images emojis
+         stringBuilder.AppendLine();
       }
 
       Text = stringBuilder.ToString();

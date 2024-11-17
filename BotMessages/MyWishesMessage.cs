@@ -1,6 +1,7 @@
 using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
+using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 
 namespace WishlistBot.BotMessages;
@@ -10,7 +11,7 @@ public class MyWishesMessage : BotMessage
    public MyWishesMessage(ILogger logger, BotUser user) : base(logger)
    {
       Keyboard = new BotKeyboard()
-         .AddButton<AddWishQuery>()
+         .AddButton<SetWishNameQuery>("Добавить виш")
          .NewRow()
          .AddButton<CompactListMyWishesQuery>()
          .AddButton<FullListMyWishesQuery>()

@@ -9,6 +9,7 @@ public abstract class BotMessage
 
    public string Text { get; protected set; }
    public BotKeyboard Keyboard { get; protected set; }
+   public IReadOnlyCollection<string> PhotoFileIds { get; protected set; }
 
    protected BotMessage(ILogger logger)
    {
