@@ -15,6 +15,6 @@ public class StartCommand : Command
 
    public override async Task ExecuteAsync(BotUser user)
    {
-      await Client.SendOrEditBotMessageAsync(Logger, user, new MainMenuMessage(Logger, user), forceNewMessage: true);
+      await Client.SendOrEditBotMessage(Logger, user, new MainMenuMessage(Logger, user), forceNewMessage: true);
    }
 }

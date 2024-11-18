@@ -11,7 +11,7 @@ public class MyWishesMessage : BotMessage
    public MyWishesMessage(ILogger logger, BotUser user) : base(logger)
    {
       Keyboard = new BotKeyboard()
-         .AddButton<SetWishNameQuery>("Добавить виш")
+         .AddButton<SetNewWishNameQuery>("Добавить виш")
          .NewRow()
          .AddButton<CompactListMyWishesQuery>()
          .AddButton<FullListMyWishesQuery>()

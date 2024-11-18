@@ -25,10 +25,10 @@ public class QueryAction<T> : UserAction where T : IQuery, new()
 
    public override async Task ExecuteAsync(BotUser user)
    {
-      await Client.AnswerCallbackQueryAsync(user.LastQueryId);
+      await Client.AnswerCallbackQuery(user.LastQueryId);
       user.LastQueryId = null;
 
       var message = MessageFactory.Build(_query, user);
-      await Client.SendOrEditBotMessageAsync(Logger, user, message);
+      await Client.SendOrEditBotMessage(Logger, user, message);
    }
 }

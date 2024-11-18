@@ -10,6 +10,7 @@ public class Wish : BasePropertyChanged
 {
    private string _name;
    private string _description;
+   private string _fileId;
 
    public string Name 
    {
@@ -23,9 +24,11 @@ public class Wish : BasePropertyChanged
       set => Set(ref _description, value);
    }
 
-   [JsonInclude]
-   [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
-   public ObservableCollection<string> FileIds { get; } = new();
+   public string FileId
+   {
+      get => _fileId;
+      set => Set(ref _fileId, value);
+   }
 
    [JsonInclude]
    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
@@ -34,13 +37,7 @@ public class Wish : BasePropertyChanged
    [JsonConstructor]
    public Wish()
    {
-      FileIds.CollectionChanged += OnFileIdsCollectionChanged;
       Links.CollectionChanged += OnLinksCollectionChanged;
-   }
-
-   private void OnFileIdsCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
-   {
-      RaisePropertyChanged(nameof(FileIds));
    }
 
    private void OnLinksCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
