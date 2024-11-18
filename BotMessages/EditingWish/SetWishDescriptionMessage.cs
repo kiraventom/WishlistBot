@@ -9,7 +9,11 @@ namespace WishlistBot.BotMessages.EditingWish;
 
 public class SetWishDescriptionMessage : BotMessage
 {
-   public SetWishDescriptionMessage(ILogger logger, BotUser user) : base(logger)
+   public SetWishDescriptionMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       Keyboard = new BotKeyboard()
          .AddButton<EditWishQuery>("Отмена");

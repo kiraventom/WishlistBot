@@ -12,6 +12,8 @@ public static class TelegramBotClientExtensions
 {
    public static async Task<Message> SendOrEditBotMessage(this ITelegramBotClient client, ILogger logger, BotUser user, BotMessage botMessage, bool forceNewMessage = false)
    {
+      botMessage.Init(user);
+
       var text = botMessage.Text;
       var keyboardMarkup = botMessage.Keyboard.ToInlineKeyboardMarkup();
       var photoFileId = botMessage.PhotoFileId;

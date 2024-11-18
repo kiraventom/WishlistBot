@@ -7,7 +7,11 @@ namespace WishlistBot.BotMessages;
 
 public class InvalidMessage : BotMessage
 {
-   public InvalidMessage(ILogger logger, BotUser user) : base(logger)
+   public InvalidMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       Keyboard = new BotKeyboard();
 

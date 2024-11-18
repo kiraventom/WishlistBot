@@ -9,7 +9,11 @@ namespace WishlistBot.BotMessages;
 
 public class ClearWishMediaMessage : EditingWishMessage
 {
-   public ClearWishMediaMessage(ILogger logger, BotUser user) : base(logger, user)
+   public ClearWishMediaMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       PhotoFileId = null;
       user.CurrentWish.FileId = null;

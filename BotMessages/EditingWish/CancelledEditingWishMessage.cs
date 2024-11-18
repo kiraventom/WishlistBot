@@ -8,7 +8,11 @@ namespace WishlistBot.BotMessages;
 
 public class CancelledEditingWishMessage : BotMessage
 {
-   public CancelledEditingWishMessage(ILogger logger, BotUser user) : base(logger)
+   public CancelledEditingWishMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       Keyboard = new BotKeyboard()
          .AddButton<SetWishNameQuery>("Добавить другой виш")

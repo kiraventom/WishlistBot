@@ -9,7 +9,11 @@ namespace WishlistBot.BotMessages.EditingWish;
 
 public class SetNewWishNameMessage : SetWishNameMessage
 {
-   public SetNewWishNameMessage(ILogger logger, BotUser user) : base(logger, user)
+   public SetNewWishNameMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       user.CurrentWish = new Wish();
       Text = "Укажите краткое название виша";

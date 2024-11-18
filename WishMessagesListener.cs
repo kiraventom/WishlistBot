@@ -120,7 +120,7 @@ public class WishMessagesListener
 
    private async Task SendEditingWishMessageAsync(BotUser user)
    {
-      var message = new EditingWishMessage(_logger, user);
+      var message = new EditingWishMessage(_logger);
       await _client.SendOrEditBotMessage(_logger, user, message, forceNewMessage: true);
    }
 }

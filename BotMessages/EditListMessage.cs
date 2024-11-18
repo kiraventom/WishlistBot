@@ -7,7 +7,11 @@ namespace WishlistBot.BotMessages;
 
 public class EditListMessage : BotMessage
 {
-   public EditListMessage(ILogger logger, BotUser user) : base(logger)
+   public EditListMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       Keyboard = new BotKeyboard();
 

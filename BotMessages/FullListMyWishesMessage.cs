@@ -7,7 +7,11 @@ namespace WishlistBot.BotMessages;
 
 public class FullListMyWishesMessage : BotMessage
 {
-   public FullListMyWishesMessage(ILogger logger, BotUser user) : base(logger)
+   public FullListMyWishesMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       Keyboard = new BotKeyboard()
          .AddButton("@edit", "Редактировать список")

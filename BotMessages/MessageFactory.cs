@@ -23,21 +23,21 @@ public class MessageFactory
    {
       BotMessage botMessage = query switch
       {
-         MainMenuQuery => new MainMenuMessage(Logger, user),
-         MyWishesQuery => new MyWishesMessage(Logger, user),
-         CompactListMyWishesQuery => new CompactListMyWishesMessage(Logger, user),
-         FullListMyWishesQuery => new FullListMyWishesMessage(Logger, user),
-         EditWishQuery => new EditingWishMessage(Logger, user),
-         SetWishNameQuery => new SetWishNameMessage(Logger, user),
-         SetNewWishNameQuery => new SetNewWishNameMessage(Logger, user),
-         SetWishDescriptionQuery => new SetWishDescriptionMessage(Logger, user),
-         SetWishMediaQuery => new SetWishMediaMessage(Logger, user),
-         ClearWishMediaQuery => new ClearWishMediaMessage(Logger, user),
-         SetWishLinksQuery => new SetWishLinksMessage(Logger, user),
-         CancelEditingWishQuery => new CancelledEditingWishMessage(Logger, user),
-         FinishEditingWishQuery => new FinishedWishEditingMessage(Logger, user),
-         EditListQuery => new EditListMessage(Logger, user),
-         _ => new InvalidMessage(Logger, user),
+         MainMenuQuery => new MainMenuMessage(Logger),
+         MyWishesQuery => new MyWishesMessage(Logger),
+         CompactListMyWishesQuery => new CompactListMyWishesMessage(Logger),
+         FullListMyWishesQuery => new FullListMyWishesMessage(Logger),
+         EditWishQuery => new EditingWishMessage(Logger),
+         SetWishNameQuery => new SetWishNameMessage(Logger),
+         SetNewWishNameQuery => new SetNewWishNameMessage(Logger),
+         SetWishDescriptionQuery => new SetWishDescriptionMessage(Logger),
+         SetWishMediaQuery => new SetWishMediaMessage(Logger),
+         ClearWishMediaQuery => new ClearWishMediaMessage(Logger),
+         SetWishLinksQuery => new SetWishLinksMessage(Logger),
+         CancelEditingWishQuery => new CancelledEditingWishMessage(Logger),
+         FinishEditingWishQuery => new FinishedWishEditingMessage(Logger),
+         EditListQuery => new EditListMessage(Logger),
+         _ => new InvalidMessage(Logger),
       };
 
       if (botMessage is InvalidMessage)

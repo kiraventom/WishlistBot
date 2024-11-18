@@ -1,4 +1,4 @@
-using System.Text;
+using System.Text; 
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -8,7 +8,7 @@ namespace WishlistBot.Keyboard;
 
 public class BotKeyboard
 {
-   private readonly List<Dictionary<string, string>> _rows = new();
+   private readonly List<List<BotButton>> _rows = new();
 
    public BotKeyboard AddButton<T>(string customCaption = null) where T : IQuery, new()
    {
@@ -22,18 +22,19 @@ public class BotKeyboard
       var lastRow = _rows.LastOrDefault();
       if (lastRow is null)
       {
-         lastRow = new Dictionary<string, string>();
+         lastRow = new List<BotButton>();
          _rows.Add(lastRow);
       }
 
-      lastRow.Add(data, caption);
+      var button = new BotButton(data, caption);
+      lastRow.Add(button);
       return this;
 
    }
 
    public BotKeyboard NewRow()
    {
-      _rows.Add(new Dictionary<string, string>());
+      _rows.Add(new List<BotButton>());
       return this;
    }
 
@@ -41,8 +42,7 @@ public class BotKeyboard
    {
       var markupRows = _rows
          .Where(r => r.Any())
-         .Select(r => r.Select(p => new InlineKeyboardButton()
-                  { Text = p.Value, CallbackData = p.Key }));
+         .Select(r => r.Select(b => b.ToInlineKeyboardButton()));
 
       return new InlineKeyboardMarkup() { InlineKeyboard = markupRows }; 
    }

@@ -8,7 +8,11 @@ namespace WishlistBot.BotMessages;
 
 public class CompactListMyWishesMessage : BotMessage
 {
-   public CompactListMyWishesMessage(ILogger logger, BotUser user) : base(logger)
+   public CompactListMyWishesMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       Keyboard = new BotKeyboard()
          .AddButton<EditListQuery>()

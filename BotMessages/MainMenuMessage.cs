@@ -7,7 +7,11 @@ namespace WishlistBot.BotMessages;
 
 public class MainMenuMessage : BotMessage
 {
-   public MainMenuMessage(ILogger logger, BotUser user) : base(logger)
+   public MainMenuMessage(ILogger logger) : base(logger)
+   {
+   }
+
+   protected override void InitInternal(BotUser user)
    {
       Keyboard = new BotKeyboard()
          .AddButton<MyWishesQuery>()
