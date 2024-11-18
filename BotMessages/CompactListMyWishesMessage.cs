@@ -24,7 +24,13 @@ public class CompactListMyWishesMessage : BotMessage
          var wish = user.Wishes[i];
          stringBuilder.Append(i + 1).Append(". ");
          stringBuilder.Append(wish.Name);
-         // TODO: Links, images emojis
+
+         if (wish.FileId is not null)
+            stringBuilder.Append(" \U0001f5bc\U0000fe0f");
+
+         if (wish.Links.Any())
+            stringBuilder.Append(" \U0001f310");
+
          stringBuilder.AppendLine();
       }
 
