@@ -11,7 +11,7 @@ public class CompactListMyWishesMessage : BotMessage
    public CompactListMyWishesMessage(ILogger logger, BotUser user) : base(logger)
    {
       Keyboard = new BotKeyboard()
-         .AddButton("@edit", "Редактировать список")
+         .AddButton<EditListQuery>()
          .NewRow()
          .AddButton<FullListMyWishesQuery>()
          .NewRow()
