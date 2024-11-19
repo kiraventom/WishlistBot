@@ -12,17 +12,29 @@ public class FinishedWishEditingMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
+   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
    {
       Keyboard = new BotKeyboard()
          .AddButton<SetWishNameQuery>("Добавить ещё виш")
-         .NewRow()
-         .AddButton<MyWishesQuery>("Назад к моим вишам");
+         .NewRow();
 
-      Text = "Виш добавлен!";
+      if (HasParameter(parameters, QueryParameterType.ReturnToEditList))
+         Keyboard.AddButton<EditListQuery>("Назад к редактированию"); // TODO pass page as parameter here
+      else
+         Keyboard.AddButton<MyWishesQuery>("Назад к моим вишам");
 
       user.BotState = BotState.WishAdded;
-      user.Wishes.Add(user.CurrentWish);
+      
+      if (!user.Wishes.Contains(user.CurrentWish))
+      {
+         user.Wishes.Add(user.CurrentWish);
+         Text = "Виш добавлен!";
+      }
+      else
+      {
+         Text = "Виш изменён!";
+      }
+
       user.CurrentWish = null;
    }
 }

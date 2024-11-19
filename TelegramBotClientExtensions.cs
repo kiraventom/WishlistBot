@@ -14,60 +14,70 @@ public static class TelegramBotClientExtensions
    {
       botMessage.Init(user);
 
-      var text = botMessage.Text;
-      var keyboardMarkup = botMessage.Keyboard.ToInlineKeyboardMarkup();
-      var photoFileId = botMessage.PhotoFileId;
-
       Message message;
-      if (user.LastBotMessageId < 0 || forceNewMessage)
+
+      try
       {
-         if (photoFileId is null)
-         {
-            message = await client.SendMessage(chatId: user.SenderId, text: text, replyMarkup: keyboardMarkup);
-         }
-         else
-         {
-            var photo = InputFile.FromFileId(photoFileId);
-            message = await client.SendPhoto(chatId: user.SenderId, photo: photo, caption: text, replyMarkup: keyboardMarkup);
-         }
+         var text = botMessage.Text;
+         var keyboardMarkup = botMessage.Keyboard.ToInlineKeyboardMarkup();
+         var photoFileId = botMessage.PhotoFileId;
 
-         logger.Information("Sent '{text}' to [{id}] with inline keyboard", text, user.SenderId);
-      }
-      else
-      {
-         if (photoFileId == null)
+         if (user.LastBotMessageId < 0 || forceNewMessage)
          {
-            try
+            if (photoFileId is null)
             {
-               message = await client.EditMessageText(chatId: user.SenderId, messageId: user.LastBotMessageId, text: text, replyMarkup: keyboardMarkup);
-            }
-            catch (Exception) // Message contains media
-            {
-               logger.Warning("Failed to edit text of message [{messageId}], looks like it contains media", user.LastBotMessageId);
-
-               try
-               {
-                  await client.DeleteMessage(chatId: user.SenderId, messageId: user.LastBotMessageId);
-               }
-               catch (Exception)
-               {
-                  logger.Warning("Failed to delete message [{messageId}], looks like it was sent more than 48 hours ago", user.LastBotMessageId);
-               }
-
                message = await client.SendMessage(chatId: user.SenderId, text: text, replyMarkup: keyboardMarkup);
             }
+            else
+            {
+               var photo = InputFile.FromFileId(photoFileId);
+               message = await client.SendPhoto(chatId: user.SenderId, photo: photo, caption: text, replyMarkup: keyboardMarkup);
+            }
+
+            logger.Information("Sent '{text}' to [{id}] with inline keyboard", text, user.SenderId);
          }
          else
          {
-            var photo = new InputMediaPhoto(InputFile.FromFileId(photoFileId));
-            message = await client.EditMessageMedia(chatId: user.SenderId, messageId: user.LastBotMessageId, media: photo, replyMarkup: keyboardMarkup);
-            message = await client.EditMessageCaption(chatId: user.SenderId, messageId: user.LastBotMessageId, caption: text, replyMarkup: keyboardMarkup);
+            if (photoFileId == null)
+            {
+               try
+               {
+                  message = await client.EditMessageText(chatId: user.SenderId, messageId: user.LastBotMessageId, text: text, replyMarkup: keyboardMarkup);
+               }
+               catch (Exception) // Message contains media
+               {
+                  logger.Warning("Failed to edit text of message [{messageId}], looks like it contains media", user.LastBotMessageId);
+
+                  try
+                  {
+                     await client.DeleteMessage(chatId: user.SenderId, messageId: user.LastBotMessageId);
+                  }
+                  catch (Exception)
+                  {
+                     logger.Warning("Failed to delete message [{messageId}], looks like it was sent more than 48 hours ago", user.LastBotMessageId);
+                  }
+
+                  message = await client.SendMessage(chatId: user.SenderId, text: text, replyMarkup: keyboardMarkup);
+               }
+            }
+            else
+            {
+               var photo = new InputMediaPhoto(InputFile.FromFileId(photoFileId));
+               message = await client.EditMessageMedia(chatId: user.SenderId, messageId: user.LastBotMessageId, media: photo, replyMarkup: keyboardMarkup);
+               message = await client.EditMessageCaption(chatId: user.SenderId, messageId: user.LastBotMessageId, caption: text, replyMarkup: keyboardMarkup);
+            }
+
+            logger.Information("Edited [{messageId}] to '{text}'", user.LastBotMessageId, text);
          }
 
-         logger.Information("Edited [{messageId}] to '{text}'", user.LastBotMessageId, text);
+         user.LastBotMessageId = message.MessageId;
       }
-   
-      user.LastBotMessageId = message.MessageId;
+      catch (Exception e)
+      {
+         logger.Fatal(e.ToString());
+         return null;
+      }
+
       return message;
    }
 }

@@ -11,11 +11,11 @@ public class BotKeyboard
 {
    private readonly List<List<BotButton>> _rows = new();
 
-   public BotKeyboard AddButton<T>(string customCaption = null) where T : IQuery, new() => AddButton<T>(customCaption, Array.Empty<string>());
+   public BotKeyboard AddButton<T>(string customCaption = null) where T : IQuery, new() => AddButton<T>(customCaption, Array.Empty<QueryParameter>());
 
-   public BotKeyboard AddButton<T>(params string[] parameters) where T : IQuery, new() => AddButton<T>(null, parameters);
+   public BotKeyboard AddButton<T>(params QueryParameter[] parameters) where T : IQuery, new() => AddButton<T>(null, parameters);
 
-   public BotKeyboard AddButton<T>(string customCaption, params string[] parameters) where T : IQuery, new()
+   public BotKeyboard AddButton<T>(string customCaption, params QueryParameter[] parameters) where T : IQuery, new()
    {
       var query = new T();
       var caption = customCaption ?? query.Caption;

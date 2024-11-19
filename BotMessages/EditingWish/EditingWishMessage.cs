@@ -1,4 +1,5 @@
 using Serilog;
+using WishlistBot.Queries;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
@@ -11,22 +12,29 @@ public class EditingWishMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
+   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
    {
       Keyboard = new BotKeyboard()
-         .AddButton<SetWishNameQuery>()
-         .AddButton<SetWishDescriptionQuery>()
+         .AddButton<SetWishNameQuery>(parameters: parameters)
+         .AddButton<SetWishDescriptionQuery>(parameters: parameters)
          .NewRow()
-         .AddButton<SetWishMediaQuery>()
-         .AddButton<SetWishLinksQuery>()
+         .AddButton<SetWishMediaQuery>(parameters: parameters)
+         .AddButton<SetWishLinksQuery>(parameters: parameters)
          .NewRow()
-         .AddButton<FinishEditingWishQuery>()
-         .AddButton<CancelEditingWishQuery>();
+         .AddButton<FinishEditingWishQuery>(parameters: parameters)
+         .AddButton<CancelEditingWishQuery>(parameters: parameters);
 
+      var setWishIndex = GetParameter(parameters, QueryParameterType.SetCurrentWishTo);
+
+      if (user.CurrentWish is null && setWishIndex.HasValue)
+      {
+         Logger.Debug("GetParameter setWishIndex={wishIndex}", setWishIndex.Value);
+         user.CurrentWish = user.Wishes[setWishIndex.Value];
+      }
 
       var wish = user.CurrentWish;
 
-      if (HasParameter(parameters, "clearMedia"))
+      if (HasParameter(parameters, QueryParameterType.ClearWishMedia))
          wish.FileId = null;
 
       var name = wish.Name;

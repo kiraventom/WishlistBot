@@ -12,6 +12,7 @@ public class BotUser : BasePropertyChanged
    private BotState _botState;
    private string _lastQueryId;
    private int _lastBotMessageId = -1;
+   private string[] _lastQueryParams;
    private Wish _currentWish;
 
    [JsonInclude]
@@ -47,6 +48,13 @@ public class BotUser : BasePropertyChanged
    {
       get => _lastBotMessageId;
       set => Set(ref _lastBotMessageId, value);
+   }
+
+   [JsonInclude]
+   public string[] LastQueryParams
+   {
+      get => _lastQueryParams;
+      set => Set(ref _lastQueryParams, value);
    }
 
    [JsonInclude]

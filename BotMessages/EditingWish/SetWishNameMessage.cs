@@ -13,14 +13,14 @@ public class SetWishNameMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
+   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
    {
       Keyboard = new BotKeyboard()
-         .AddButton<CancelEditingWishQuery>();
+         .AddButton<CancelEditingWishQuery>(parameters);
 
       var stringBuilder = new StringBuilder();
 
-      var forceNewWish = HasParameter(parameters, "forceNewWish");
+      var forceNewWish = HasParameter(parameters, QueryParameterType.ForceNewWish);
 
       if (user.CurrentWish is null || forceNewWish)
       {

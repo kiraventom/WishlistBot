@@ -1,5 +1,6 @@
 using Serilog;
 using WishlistBot.Keyboard;
+using WishlistBot.Queries;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 
@@ -11,7 +12,7 @@ public class EditListMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
+   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
    {
       Keyboard = new BotKeyboard();
 
@@ -24,7 +25,7 @@ public class EditListMessage : BotMessage
             break;
 
          var wish = user.Wishes[i];
-         Keyboard.AddButton<EditWishQuery>(wish.Name);
+         Keyboard.AddButton<EditWishQuery>(wish.Name, new QueryParameter(QueryParameterType.SetCurrentWishTo, (byte)i), QueryParameter.ReturnToEditList);
          Keyboard.AddButton("@delete", "\U0001f5d1\U0000fe0f");
          Keyboard.NewRow();
       }

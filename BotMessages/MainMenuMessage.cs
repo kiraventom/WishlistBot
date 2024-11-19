@@ -11,7 +11,7 @@ public class MainMenuMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
+   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
    {
       Keyboard = new BotKeyboard()
          .AddButton<MyWishesQuery>()

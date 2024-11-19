@@ -13,10 +13,10 @@ public class SetWishDescriptionMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
+   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
    {
       Keyboard = new BotKeyboard()
-         .AddButton<EditWishQuery>("Отмена");
+         .AddButton<EditWishQuery>("Отмена", parameters);
 
       var stringBuilder = new StringBuilder();
 

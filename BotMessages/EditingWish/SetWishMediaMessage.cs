@@ -13,14 +13,14 @@ public class SetWishMediaMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
+   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
    {
-      Keyboard = new BotKeyboard();
+      Keyboard = new BotKeyboard(); // TODO Inherit parameters through keyboard?
 
       if (user.CurrentWish.FileId is not null)
-         Keyboard.AddButton<EditWishQuery>("Удалить", "clearMedia");
+         Keyboard.AddButton<EditWishQuery>("Удалить", QueryParameter.ClearWishMedia); // TODO not passing current parameters right now
 
-      Keyboard.AddButton<EditWishQuery>("Отмена");
+      Keyboard.AddButton<EditWishQuery>("Отмена", parameters);
 
       PhotoFileId = user.CurrentWish.FileId;
       var text = "Пришлите фото виша:";

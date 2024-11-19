@@ -12,12 +12,16 @@ public class CancelledEditingWishMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
+   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
    {
       Keyboard = new BotKeyboard()
          .AddButton<SetWishNameQuery>("Добавить другой виш")
-         .NewRow()
-         .AddButton<MyWishesQuery>("Назад к моим вишам");
+         .NewRow();
+
+      if (HasParameter(parameters, QueryParameterType.ReturnToEditList))
+         Keyboard.AddButton<EditListQuery>("Назад к редактированию"); // TODO pass page as parameter here
+      else
+         Keyboard.AddButton<MyWishesQuery>("Назад к моим вишам");
 
       Text = "Создание виша отменено";
 

@@ -19,7 +19,7 @@ public class MessageFactory
       Client = client;
    }
 
-   public BotMessage Build(IQuery query, BotUser user, IReadOnlyCollection<string> parameters = null)
+   public BotMessage Build(IQuery query, BotUser user)
    {
       BotMessage botMessage = query switch
       {
@@ -40,8 +40,6 @@ public class MessageFactory
 
       if (botMessage is InvalidMessage)
          Logger.Error("Failed to find message for query [{queryId}]", user.LastQueryId);
-
-      botMessage.Init(user, parameters);
 
       return botMessage;
    }
