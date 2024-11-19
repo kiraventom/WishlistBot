@@ -12,7 +12,7 @@ public class CancelledEditingWishMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user)
+   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
    {
       Keyboard = new BotKeyboard()
          .AddButton<SetWishNameQuery>("Добавить другой виш")

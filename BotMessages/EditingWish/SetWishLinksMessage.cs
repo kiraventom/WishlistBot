@@ -13,7 +13,7 @@ public class SetWishLinksMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user)
+   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
    {
       Keyboard = new BotKeyboard()
          .AddButton<EditWishQuery>("Отмена");

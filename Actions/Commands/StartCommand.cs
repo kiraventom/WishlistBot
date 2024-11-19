@@ -13,7 +13,7 @@ public class StartCommand : Command
    {
    }
 
-   public override async Task ExecuteAsync(BotUser user)
+   public override async Task ExecuteAsync(BotUser user, string actionText)
    {
       await Client.SendOrEditBotMessage(Logger, user, new MainMenuMessage(Logger), forceNewMessage: true);
    }

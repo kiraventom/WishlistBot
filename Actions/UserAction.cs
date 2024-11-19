@@ -17,9 +17,9 @@ public abstract class UserAction
       Client = client;
    }
 
-   public abstract Task ExecuteAsync(BotUser user);
+   public abstract Task ExecuteAsync(BotUser user, string actionText);
 
-   public bool IsMatch(string name)
+   public virtual bool IsMatch(string name)
    {
       return name == Name;
    }

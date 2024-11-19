@@ -11,7 +11,7 @@ public class EditingWishMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user)
+   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
    {
       Keyboard = new BotKeyboard()
          .AddButton<SetWishNameQuery>()
@@ -23,7 +23,11 @@ public class EditingWishMessage : BotMessage
          .AddButton<FinishEditingWishQuery>()
          .AddButton<CancelEditingWishQuery>();
 
+
       var wish = user.CurrentWish;
+
+      if (HasParameter(parameters, "clearMedia"))
+         wish.FileId = null;
 
       var name = wish.Name;
       var description = wish.Description ?? "<не указано>";

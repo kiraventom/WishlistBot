@@ -13,12 +13,12 @@ public class SetWishMediaMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user)
+   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
    {
       Keyboard = new BotKeyboard();
 
       if (user.CurrentWish.FileId is not null)
-         Keyboard.AddButton<ClearWishMediaQuery>();
+         Keyboard.AddButton<EditWishQuery>("Удалить", "clearMedia");
 
       Keyboard.AddButton<EditWishQuery>("Отмена");
 

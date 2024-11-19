@@ -19,14 +19,22 @@ public abstract class BotMessage
       Logger = logger;
    }
 
-   public void Init(BotUser user)
+   public void Init(BotUser user, IReadOnlyCollection<string> parameters = null)
    {
       if (_isInited)
          return;
 
-      InitInternal(user);
+      InitInternal(user, parameters);
       _isInited = true;
    }
 
-   protected abstract void InitInternal(BotUser user);
+   protected abstract void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null);
+
+   protected static bool HasParameter(IReadOnlyCollection<string> parameters, string parameter)
+   {
+      if (parameters is null)
+         return false;
+
+      return parameters.Contains(parameter);
+   }
 }

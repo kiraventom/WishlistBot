@@ -13,18 +13,19 @@ public class SetWishNameMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user)
+   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
    {
       Keyboard = new BotKeyboard()
          .AddButton<CancelEditingWishQuery>();
 
       var stringBuilder = new StringBuilder();
 
-      if (user.CurrentWish is null)
+      var forceNewWish = HasParameter(parameters, "forceNewWish");
+
+      if (user.CurrentWish is null || forceNewWish)
       {
          user.CurrentWish = new Wish();
          stringBuilder.AppendLine("Укажите краткое название виша:");
-
       }
       else
       {

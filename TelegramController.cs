@@ -42,10 +42,8 @@ public class TelegramController
          new QueryAction<FullListMyWishesQuery>(_logger, _client, messagesFactory),
          new QueryAction<EditWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<SetWishNameQuery>(_logger, _client, messagesFactory),
-         new QueryAction<SetNewWishNameQuery>(_logger, _client, messagesFactory),
          new QueryAction<SetWishDescriptionQuery>(_logger, _client, messagesFactory),
          new QueryAction<SetWishMediaQuery>(_logger, _client, messagesFactory),
-         new QueryAction<ClearWishMediaQuery>(_logger, _client, messagesFactory),
          new QueryAction<SetWishLinksQuery>(_logger, _client, messagesFactory),
          new QueryAction<CancelEditingWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<FinishEditingWishQuery>(_logger, _client, messagesFactory),
@@ -134,7 +132,7 @@ public class TelegramController
          return;
       }
 
-      await action.ExecuteAsync(user);
+      await action.ExecuteAsync(user, actionText);
    }
 
    private Task OnError(ITelegramBotClient client, Exception exception, CancellationToken cts)

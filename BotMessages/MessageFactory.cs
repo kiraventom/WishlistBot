@@ -19,7 +19,7 @@ public class MessageFactory
       Client = client;
    }
 
-   public BotMessage Build(IQuery query, BotUser user)
+   public BotMessage Build(IQuery query, BotUser user, IReadOnlyCollection<string> parameters = null)
    {
       BotMessage botMessage = query switch
       {
@@ -29,10 +29,8 @@ public class MessageFactory
          FullListMyWishesQuery => new FullListMyWishesMessage(Logger),
          EditWishQuery => new EditingWishMessage(Logger),
          SetWishNameQuery => new SetWishNameMessage(Logger),
-         SetNewWishNameQuery => new SetNewWishNameMessage(Logger),
          SetWishDescriptionQuery => new SetWishDescriptionMessage(Logger),
          SetWishMediaQuery => new SetWishMediaMessage(Logger),
-         ClearWishMediaQuery => new ClearWishMediaMessage(Logger),
          SetWishLinksQuery => new SetWishLinksMessage(Logger),
          CancelEditingWishQuery => new CancelledEditingWishMessage(Logger),
          FinishEditingWishQuery => new FinishedWishEditingMessage(Logger),
@@ -42,6 +40,8 @@ public class MessageFactory
 
       if (botMessage is InvalidMessage)
          Logger.Error("Failed to find message for query [{queryId}]", user.LastQueryId);
+
+      botMessage.Init(user, parameters);
 
       return botMessage;
    }

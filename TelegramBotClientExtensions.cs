@@ -41,7 +41,7 @@ public static class TelegramBotClientExtensions
             {
                message = await client.EditMessageText(chatId: user.SenderId, messageId: user.LastBotMessageId, text: text, replyMarkup: keyboardMarkup);
             }
-            catch (Exception editException) // Message contains media
+            catch (Exception) // Message contains media
             {
                logger.Warning("Failed to edit text of message [{messageId}], looks like it contains media", user.LastBotMessageId);
 
@@ -49,7 +49,7 @@ public static class TelegramBotClientExtensions
                {
                   await client.DeleteMessage(chatId: user.SenderId, messageId: user.LastBotMessageId);
                }
-               catch (Exception deleteException)
+               catch (Exception)
                {
                   logger.Warning("Failed to delete message [{messageId}], looks like it was sent more than 48 hours ago", user.LastBotMessageId);
                }

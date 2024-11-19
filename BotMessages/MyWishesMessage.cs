@@ -12,10 +12,10 @@ public class MyWishesMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user)
+   protected override void InitInternal(BotUser user, IReadOnlyCollection<string> parameters = null)
    {
       Keyboard = new BotKeyboard()
-         .AddButton<SetNewWishNameQuery>("Добавить виш")
+         .AddButton<SetWishNameQuery>("Добавить виш", "forceNewWish")
          .NewRow()
          .AddButton<CompactListMyWishesQuery>()
          .AddButton<FullListMyWishesQuery>()
