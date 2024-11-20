@@ -21,16 +21,21 @@ public class EditingWishMessage : BotMessage
          .NewRow()
          .AddButton<SetWishMediaQuery>()
          .AddButton<SetWishLinksQuery>()
-         .NewRow()
-         .AddButton<FinishEditingWishQuery>()
-         .AddButton<CancelEditingWishQuery>();
+         .NewRow();
 
-      Logger.Debug("EditingWish: {parameters}", parameters.ToString());
+      if (parameters.Peek(QueryParameterType.ReturnToEditList))
+      {
+         Keyboard.AddButton<DeleteWishQuery>();
+         Keyboard.NewRow();
+      }
 
       if (parameters.Pop(QueryParameterType.SetCurrentWishTo, out var setWishIndex))
+      {
          user.CurrentWish = user.Wishes[setWishIndex];
+      }
 
-      Logger.Debug("EditingWish: {parameters}", parameters.ToString());
+      Keyboard.AddButton<FinishEditingWishQuery>();
+      Keyboard.AddButton<CancelEditingWishQuery>();
 
       var wish = user.CurrentWish;
 

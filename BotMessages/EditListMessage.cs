@@ -1,5 +1,6 @@
 using Serilog;
 using WishlistBot.Keyboard;
+using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
@@ -25,12 +26,24 @@ public class EditListMessage : BotMessage
             break;
 
          var wish = user.Wishes[i];
-         Keyboard.AddButton<EditWishQuery>(wish.Name, new QueryParameter(QueryParameterType.SetCurrentWishTo, (byte)i), QueryParameter.ReturnToEditList);
-         Keyboard.AddButton("@delete", "\U0001f5d1\U0000fe0f");
+
+         const string pencilEmoji = " \u270f\ufe0f";
+         
+         Keyboard.AddButton<EditWishQuery>(
+               wish.Name + pencilEmoji, 
+               new QueryParameter(QueryParameterType.SetCurrentWishTo, (byte)i), 
+               QueryParameter.ReturnToEditList);
+
          Keyboard.NewRow();
       }
 
       Keyboard.AddButton("@prev_page", "\u2b05\ufe0f");
+      
+      if (parameters.Peek(QueryParameterType.ReturnToCompactList))
+         Keyboard.AddButton<CompactListMyWishesQuery>("Назад");
+      else if (parameters.Peek(QueryParameterType.ReturnToFullList))
+         Keyboard.AddButton<FullListMyWishesQuery>("Назад");
+
       Keyboard.AddButton("@next_page", "\u27a1\ufe0f");
 
       Text = "Ваши виши:";

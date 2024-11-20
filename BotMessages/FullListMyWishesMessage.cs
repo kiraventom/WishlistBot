@@ -15,11 +15,13 @@ public class FullListMyWishesMessage : BotMessage
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters)
-         .AddButton("@edit", "Редактировать список")
+         .AddButton<EditListQuery>(QueryParameter.ReturnToFullList)
          .NewRow()
          .AddButton<CompactListMyWishesQuery>()
          .NewRow()
          .AddButton<MyWishesQuery>("Назад к моим вишам");
+
+      parameters.Pop(QueryParameterType.ReturnToFullList);
 
       Text = "Полный список ваших вишей:";
       // TODO Send all wishes

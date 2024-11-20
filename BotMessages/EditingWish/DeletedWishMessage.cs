@@ -7,9 +7,9 @@ using WishlistBot.Database;
 
 namespace WishlistBot.BotMessages;
 
-public class CancelledEditingWishMessage : BotMessage
+public class DeletedWishMessage : BotMessage
 {
-   public CancelledEditingWishMessage(ILogger logger) : base(logger)
+   public DeletedWishMessage(ILogger logger) : base(logger)
    {
    }
 
@@ -18,19 +18,15 @@ public class CancelledEditingWishMessage : BotMessage
       Keyboard = new BotKeyboard(parameters);
 
       if (parameters.Pop(QueryParameterType.ReturnToEditList))
-      {
-         Text = "Редактирование виша отменено";
          Keyboard.AddButton<EditListQuery>("Назад к редактированию"); // TODO pass page as parameter here
-      }
       else
-      {
-         Text = "Создание виша отменено";
-         Keyboard.AddButton<SetWishNameQuery>("Добавить другой виш")
-            .NewRow()
-            .AddButton<MyWishesQuery>("Назад к моим вишам");
-      }
+         Keyboard.AddButton<MyWishesQuery>("Назад к моим вишам");
 
+      user.BotState = BotState.WishDeleted;
+      
+      Text = "Виш удалён!";
 
+      user.Wishes.Remove(user.CurrentWish);
       user.CurrentWish = null;
    }
 }

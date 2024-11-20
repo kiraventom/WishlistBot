@@ -29,6 +29,8 @@ public class MessageFactory
          CompactListMyWishesQuery => new CompactListMyWishesMessage(Logger),
          FullListMyWishesQuery => new FullListMyWishesMessage(Logger),
          EditWishQuery => new EditingWishMessage(Logger),
+         DeleteWishQuery => new ConfirmWishDeletionMessage(Logger),
+         ConfirmWishDeletionQuery => new DeletedWishMessage(Logger),
          SetWishNameQuery => new SetWishNameMessage(Logger),
          SetWishDescriptionQuery => new SetWishDescriptionMessage(Logger),
          SetWishMediaQuery => new SetWishMediaMessage(Logger),

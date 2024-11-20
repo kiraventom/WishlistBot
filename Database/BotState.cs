@@ -6,5 +6,6 @@ public enum BotState
    EditingWish, SettingWishName, SettingWishDescription, SettingWishMedia, SettingWishLinks,
    WishAdded, 
    CompactListMyWishes, FullListMyWishes,
-   EditingList
+   EditingList,
+   DeletingWish, WishDeleted
 }

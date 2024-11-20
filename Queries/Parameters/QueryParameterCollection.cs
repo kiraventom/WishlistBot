@@ -27,31 +27,42 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       _parameters[parameter.Type] = parameter; 
    }
 
-   public bool Pop(QueryParameterType type)
+   public bool Peek(QueryParameterType type)
    {
-      if (_parameters.ContainsKey(type))
-      {
-         _parameters.Remove(type);
-         return true;
-      }
-
-      return false;
+      return _parameters.ContainsKey(type);
    }
-
-   public bool Pop(QueryParameterType type, out byte value)
+   
+   public bool Peek(QueryParameterType type, out byte value)
    {
       if (_parameters.ContainsKey(type))
       {
          if (_parameters[type].Value.HasValue)
          {
             value = _parameters[type].Value.Value;
-            _parameters.Remove(type);
             return true;
          }
       }
 
       value = byte.MaxValue;
       return false;
+   }
+
+   public bool Pop(QueryParameterType type)
+   {
+      var found = Peek(type);
+      if (found)
+         _parameters.Remove(type);
+
+      return found;
+   }
+
+   public bool Pop(QueryParameterType type, out byte value)
+   {
+      var found = Peek(type, out value);
+      if (found)
+         _parameters.Remove(type);
+
+      return found;
    }
 
    public byte? GetValue(QueryParameterType type)
