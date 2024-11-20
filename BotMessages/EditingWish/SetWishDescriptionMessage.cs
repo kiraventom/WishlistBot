@@ -1,6 +1,6 @@
 using Serilog;
 using WishlistBot.Keyboard;
-using WishlistBot.Queries;
+using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 using System.Text;
@@ -13,10 +13,10 @@ public class SetWishDescriptionMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
+   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard()
-         .AddButton<EditWishQuery>("Отмена", parameters);
+      Keyboard = new BotKeyboard(parameters)
+         .AddButton<EditWishQuery>("Отмена");
 
       var stringBuilder = new StringBuilder();
 

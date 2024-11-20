@@ -15,6 +15,7 @@ public class StartCommand : Command
 
    public override async Task ExecuteAsync(BotUser user, string actionText)
    {
+      user.QueryParams = null;
       await Client.SendOrEditBotMessage(Logger, user, new MainMenuMessage(Logger), forceNewMessage: true);
    }
 }

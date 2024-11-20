@@ -12,7 +12,7 @@ public class BotUser : BasePropertyChanged
    private BotState _botState;
    private string _lastQueryId;
    private int _lastBotMessageId = -1;
-   private string[] _lastQueryParams;
+   private string _queryParams;
    private Wish _currentWish;
 
    [JsonInclude]
@@ -50,11 +50,12 @@ public class BotUser : BasePropertyChanged
       set => Set(ref _lastBotMessageId, value);
    }
 
+   // TODO: store QueryParametersCollection here
    [JsonInclude]
-   public string[] LastQueryParams
+   public string QueryParams
    {
-      get => _lastQueryParams;
-      set => Set(ref _lastQueryParams, value);
+      get => _queryParams;
+      set => Set(ref _queryParams, value);
    }
 
    [JsonInclude]

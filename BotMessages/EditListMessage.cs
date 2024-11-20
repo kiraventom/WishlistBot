@@ -1,6 +1,6 @@
 using Serilog;
 using WishlistBot.Keyboard;
-using WishlistBot.Queries;
+using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 
@@ -12,9 +12,9 @@ public class EditListMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
+   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard();
+      Keyboard = new BotKeyboard(parameters);
 
       // TODO: Allow pages scrolling
       const int wishesPerPage = 5;

@@ -1,6 +1,7 @@
 using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
+using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 
@@ -12,13 +13,13 @@ public class FinishedWishEditingMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
+   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard()
+      Keyboard = new BotKeyboard(parameters)
          .AddButton<SetWishNameQuery>("Добавить ещё виш")
          .NewRow();
 
-      if (HasParameter(parameters, QueryParameterType.ReturnToEditList))
+      if (parameters.Pop(QueryParameterType.ReturnToEditList))
          Keyboard.AddButton<EditListQuery>("Назад к редактированию"); // TODO pass page as parameter here
       else
          Keyboard.AddButton<MyWishesQuery>("Назад к моим вишам");

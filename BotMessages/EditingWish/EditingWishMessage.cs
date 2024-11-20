@@ -1,6 +1,7 @@
 using Serilog;
-using WishlistBot.Queries;
 using WishlistBot.Keyboard;
+using WishlistBot.Queries;
+using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 
@@ -12,29 +13,28 @@ public class EditingWishMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
+   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard()
-         .AddButton<SetWishNameQuery>(parameters: parameters)
-         .AddButton<SetWishDescriptionQuery>(parameters: parameters)
+      Keyboard = new BotKeyboard(parameters)
+         .AddButton<SetWishNameQuery>()
+         .AddButton<SetWishDescriptionQuery>()
          .NewRow()
-         .AddButton<SetWishMediaQuery>(parameters: parameters)
-         .AddButton<SetWishLinksQuery>(parameters: parameters)
+         .AddButton<SetWishMediaQuery>()
+         .AddButton<SetWishLinksQuery>()
          .NewRow()
-         .AddButton<FinishEditingWishQuery>(parameters: parameters)
-         .AddButton<CancelEditingWishQuery>(parameters: parameters);
+         .AddButton<FinishEditingWishQuery>()
+         .AddButton<CancelEditingWishQuery>();
 
-      var setWishIndex = GetParameter(parameters, QueryParameterType.SetCurrentWishTo);
+      Logger.Debug("EditingWish: {parameters}", parameters.ToString());
 
-      if (user.CurrentWish is null && setWishIndex.HasValue)
-      {
-         Logger.Debug("GetParameter setWishIndex={wishIndex}", setWishIndex.Value);
-         user.CurrentWish = user.Wishes[setWishIndex.Value];
-      }
+      if (parameters.Pop(QueryParameterType.SetCurrentWishTo, out var setWishIndex))
+         user.CurrentWish = user.Wishes[setWishIndex];
+
+      Logger.Debug("EditingWish: {parameters}", parameters.ToString());
 
       var wish = user.CurrentWish;
 
-      if (HasParameter(parameters, QueryParameterType.ClearWishMedia))
+      if (parameters.Pop(QueryParameterType.ClearWishMedia))
          wish.FileId = null;
 
       var name = wish.Name;

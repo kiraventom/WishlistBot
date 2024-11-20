@@ -1,6 +1,7 @@
 using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
+using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 
@@ -12,9 +13,9 @@ public class EditingWishFailedMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
+   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard()
+      Keyboard = new BotKeyboard(parameters)
          .AddButton<SetWishNameQuery>("Добавить другой виш")
          .NewRow()
          .AddButton<MyWishesQuery>("Назад к моим вишам");

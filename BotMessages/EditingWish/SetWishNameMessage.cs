@@ -1,6 +1,6 @@
 using Serilog;
 using WishlistBot.Keyboard;
-using WishlistBot.Queries;
+using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 using System.Text;
@@ -13,16 +13,18 @@ public class SetWishNameMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
+   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard()
-         .AddButton<CancelEditingWishQuery>(parameters);
+      Keyboard = new BotKeyboard(parameters)
+         .AddButton<CancelEditingWishQuery>();
 
       var stringBuilder = new StringBuilder();
 
-      var forceNewWish = HasParameter(parameters, QueryParameterType.ForceNewWish);
+      var forceNewWish = parameters.Pop(QueryParameterType.ForceNewWish);
+      Logger.Debug("forceNewWish: {forceNewWish}", forceNewWish);
+      Logger.Debug("parameters: {parameters}", parameters.ToString());
 
-      if (user.CurrentWish is null || forceNewWish)
+      if (forceNewWish || user.CurrentWish is null)
       {
          user.CurrentWish = new Wish();
          stringBuilder.AppendLine("Укажите краткое название виша:");

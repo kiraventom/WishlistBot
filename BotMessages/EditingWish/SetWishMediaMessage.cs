@@ -1,6 +1,6 @@
 using Serilog;
 using WishlistBot.Keyboard;
-using WishlistBot.Queries;
+using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database;
 using System.Text;
@@ -13,14 +13,14 @@ public class SetWishMediaMessage : BotMessage
    {
    }
 
-   protected override void InitInternal(BotUser user, params QueryParameter[] parameters)
+   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(); // TODO Inherit parameters through keyboard?
+      Keyboard = new BotKeyboard(parameters); 
 
       if (user.CurrentWish.FileId is not null)
-         Keyboard.AddButton<EditWishQuery>("Удалить", QueryParameter.ClearWishMedia); // TODO not passing current parameters right now
+         Keyboard.AddButton<EditWishQuery>("Удалить", QueryParameter.ClearWishMedia);
 
-      Keyboard.AddButton<EditWishQuery>("Отмена", parameters);
+      Keyboard.AddButton<EditWishQuery>("Отмена");
 
       PhotoFileId = user.CurrentWish.FileId;
       var text = "Пришлите фото виша:";

@@ -1,5 +1,5 @@
 using Serilog;
-using WishlistBot.Queries;
+using WishlistBot.Queries.Parameters;
 using WishlistBot.Keyboard;
 using WishlistBot.Database;
 
@@ -25,9 +25,8 @@ public abstract class BotMessage
       if (_isInited)
          return;
 
-      var lastQueryParams = user.LastQueryParams;
-      if (!QueryParameter.TryParseQueryParams(lastQueryParams, out var parameters))
-         parameters = Array.Empty<QueryParameter>();
+      if (!QueryParameterCollection.TryParse(user.QueryParams, out var parameters))
+         parameters = new QueryParameterCollection();
 
       try
       {
@@ -39,24 +38,11 @@ public abstract class BotMessage
          return;
       }
 
+      // Parameters can change during message initialization
+      user.QueryParams = parameters.ToString();
+
       _isInited = true;
    }
 
-   protected abstract void InitInternal(BotUser user, params QueryParameter[] parameters);
-
-   protected static bool HasParameter(IReadOnlyCollection<QueryParameter> parameters, QueryParameterType type)
-   {
-      if (parameters is null)
-         return false;
-
-      return parameters.Any(p => p.Type == (byte)type);
-   }
-
-   protected static byte? GetParameter(IReadOnlyCollection<QueryParameter> parameters, QueryParameterType type)
-   {
-      if (!HasParameter(parameters, type)) // TODO Fix double check
-         return null;
-
-      return parameters.First(p => p.Type == (byte)type).Value;
-   }
+   protected abstract void InitInternal(BotUser user, QueryParameterCollection parameters);
 }
