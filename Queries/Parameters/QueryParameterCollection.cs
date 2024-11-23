@@ -32,7 +32,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       return _parameters.ContainsKey(type);
    }
    
-   public bool Peek(QueryParameterType type, out byte value)
+   public bool Peek(QueryParameterType type, out int value)
    {
       if (_parameters.ContainsKey(type))
       {
@@ -43,7 +43,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
          }
       }
 
-      value = byte.MaxValue;
+      value = int.MaxValue;
       return false;
    }
 
@@ -56,7 +56,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       return found;
    }
 
-   public bool Pop(QueryParameterType type, out byte value)
+   public bool Pop(QueryParameterType type, out int value)
    {
       var found = Peek(type, out value);
       if (found)
@@ -65,7 +65,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       return found;
    }
 
-   public byte? GetValue(QueryParameterType type)
+   public int? GetValue(QueryParameterType type)
    {
       if (_parameters.ContainsKey(type))
          return _parameters[type].Value;

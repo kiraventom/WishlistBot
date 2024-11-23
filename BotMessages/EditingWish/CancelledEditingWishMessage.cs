@@ -20,7 +20,7 @@ public class CancelledEditingWishMessage : BotMessage
       if (parameters.Pop(QueryParameterType.ReturnToEditList))
       {
          Text = "Редактирование виша отменено";
-         Keyboard.AddButton<EditListQuery>("Назад к редактированию"); // TODO pass page as parameter here
+         Keyboard.AddButton<EditListQuery>("Назад к редактированию");
       }
       else
       {

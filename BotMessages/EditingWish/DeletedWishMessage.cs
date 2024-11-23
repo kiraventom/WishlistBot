@@ -18,7 +18,7 @@ public class DeletedWishMessage : BotMessage
       Keyboard = new BotKeyboard(parameters);
 
       if (parameters.Pop(QueryParameterType.ReturnToEditList))
-         Keyboard.AddButton<EditListQuery>("Назад к редактированию"); // TODO pass page as parameter here
+         Keyboard.AddButton<EditListQuery>("Назад к редактированию");
       else
          Keyboard.AddButton<MyWishesQuery>("Назад к моим вишам");
 

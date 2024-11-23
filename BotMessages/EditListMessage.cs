@@ -17,36 +17,52 @@ public class EditListMessage : BotMessage
    {
       Keyboard = new BotKeyboard(parameters);
 
-      // TODO: Allow pages scrolling
+      int currentPageIndex = 0;
+      if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndex))
+         currentPageIndex = pageIndex;
+
       const int wishesPerPage = 5;
+
+      int pagesCount = (int)Math.Ceiling((double)user.Wishes.Count / wishesPerPage);
+
+      // Can happen if the only wish on the last page was deleted
+      if (currentPageIndex >= pagesCount)
+         currentPageIndex = pagesCount - 1;
 
       for (int i = 0; i < wishesPerPage; ++i)
       {
-         if (i >= user.Wishes.Count)
+         var wishIndex = currentPageIndex * wishesPerPage + i;
+         if (wishIndex >= user.Wishes.Count)
             break;
 
-         var wish = user.Wishes[i];
+         var wish = user.Wishes[wishIndex];
 
-         const string pencilEmoji = " \u270f\ufe0f";
+         const string pencilEmoji = "\u270f\ufe0f ";
          
          Keyboard.AddButton<EditWishQuery>(
-               wish.Name + pencilEmoji, 
-               new QueryParameter(QueryParameterType.SetCurrentWishTo, (byte)i), 
+               pencilEmoji + wish.Name,
+               new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex), 
+               new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex),
                QueryParameter.ReturnToEditList);
 
          Keyboard.NewRow();
       }
 
-      Keyboard.AddButton("@prev_page", "\u2b05\ufe0f");
+      if (currentPageIndex > 0)
+         Keyboard.AddButton<EditListQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
       
       if (parameters.Peek(QueryParameterType.ReturnToCompactList))
          Keyboard.AddButton<CompactListMyWishesQuery>("Назад");
       else if (parameters.Peek(QueryParameterType.ReturnToFullList))
          Keyboard.AddButton<FullListMyWishesQuery>("Назад");
 
-      Keyboard.AddButton("@next_page", "\u27a1\ufe0f");
+      if (currentPageIndex < pagesCount - 1)
+         Keyboard.AddButton<EditListQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));
 
-      Text = "Ваши виши:";
+      if (user.Wishes.Count == 0)
+         Text = "Список пуст";
+      else
+         Text = $"Ваши виши\nСтраница {currentPageIndex + 1} из {pagesCount}";
 
       user.BotState = BotState.EditingList;
    }

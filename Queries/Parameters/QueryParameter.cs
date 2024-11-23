@@ -14,9 +14,9 @@ public struct QueryParameter
    public static QueryParameter ReturnToFullList { get; } = new QueryParameter(QueryParameterType.ReturnToFullList);
 
    public QueryParameterType Type { get; }
-   public byte? Value { get; }
+   public int? Value { get; }
 
-   public QueryParameter(QueryParameterType type, byte? value = null)
+   public QueryParameter(QueryParameterType type, int? value = null)
    {
       Type = type;
       Value = value;
@@ -24,16 +24,16 @@ public struct QueryParameter
    
    public static bool TryParse(string str, out QueryParameter parameter)
    {
-      byte type = default;
-      byte value = default;
+      int type = default;
+      int value = default;
 
       var parts = str.Split(EQUALS_CH);
 
       var isValidValue = parts.Length == 2 && 
-         byte.TryParse(parts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
+         int.TryParse(parts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
 
       var isValidType = parts.Length >= 1 && 
-         byte.TryParse(parts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out type) && 
+         int.TryParse(parts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out type) && 
          Enum.IsDefined<QueryParameterType>((QueryParameterType)type);
 
       if (isValidType && isValidValue)
@@ -49,7 +49,7 @@ public struct QueryParameter
    public override string ToString()
    {
       var stringBuilder = new StringBuilder();
-      stringBuilder.Append(((byte)Type).ToString("X"));
+      stringBuilder.Append(((int)Type).ToString("X"));
       if (Value.HasValue)
          stringBuilder.Append(EQUALS_CH).Append(Value.Value.ToString("X"));
 
