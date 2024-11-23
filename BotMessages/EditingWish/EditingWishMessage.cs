@@ -39,8 +39,22 @@ public class EditingWishMessage : BotMessage
 
       var wish = user.CurrentWish;
 
-      if (parameters.Pop(QueryParameterType.ClearWishMedia))
-         wish.FileId = null;
+      if (parameters.Pop(QueryParameterType.ClearWishProperty, out var propertyTypeValue))
+      {
+         var propertyType = (WishPropertyType)propertyTypeValue;
+         switch (propertyType)
+         {
+            case WishPropertyType.Description:
+               wish.Description = null;
+               break;
+            case WishPropertyType.Media:
+               wish.FileId = null;
+               break;
+            case WishPropertyType.Links:
+               wish.Links.Clear();
+               break;
+         }
+      }
 
       var name = wish.Name;
       var description = wish.Description ?? "<не указано>";

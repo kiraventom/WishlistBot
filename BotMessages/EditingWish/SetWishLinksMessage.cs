@@ -15,7 +15,13 @@ public class SetWishLinksMessage : BotMessage
 
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters)
+      Keyboard = new BotKeyboard(parameters);
+
+      if (user.CurrentWish.Links.Any())
+         Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));
+
+      Keyboard
+         .NewRow()
          .AddButton<EditWishQuery>("Отмена");
 
       var stringBuilder = new StringBuilder();

@@ -18,9 +18,11 @@ public class SetWishMediaMessage : BotMessage
       Keyboard = new BotKeyboard(parameters); 
 
       if (user.CurrentWish.FileId is not null)
-         Keyboard.AddButton<EditWishQuery>("Удалить", QueryParameter.ClearWishMedia);
+         Keyboard.AddButton<EditWishQuery>("Удалить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Media));
 
-      Keyboard.AddButton<EditWishQuery>("Отмена");
+      Keyboard
+         .NewRow()
+         .AddButton<EditWishQuery>("Отмена");
 
       PhotoFileId = user.CurrentWish.FileId;
       var text = "Пришлите фото виша:";

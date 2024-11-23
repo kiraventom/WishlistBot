@@ -8,7 +8,6 @@ public struct QueryParameter
    private const char EQUALS_CH = '=';
 
    public static QueryParameter ForceNewWish { get; } = new QueryParameter(QueryParameterType.ForceNewWish);
-   public static QueryParameter ClearWishMedia { get; } = new QueryParameter(QueryParameterType.ClearWishMedia);
    public static QueryParameter ReturnToEditList { get; } = new QueryParameter(QueryParameterType.ReturnToEditList);
    public static QueryParameter ReturnToCompactList { get; } = new QueryParameter(QueryParameterType.ReturnToCompactList);
    public static QueryParameter ReturnToFullList { get; } = new QueryParameter(QueryParameterType.ReturnToFullList);

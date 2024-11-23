@@ -15,7 +15,13 @@ public class SetWishDescriptionMessage : BotMessage
 
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters)
+      Keyboard = new BotKeyboard(parameters);
+
+      if (!string.IsNullOrEmpty(user.CurrentWish.Description))
+         Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Description));
+
+      Keyboard
+         .NewRow()
          .AddButton<EditWishQuery>("Отмена");
 
       var stringBuilder = new StringBuilder();
