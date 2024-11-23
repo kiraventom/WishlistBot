@@ -18,8 +18,8 @@ public class MyWishesMessage : BotMessage
       Keyboard = new BotKeyboard(parameters)
          .AddButton<SetWishNameQuery>("Добавить виш", QueryParameter.ForceNewWish)
          .NewRow()
-         .AddButton<CompactListMyWishesQuery>()
-         .AddButton<FullListMyWishesQuery>()
+         .AddButton<CompactListMyWishesQuery>("Список вишей")
+//       .AddButton<FullListMyWishesQuery>()
          .NewRow()
          .AddButton<MainMenuQuery>("Назад");
 

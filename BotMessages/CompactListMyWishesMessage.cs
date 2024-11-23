@@ -15,10 +15,14 @@ public class CompactListMyWishesMessage : BotMessage
 
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters)
-         .AddButton<EditListQuery>(QueryParameter.ReturnToCompactList)
-         .NewRow()
-         .AddButton<FullListMyWishesQuery>()
+      Keyboard = new BotKeyboard(parameters);
+
+      if (user.Wishes.Count != 0)
+         Keyboard.AddButton<EditListQuery>(QueryParameter.ReturnToCompactList);
+
+        Keyboard
+//       .NewRow()
+//       .AddButton<FullListMyWishesQuery>()
          .NewRow()
          .AddButton<MyWishesQuery>("Назад к моим вишам");
 
