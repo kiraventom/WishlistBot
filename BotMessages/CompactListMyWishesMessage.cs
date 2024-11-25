@@ -21,8 +21,6 @@ public class CompactListMyWishesMessage : BotMessage
          Keyboard.AddButton<EditListQuery>(QueryParameter.ReturnToCompactList);
 
         Keyboard
-//       .NewRow()
-//       .AddButton<FullListMyWishesQuery>()
          .NewRow()
          .AddButton<MyWishesQuery>("Назад к моим вишам");
 

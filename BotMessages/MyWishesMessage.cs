@@ -19,7 +19,6 @@ public class MyWishesMessage : BotMessage
          .AddButton<SetWishNameQuery>("Добавить виш", QueryParameter.ForceNewWish)
          .NewRow()
          .AddButton<CompactListMyWishesQuery>("Список вишей")
-//       .AddButton<FullListMyWishesQuery>()
          .NewRow()
          .AddButton<MainMenuQuery>("Назад");
 
