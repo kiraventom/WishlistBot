@@ -25,11 +25,11 @@ public class SetWishMediaMessage : BotMessage
          .AddButton<EditWishQuery>("Отмена");
 
       PhotoFileId = user.CurrentWish.FileId;
-      var text = "Пришлите фото виша:";
-      if (PhotoFileId is not null)
-         text = "Пришлите новое фото или удалите текущее";
 
-      Text = text;
+      if (PhotoFileId is not null)
+         Text.Verbatim("Пришлите новое фото или удалите текущее");
+      else
+         Text.Verbatim("Пришлите фото виша:");
 
       user.BotState = BotState.SettingWishMedia;
    }

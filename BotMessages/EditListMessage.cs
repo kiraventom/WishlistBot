@@ -27,11 +27,9 @@ public class EditListMessage : BotMessage
 
       if (pagesCount == 0)
       {
-         Text = "Список пуст";
+         Text.Bold("Список пуст");
          if (parameters.Peek(QueryParameterType.ReturnToCompactList))
             Keyboard.AddButton<CompactListMyWishesQuery>("Назад");
-         else if (parameters.Peek(QueryParameterType.ReturnToFullList))
-            Keyboard.AddButton<FullListMyWishesQuery>("Назад");
       }
 
       // Can happen if the only wish on the last page was deleted
@@ -62,13 +60,12 @@ public class EditListMessage : BotMessage
       
       if (parameters.Peek(QueryParameterType.ReturnToCompactList))
          Keyboard.AddButton<CompactListMyWishesQuery>("Назад");
-      else if (parameters.Peek(QueryParameterType.ReturnToFullList))
-         Keyboard.AddButton<FullListMyWishesQuery>("Назад");
 
       if (currentPageIndex < pagesCount - 1)
          Keyboard.AddButton<EditListQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));
 
-      Text = $"Ваши виши\nСтраница {currentPageIndex + 1} из {pagesCount}";
+      Text.Bold("Ваши виши")
+         .LineBreak().Bold($"Страница {currentPageIndex + 1} из {pagesCount}");
 
       user.BotState = BotState.EditingList;
    }

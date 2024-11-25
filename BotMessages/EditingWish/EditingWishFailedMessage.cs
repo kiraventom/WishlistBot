@@ -20,7 +20,7 @@ public class EditingWishFailedMessage : BotMessage
          .NewRow()
          .AddButton<MyWishesQuery>("Назад к моим вишам");
 
-      Text = "Создание виша не удалось";
+      Text.Italic("Создание виша не удалось");
 
       user.CurrentWish = null;
    }

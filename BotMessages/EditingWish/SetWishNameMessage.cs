@@ -18,28 +18,21 @@ public class SetWishNameMessage : BotMessage
       Keyboard = new BotKeyboard(parameters)
          .AddButton<CancelEditingWishQuery>();
 
-      var stringBuilder = new StringBuilder();
-
       var forceNewWish = parameters.Pop(QueryParameterType.ForceNewWish);
-      Logger.Debug("forceNewWish: {forceNewWish}", forceNewWish);
-      Logger.Debug("parameters: {parameters}", parameters.ToString());
 
       if (forceNewWish || user.CurrentWish is null)
       {
          user.CurrentWish = new Wish();
-         stringBuilder.AppendLine("Укажите краткое название виша:");
+         Text.Verbatim("Укажите краткое название виша:");
       }
       else
       {
-         // TODO: Name in Markdown monospace
-         stringBuilder
-            .Append("Текущее название виша: ")
-            .AppendLine(user.CurrentWish.Name)
-            .AppendLine()
-            .AppendLine("Укажите новое название виша:");
+         Text
+            .Bold("Текущее название виша: ")
+            .Monospace(user.CurrentWish.Name)
+            .LineBreak()
+            .LineBreak().Verbatim("Укажите новое название виша:");
       }
-
-      Text = stringBuilder.ToString();
 
       user.BotState = BotState.SettingWishName;
    }

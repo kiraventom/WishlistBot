@@ -19,17 +19,16 @@ public class CancelledEditingWishMessage : BotMessage
 
       if (parameters.Pop(QueryParameterType.ReturnToEditList))
       {
-         Text = "Редактирование виша отменено";
+         Text.Italic("Редактирование виша отменено");
          Keyboard.AddButton<EditListQuery>("Назад к редактированию");
       }
       else
       {
-         Text = "Создание виша отменено";
+         Text.Italic("Создание виша отменено");
          Keyboard.AddButton<SetWishNameQuery>("Добавить другой виш")
             .NewRow()
             .AddButton<MyWishesQuery>("Назад к моим вишам");
       }
-
 
       user.CurrentWish = null;
    }

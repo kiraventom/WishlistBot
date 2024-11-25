@@ -24,24 +24,19 @@ public class SetWishDescriptionMessage : BotMessage
          .NewRow()
          .AddButton<EditWishQuery>("Отмена");
 
-      var stringBuilder = new StringBuilder();
-
       if (user.CurrentWish.Description is null)
       {
-         stringBuilder.AppendLine("Укажите подробное описание виша:");
+         Text.Verbatim("Укажите подробное описание виша:");
 
       }
       else
       {
-         // TODO: Description in Markdown monospace
-         stringBuilder
-            .AppendLine("Текущее описание виша:")
-            .AppendLine(user.CurrentWish.Description)
-            .AppendLine()
-            .AppendLine("Укажите новое описание виша:");
+         Text
+            .Bold("Текущее описание виша:")
+            .LineBreak().Monospace(user.CurrentWish.Description)
+            .LineBreak()
+            .LineBreak().Verbatim("Укажите новое описание или удалите текущее:");
       }
-
-      Text = stringBuilder.ToString();
 
       user.BotState = BotState.SettingWishDescription;
    }

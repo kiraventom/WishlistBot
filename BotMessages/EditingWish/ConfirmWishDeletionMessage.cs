@@ -20,7 +20,11 @@ public class ConfirmWishDeletionMessage : BotMessage
          .NewRow()
          .AddButton<EditWishQuery>("Отмена \u274c");
 
-      Text = $"Действительно удалить виш \"{user.CurrentWish.Name}\" навсегда?";
+      Text.Italic("Действительно удалить виш \"")
+         .Monospace(user.CurrentWish.Name)
+         .Italic("\"")
+         .ItalicBold(" навсегда")
+         .Italic("?");
 
       user.BotState = BotState.DeletingWish;
    }

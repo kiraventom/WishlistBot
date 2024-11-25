@@ -57,10 +57,32 @@ public class EditingWishMessage : BotMessage
       }
 
       var name = wish.Name;
-      var description = wish.Description ?? "<не указано>";
-      var links = wish.Links.Count; // TODO: Replace with inline links
+      var description = wish.Description;
+      var links = wish.Links;
 
-      Text = $"Редактирование виша\n\nНазвание: {name}\nОписание: {description}\nСсылки: {links}";
+      Text.Italic("Редактирование виша")
+         .LineBreak()
+         .LineBreak().Bold("Название: ").Monospace(name);
+      
+      if (description is not null)
+         Text.LineBreak().Bold("Описание: ").LineBreak().ExpandableQuote(description);
+
+      if (links.Count > 1)
+      {
+         Text.LineBreak().Bold("Ссылки: ");
+         for (int i = 0; i < links.Count; ++i)
+         {
+            var link = links[i];
+            Text.InlineUrl($"Ссылка {i + 1}", link);
+            if (i < links.Count - 1)
+               Text.Verbatim(", ");
+         }
+      }
+      else if (links.Count == 1)
+      {
+         Text.LineBreak().InlineUrl("Ссылка", links.First());
+      }
+
 
       PhotoFileId = wish.FileId;
 

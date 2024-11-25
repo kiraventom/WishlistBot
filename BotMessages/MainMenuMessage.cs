@@ -19,7 +19,9 @@ public class MainMenuMessage : BotMessage
          .AddButton("@my_subscriptions", "Мои подписки")
          .AddButton("@settings", "Настройки");
 
-      Text = $"Добро пожаловать в главное меню, {user.FirstName}!";
+      Text.Bold("Добро пожаловать в главное меню, ")
+         .InlineMention(user.FirstName, user.SenderId)
+         .Bold("!");
 
       user.BotState = BotState.MainMenu;
    }

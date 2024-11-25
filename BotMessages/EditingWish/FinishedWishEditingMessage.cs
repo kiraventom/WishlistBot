@@ -29,11 +29,11 @@ public class FinishedWishEditingMessage : BotMessage
       if (!user.Wishes.Contains(user.CurrentWish))
       {
          user.Wishes.Add(user.CurrentWish);
-         Text = "Виш добавлен!";
+         Text.Italic("Виш добавлен!");
       }
       else
       {
-         Text = "Виш изменён!";
+         Text.Italic("Виш изменён!");
       }
 
       user.CurrentWish = null;

@@ -24,7 +24,7 @@ public class DeletedWishMessage : BotMessage
 
       user.BotState = BotState.WishDeleted;
       
-      Text = "Виш удалён!";
+      Text.Italic("Виш удалён!");
 
       user.Wishes.Remove(user.CurrentWish);
       user.CurrentWish = null;

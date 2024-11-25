@@ -10,7 +10,6 @@ public struct QueryParameter
    public static QueryParameter ForceNewWish { get; } = new QueryParameter(QueryParameterType.ForceNewWish);
    public static QueryParameter ReturnToEditList { get; } = new QueryParameter(QueryParameterType.ReturnToEditList);
    public static QueryParameter ReturnToCompactList { get; } = new QueryParameter(QueryParameterType.ReturnToCompactList);
-   public static QueryParameter ReturnToFullList { get; } = new QueryParameter(QueryParameterType.ReturnToFullList);
 
    public QueryParameterType Type { get; }
    public int? Value { get; }

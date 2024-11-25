@@ -15,6 +15,6 @@ public class InvalidMessage : BotMessage
    {
       Keyboard = new BotKeyboard(parameters);
 
-      Text = "Некорректное действие";
+      Text.Bold("Некорректное действие");
    }
 }

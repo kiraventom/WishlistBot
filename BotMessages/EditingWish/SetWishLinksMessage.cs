@@ -24,24 +24,22 @@ public class SetWishLinksMessage : BotMessage
          .NewRow()
          .AddButton<EditWishQuery>("Отмена");
 
-      var stringBuilder = new StringBuilder();
-
       if (user.CurrentWish.Links is null)
       {
-         stringBuilder.AppendLine("Пришлите ссылки на товары (одним сообщением):");
-
+         Text.Verbatim("Пришлите ссылки одним сообщением:");
       }
       else
       {
-         // TODO: Links as Markdown
-         stringBuilder
-            .AppendLine("Текущие ссылки: ")
-            .Append(user.CurrentWish.Links.Count).AppendLine()
-            .AppendLine()
-            .AppendLine("Пришлите новые ссылки (одним сообщением):");
-      }
+         Text.Bold("Текущие ссылки: ");
 
-      Text = stringBuilder.ToString();
+         for (int i = 0; i < user.CurrentWish.Links.Count; ++i)
+         {
+            var link = user.CurrentWish.Links[i];
+            Text.LineBreak().InlineUrl($"Ссылка {i + 1}", link);
+         }
+
+         Text.Verbatim("Пришлите новые ссылки или удалите текущие:");
+      }
 
       user.BotState = BotState.SettingWishLinks;
    }

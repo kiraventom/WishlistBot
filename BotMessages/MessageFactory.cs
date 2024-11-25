@@ -27,7 +27,6 @@ public class MessageFactory
          MainMenuQuery => new MainMenuMessage(Logger),
          MyWishesQuery => new MyWishesMessage(Logger),
          CompactListMyWishesQuery => new CompactListMyWishesMessage(Logger),
-         FullListMyWishesQuery => new FullListMyWishesMessage(Logger),
          EditWishQuery => new EditingWishMessage(Logger),
          DeleteWishQuery => new ConfirmWishDeletionMessage(Logger),
          ConfirmWishDeletionQuery => new DeletedWishMessage(Logger),

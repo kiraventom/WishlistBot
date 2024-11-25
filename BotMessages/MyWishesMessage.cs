@@ -22,7 +22,9 @@ public class MyWishesMessage : BotMessage
          .NewRow()
          .AddButton<MainMenuQuery>("Назад");
 
-      Text = $"Ваши виши\n\nКоличество вишей в вашем списке: {user.Wishes.Count}";
+      Text.Bold("Ваши виши:")
+         .LineBreak()
+         .LineBreak().Bold($"Количество вишей в вашем списке: {user.Wishes.Count}");
 
       user.BotState = BotState.MyWishes;
    }

@@ -26,24 +26,18 @@ public class CompactListMyWishesMessage : BotMessage
 
       parameters.Pop(QueryParameterType.ReturnToCompactList);
 
-      var stringBuilder = new StringBuilder();
-      stringBuilder.AppendLine("Краткий список ваших вишей:");
+      Text.Bold("Краткий список ваших вишей:");
       for (int i = 0; i < user.Wishes.Count; ++i)
       {
          var wish = user.Wishes[i];
-         stringBuilder.Append(i + 1).Append(". ");
-         stringBuilder.Append(wish.Name);
+         Text.LineBreak().Bold($"{i + 1}. ").Monospace(wish.Name);
 
          if (wish.FileId is not null)
-            stringBuilder.Append(" \U0001f5bc\U0000fe0f");
+            Text.Verbatim(" \U0001f5bc\U0000fe0f");
 
          if (wish.Links.Any())
-            stringBuilder.Append(" \U0001f310");
-
-         stringBuilder.AppendLine();
+            Text.Verbatim(" \U0001f310");
       }
-
-      Text = stringBuilder.ToString();
 
       user.BotState = BotState.CompactListMyWishes;
    }
