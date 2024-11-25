@@ -4,7 +4,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
-using WishlistBot.Database;
+using WishlistBot.Database.Users;
 using WishlistBot.Actions;
 using WishlistBot.Actions.Commands;
 using WishlistBot.Queries;
@@ -16,7 +16,7 @@ namespace WishlistBot;
 public class TelegramController
 {
    private readonly ILogger _logger;
-   private readonly TelegramBotClient _client;
+   private readonly ITelegramBotClient _client;
    private readonly UsersDb _usersDb;
    private readonly WishMessagesListener _wishMessagesListener;
 
@@ -24,11 +24,11 @@ public class TelegramController
 
    private bool _started;
 
-   public TelegramController(ILogger logger, string token, UsersDb usersDb)
+   public TelegramController(ILogger logger, ITelegramBotClient client, UsersDb usersDb)
    {
       _logger = logger;
-      _client = new TelegramBotClient(token);
       _usersDb = usersDb;
+      _client = client;
       _wishMessagesListener = new WishMessagesListener(_logger, _client);
 
       var messagesFactory = new MessageFactory(_logger, _client);

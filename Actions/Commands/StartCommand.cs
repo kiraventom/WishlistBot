@@ -1,6 +1,6 @@
 using Telegram.Bot;
 using Serilog;
-using WishlistBot.Database;
+using WishlistBot.Database.Users;
 using WishlistBot.BotMessages;
 
 namespace WishlistBot.Actions.Commands;

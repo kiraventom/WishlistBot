@@ -2,7 +2,7 @@ using System.Text;
 using Telegram.Bot;
 using Serilog;
 using WishlistBot;
-using WishlistBot.Database;
+using WishlistBot.Database.Users;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.BotMessages;

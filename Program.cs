@@ -1,6 +1,8 @@
 ﻿using Serilog;
 using Serilog.Events;
-using WishlistBot.Database;
+using Telegram.Bot;
+using WishlistBot.Database.Users;
+using WishlistBot.Database.MediaStorage;
 
 namespace WishlistBot;
 
@@ -27,7 +29,16 @@ class Program
          return;
       }
 
-      var telegramController = new TelegramController(logger, config.Token, usersDb);
+      if (!TryLoadMediaStorageDb(logger, projectDirPath, out var mediaStorageDb))
+      {
+         logger.Fatal("Couldn't parse media storage DB, exiting");
+         return;
+      }
+
+      var client = new TelegramBotClient(config.Token);
+      MediaStorageManager.Instance.Init(client, mediaStorageDb, config.StorageChannelId);
+
+      var telegramController = new TelegramController(logger, client, usersDb);
       telegramController.StartReceiving();
 
       while (true)
@@ -78,5 +89,12 @@ class Program
       var usersDbFilePath = Path.Combine(projectDirPath, "users.json");
       usersDb = UsersDb.Load(logger, usersDbFilePath);
       return usersDb is not null;
+   }
+
+   private static bool TryLoadMediaStorageDb(ILogger logger, string projectDirPath, out MediaStorageDb mediaStorageDb)
+   {
+      var mediaStorageDbFilePath = Path.Combine(projectDirPath, "mediaStorage.json");
+      mediaStorageDb = MediaStorageDb.Load(logger, mediaStorageDbFilePath);
+      return mediaStorageDb is not null;
    }
 }

@@ -11,10 +11,18 @@ public class Config
    /// </summary>
    public string Token { get; }
 
+   /// <summary>
+   /// ID of a channel that will work as media storage. 
+   /// Bot will copy all received media to this channel to cache them.
+   /// It is required because otherwise Telegram will delete them from servers if user deletes them from dialog.
+   /// </summary>
+   public long StorageChannelId { get; }
+
    [System.Text.Json.Serialization.JsonConstructor]
-   public Config(string token)
+   public Config(string token, long storageChannelId)
    {
       Token = token;
+      StorageChannelId = storageChannelId;
    }
 
    public static Config Load(ILogger logger, string filepath)
