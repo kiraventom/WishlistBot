@@ -64,7 +64,7 @@ public class MediaStorageManager
       foreach (var unusedFileId in unusedFileIds)
       {
          ++count;
-         Remove(unusedFileId);
+         await Remove(unusedFileId);
       }
 
       _logger.Debug("Media storage cleanup removed {count} obsolete entities", count);
