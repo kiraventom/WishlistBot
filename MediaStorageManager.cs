@@ -1,6 +1,8 @@
+using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using WishlistBot.Database.MediaStorage;
+using WishlistBot.Database.Users;
 
 namespace WishlistBot;
 
@@ -8,16 +10,19 @@ public class MediaStorageManager
 {
    private bool _inited;
 
+   private ILogger _logger;
    private long _storageChannelId;
    private ITelegramBotClient _client;
    private MediaStorageDb _database;
 
    public static MediaStorageManager Instance { get; } = new MediaStorageManager();
 
-   public void Init(ITelegramBotClient client, MediaStorageDb mediaStorageDb, long storageChannelId)
+   public void Init(ILogger logger, ITelegramBotClient client, MediaStorageDb mediaStorageDb, long storageChannelId)
    {
       if (_inited)
          return;
+
+      _logger = logger;
 
       _storageChannelId = storageChannelId;
       _client = client;
@@ -33,10 +38,39 @@ public class MediaStorageManager
       var photo = InputFile.FromFileId(fileId);
       var message = await _client.SendPhoto(chatId: _storageChannelId, photo: photo);
       _database.Add(fileId, message.MessageId);
+      _logger.Debug("Stored media '{fileId}' as message id '{messageId}'", fileId, message.MessageId);
    }
 
-   // TODO Call this somewhere
-   public async Task Remove(string fileId)
+   public async Task Cleanup(UsersDb usersDb)
+   {
+      _logger.Debug("Media storage cleanup started");
+
+      var storedFileIds = _database.Values.Keys;
+      var wishesFileIds = usersDb.Values.Values
+         .SelectMany(u => u.Wishes)
+         .Select(w => w.FileId)
+         .Where(i => i != null);
+
+      var currentWishesFileIds = usersDb.Values.Values
+         .Select(u => u.CurrentWish)
+         .Where(w => w != null)
+         .Select(w => w.FileId)
+         .Where(i => i != null);
+
+      var usedFileIds = wishesFileIds.Concat(currentWishesFileIds);
+      var unusedFileIds = storedFileIds.Except(usedFileIds);
+
+      int count = 0;
+      foreach (var unusedFileId in unusedFileIds)
+      {
+         ++count;
+         Remove(unusedFileId);
+      }
+
+      _logger.Debug("Media storage cleanup removed {count} obsolete entities", count);
+   }
+
+   private async Task Remove(string fileId)
    {
       if (!_database.Values.ContainsKey(fileId))
          return;

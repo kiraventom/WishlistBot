@@ -17,6 +17,8 @@ class Program
 
       var logger = InitLogger(projectDirPath);
 
+      logger.Information("===== ENTRY POINT =====");
+
       if (!TryLoadConfig(logger, projectDirPath, out var config))
       {
          logger.Fatal("Couldn't parse config, exiting");
@@ -36,7 +38,8 @@ class Program
       }
 
       var client = new TelegramBotClient(config.Token);
-      MediaStorageManager.Instance.Init(client, mediaStorageDb, config.StorageChannelId);
+      MediaStorageManager.Instance.Init(logger, client, mediaStorageDb, config.StorageChannelId);
+      await MediaStorageManager.Instance.Cleanup(usersDb);
 
       var telegramController = new TelegramController(logger, client, usersDb);
       telegramController.StartReceiving();
