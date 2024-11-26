@@ -7,16 +7,16 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.EditingWish;
 
-public class ConfirmWishDeletionMessage : BotMessage
+public class ConfirmDeleteWishMessage : BotMessage
 {
-   public ConfirmWishDeletionMessage(ILogger logger) : base(logger)
+   public ConfirmDeleteWishMessage(ILogger logger) : base(logger)
    {
    }
 
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters)
-         .AddButton<ConfirmWishDeletionQuery>()
+         .AddButton<ConfirmDeleteWishQuery>()
          .NewRow()
          .AddButton<EditWishQuery>("Отмена \u274c");
 

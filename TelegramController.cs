@@ -41,7 +41,7 @@ public class TelegramController
          new QueryAction<CompactListQuery>(_logger, _client, messagesFactory),
          new QueryAction<EditWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<DeleteWishQuery>(_logger, _client, messagesFactory),
-         new QueryAction<ConfirmWishDeletionQuery>(_logger, _client, messagesFactory),
+         new QueryAction<ConfirmDeleteWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<SetWishNameQuery>(_logger, _client, messagesFactory),
          new QueryAction<SetWishDescriptionQuery>(_logger, _client, messagesFactory),
          new QueryAction<SetWishMediaQuery>(_logger, _client, messagesFactory),
