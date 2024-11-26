@@ -18,7 +18,7 @@ public class CompactListMessage : BotMessage
       Keyboard = new BotKeyboard(parameters);
 
       if (user.Wishes.Count != 0)
-         Keyboard.AddButton<EditListQuery>(QueryParameter.ReturnToCompactList);
+         Keyboard.AddButton<FullListQuery>(QueryParameter.ReturnToCompactList);
 
         Keyboard
          .NewRow()

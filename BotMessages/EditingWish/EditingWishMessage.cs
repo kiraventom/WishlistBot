@@ -23,7 +23,8 @@ public class EditingWishMessage : BotMessage
          .AddButton<SetWishLinksQuery>()
          .NewRow();
 
-      if (parameters.Peek(QueryParameterType.ReturnToEditList))
+      // TODO: Also check if in editing mode
+      if (parameters.Peek(QueryParameterType.ReturnToFullList))
       {
          Keyboard.AddButton<DeleteWishQuery>();
          Keyboard.NewRow();

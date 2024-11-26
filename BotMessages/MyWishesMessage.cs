@@ -18,13 +18,11 @@ public class MyWishesMessage : BotMessage
       Keyboard = new BotKeyboard(parameters)
          .AddButton<SetWishNameQuery>("Добавить виш", QueryParameter.ForceNewWish)
          .NewRow()
-         .AddButton<CompactListQuery>("Список вишей")
+         .AddButton<CompactListQuery>()
          .NewRow()
          .AddButton<MainMenuQuery>("Назад");
 
-      Text.Bold("Ваши виши:")
-         .LineBreak()
-         .LineBreak().Bold($"Количество вишей в вашем списке: {user.Wishes.Count}");
+      Text.Bold($"Количество вишей в вашем списке: {user.Wishes.Count}");
 
       user.BotState = BotState.MyWishes;
    }

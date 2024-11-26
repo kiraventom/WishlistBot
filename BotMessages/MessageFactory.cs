@@ -36,7 +36,7 @@ public class MessageFactory
          SetWishLinksQuery => new SetWishLinksMessage(Logger),
          CancelEditingWishQuery => new CancelledEditingWishMessage(Logger),
          FinishEditingWishQuery => new FinishedWishEditingMessage(Logger),
-         EditListQuery => new EditListMessage(Logger),
+         FullListQuery => new FullListMessage(Logger),
          _ => new InvalidMessage(Logger),
       };
 

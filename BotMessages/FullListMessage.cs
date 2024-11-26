@@ -7,9 +7,9 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
-public class EditListMessage : BotMessage
+public class FullListMessage : BotMessage
 {
-   public EditListMessage(ILogger logger) : base(logger)
+   public FullListMessage(ILogger logger) : base(logger)
    {
    }
 
@@ -50,19 +50,20 @@ public class EditListMessage : BotMessage
                pencilEmoji + wish.Name,
                new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex), 
                new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex),
-               QueryParameter.ReturnToEditList);
+               QueryParameter.ReturnToFullList);
 
          Keyboard.NewRow();
       }
 
       if (currentPageIndex > 0)
-         Keyboard.AddButton<EditListQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
+         Keyboard.AddButton<FullListQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
       
+      // TODO: Remove ReturnToCompactList
       if (parameters.Peek(QueryParameterType.ReturnToCompactList))
          Keyboard.AddButton<CompactListQuery>("Назад");
 
       if (currentPageIndex < pagesCount - 1)
-         Keyboard.AddButton<EditListQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));
+         Keyboard.AddButton<FullListQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));
 
       Text.Bold("Ваши виши")
          .LineBreak().Bold($"Страница {currentPageIndex + 1} из {pagesCount}");

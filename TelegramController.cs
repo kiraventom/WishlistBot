@@ -48,7 +48,7 @@ public class TelegramController
          new QueryAction<SetWishLinksQuery>(_logger, _client, messagesFactory),
          new QueryAction<CancelEditingWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<FinishEditingWishQuery>(_logger, _client, messagesFactory),
-         new QueryAction<EditListQuery>(_logger, _client, messagesFactory),
+         new QueryAction<FullListQuery>(_logger, _client, messagesFactory),
       };
    }
 

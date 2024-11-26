@@ -17,10 +17,10 @@ public class CancelledEditingWishMessage : BotMessage
    {
       Keyboard = new BotKeyboard(parameters);
 
-      if (parameters.Pop(QueryParameterType.ReturnToEditList))
+      if (parameters.Pop(QueryParameterType.ReturnToFullList))
       {
          Text.Italic("Редактирование виша отменено");
-         Keyboard.AddButton<EditListQuery>("Назад к редактированию");
+         Keyboard.AddButton<FullListQuery>("Назад к списку");
       }
       else
       {
