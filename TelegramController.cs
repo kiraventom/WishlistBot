@@ -8,7 +8,7 @@ using WishlistBot.Database.Users;
 using WishlistBot.Actions;
 using WishlistBot.Actions.Commands;
 using WishlistBot.Queries;
-using WishlistBot.Queries.EditingWish;
+using WishlistBot.Queries.EditWish;
 using WishlistBot.BotMessages;
 
 namespace WishlistBot;

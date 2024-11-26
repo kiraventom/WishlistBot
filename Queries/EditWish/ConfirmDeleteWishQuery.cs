@@ -1,4 +1,4 @@
-namespace WishlistBot.Queries.EditingWish;
+namespace WishlistBot.Queries.EditWish;
 
 public class ConfirmDeleteWishQuery : IQuery
 {

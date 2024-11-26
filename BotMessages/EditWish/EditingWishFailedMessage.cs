@@ -2,14 +2,14 @@ using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
-using WishlistBot.Queries.EditingWish;
+using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
 
-namespace WishlistBot.BotMessages.EditingWish;
+namespace WishlistBot.BotMessages.EditWish;
 
-public class EditingWishFailedMessage : BotMessage
+public class EditWishFailedMessage : BotMessage
 {
-   public EditingWishFailedMessage(ILogger logger) : base(logger)
+   public EditWishFailedMessage(ILogger logger) : base(logger)
    {
    }
 

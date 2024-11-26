@@ -9,7 +9,7 @@ using WishlistBot.Actions;
 using WishlistBot.Actions.Commands;
 using WishlistBot.Queries;
 using WishlistBot.BotMessages;
-using WishlistBot.BotMessages.EditingWish;
+using WishlistBot.BotMessages.EditWish;
 
 namespace WishlistBot;
 

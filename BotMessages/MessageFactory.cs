@@ -3,9 +3,9 @@ using Telegram.Bot;
 using WishlistBot.Database.Users;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
-using WishlistBot.Queries.EditingWish;
+using WishlistBot.Queries.EditWish;
 using WishlistBot.BotMessages;
-using WishlistBot.BotMessages.EditingWish;
+using WishlistBot.BotMessages.EditWish;
 
 namespace WishlistBot.BotMessages;
 

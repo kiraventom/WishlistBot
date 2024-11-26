@@ -1,11 +1,11 @@
 using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries.Parameters;
-using WishlistBot.Queries.EditingWish;
+using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
 using System.Text;
 
-namespace WishlistBot.BotMessages.EditingWish;
+namespace WishlistBot.BotMessages.EditWish;
 
 public class SetWishNameMessage : BotMessage
 {
