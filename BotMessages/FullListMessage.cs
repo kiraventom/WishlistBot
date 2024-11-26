@@ -28,8 +28,7 @@ public class FullListMessage : BotMessage
       if (pagesCount == 0)
       {
          Text.Bold("Список пуст");
-         if (parameters.Peek(QueryParameterType.ReturnToCompactList))
-            Keyboard.AddButton<CompactListQuery>("Назад");
+         Keyboard.AddButton<CompactListQuery>("Назад");
       }
 
       // Can happen if the only wish on the last page was deleted
@@ -58,9 +57,7 @@ public class FullListMessage : BotMessage
       if (currentPageIndex > 0)
          Keyboard.AddButton<FullListQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
       
-      // TODO: Remove ReturnToCompactList
-      if (parameters.Peek(QueryParameterType.ReturnToCompactList))
-         Keyboard.AddButton<CompactListQuery>("Назад");
+      Keyboard.AddButton<CompactListQuery>("Назад");
 
       if (currentPageIndex < pagesCount - 1)
          Keyboard.AddButton<FullListQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));

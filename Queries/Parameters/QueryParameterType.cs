@@ -6,6 +6,5 @@ public enum QueryParameterType : int
    ClearWishProperty = 0x2,
    SetCurrentWishTo = 0x3,
    ReturnToFullList = 0x4,
-   ReturnToCompactList = 0x5,
    SetListPageTo = 0x7,
 }

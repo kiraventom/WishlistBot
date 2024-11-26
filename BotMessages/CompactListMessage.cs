@@ -18,13 +18,11 @@ public class CompactListMessage : BotMessage
       Keyboard = new BotKeyboard(parameters);
 
       if (user.Wishes.Count != 0)
-         Keyboard.AddButton<FullListQuery>(QueryParameter.ReturnToCompactList);
+         Keyboard.AddButton<FullListQuery>();
 
         Keyboard
          .NewRow()
          .AddButton<MyWishesQuery>("Назад к моим вишам");
-
-      parameters.Pop(QueryParameterType.ReturnToCompactList);
 
       Text.Bold("Краткий список ваших вишей:");
       for (int i = 0; i < user.Wishes.Count; ++i)
