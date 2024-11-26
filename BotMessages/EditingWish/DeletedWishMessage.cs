@@ -5,7 +5,7 @@ using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditingWish;
 using WishlistBot.Database.Users;
 
-namespace WishlistBot.BotMessages;
+namespace WishlistBot.BotMessages.EditingWish;
 
 public class DeletedWishMessage : BotMessage
 {
