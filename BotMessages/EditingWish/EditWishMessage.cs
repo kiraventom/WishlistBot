@@ -36,7 +36,7 @@ public class EditWishMessage : BotMessage
       }
 
       Keyboard.AddButton<FinishEditingWishQuery>();
-      Keyboard.AddButton<CancelEditingWishQuery>();
+      Keyboard.AddButton<CancelEditWishQuery>();
 
       var wish = user.CurrentWish;
 

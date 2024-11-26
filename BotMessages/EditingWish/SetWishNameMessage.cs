@@ -16,7 +16,7 @@ public class SetWishNameMessage : BotMessage
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters)
-         .AddButton<CancelEditingWishQuery>();
+         .AddButton<CancelEditWishQuery>();
 
       var forceNewWish = parameters.Pop(QueryParameterType.ForceNewWish);
 

@@ -7,9 +7,9 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
-public class CancelledEditingWishMessage : BotMessage
+public class CancelEditWishMessage : BotMessage
 {
-   public CancelledEditingWishMessage(ILogger logger) : base(logger)
+   public CancelEditWishMessage(ILogger logger) : base(logger)
    {
    }
 
