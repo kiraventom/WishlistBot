@@ -29,7 +29,7 @@ public class MessageFactory
          CompactListQuery => new CompactListMessage(Logger),
          EditWishQuery => new EditWishMessage(Logger),
          DeleteWishQuery => new ConfirmWishDeletionMessage(Logger),
-         ConfirmWishDeletionQuery => new DeletedWishMessage(Logger),
+         ConfirmWishDeletionQuery => new DeleteWishMessage(Logger),
          SetWishNameQuery => new SetWishNameMessage(Logger),
          SetWishDescriptionQuery => new SetWishDescriptionMessage(Logger),
          SetWishMediaQuery => new SetWishMediaMessage(Logger),
