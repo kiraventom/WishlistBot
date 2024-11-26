@@ -7,9 +7,9 @@ using System.Text;
 
 namespace WishlistBot.BotMessages;
 
-public class CompactListMyWishesMessage : BotMessage
+public class CompactListMessage : BotMessage
 {
-   public CompactListMyWishesMessage(ILogger logger) : base(logger)
+   public CompactListMessage(ILogger logger) : base(logger)
    {
    }
 
@@ -39,6 +39,6 @@ public class CompactListMyWishesMessage : BotMessage
             Text.Verbatim(" \U0001f310");
       }
 
-      user.BotState = BotState.CompactListMyWishes;
+      user.BotState = BotState.CompactList;
    }
 }

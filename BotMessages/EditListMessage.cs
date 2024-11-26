@@ -29,7 +29,7 @@ public class EditListMessage : BotMessage
       {
          Text.Bold("Список пуст");
          if (parameters.Peek(QueryParameterType.ReturnToCompactList))
-            Keyboard.AddButton<CompactListMyWishesQuery>("Назад");
+            Keyboard.AddButton<CompactListQuery>("Назад");
       }
 
       // Can happen if the only wish on the last page was deleted
@@ -59,7 +59,7 @@ public class EditListMessage : BotMessage
          Keyboard.AddButton<EditListQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
       
       if (parameters.Peek(QueryParameterType.ReturnToCompactList))
-         Keyboard.AddButton<CompactListMyWishesQuery>("Назад");
+         Keyboard.AddButton<CompactListQuery>("Назад");
 
       if (currentPageIndex < pagesCount - 1)
          Keyboard.AddButton<EditListQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));
