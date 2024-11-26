@@ -48,7 +48,7 @@ public class WishMessagesListener
             return;
       }
 
-      await SendEditingWishMessageAsync(user);
+      await SendEditWishMessageAsync(user);
    }
 
    private Task HandleSettingWishNameAsync(Message message, BotUser user)
@@ -94,7 +94,7 @@ public class WishMessagesListener
       if (message.MediaGroupId is not null)
          _logger.Warning("Media groups are not supported, ignoring other photos");
 
-      await SendEditingWishMessageAsync(user);
+      await SendEditWishMessageAsync(user);
    }
 
    private Task HandleSettingWishLinksAsync(Message message, BotUser user)
@@ -118,9 +118,9 @@ public class WishMessagesListener
       return Task.CompletedTask;
    }
 
-   private async Task SendEditingWishMessageAsync(BotUser user)
+   private async Task SendEditWishMessageAsync(BotUser user)
    {
-      var message = new EditingWishMessage(_logger);
+      var message = new EditWishMessage(_logger);
       await _client.SendOrEditBotMessage(_logger, user, message, forceNewMessage: true);
    }
 }
