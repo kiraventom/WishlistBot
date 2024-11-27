@@ -16,7 +16,7 @@ public class ConfirmDeleteWishMessage : BotMessage
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters)
-         .AddButton<ConfirmDeleteWishQuery>()
+         .AddButton<DeleteWishQuery>()
          .NewRow()
          .AddButton<EditWishQuery>("Отмена \u274c");
 
@@ -25,7 +25,5 @@ public class ConfirmDeleteWishMessage : BotMessage
          .Italic("\"")
          .ItalicBold(" навсегда")
          .Italic("?");
-
-      user.BotState = BotState.DeletingWish;
    }
 }

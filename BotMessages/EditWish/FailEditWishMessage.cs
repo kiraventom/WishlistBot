@@ -18,7 +18,7 @@ public class EditWishFailedMessage : BotMessage
       Keyboard = new BotKeyboard(parameters)
          .AddButton<SetWishNameQuery>("Добавить другой виш")
          .NewRow()
-         .AddButton<MyWishesQuery>("Назад к моим вишам");
+         .AddButton<CompactListQuery>("Назад к моим вишам");
 
       Text.Italic("Создание виша не удалось");
 

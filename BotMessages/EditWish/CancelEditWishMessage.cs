@@ -27,7 +27,7 @@ public class CancelEditWishMessage : BotMessage
          Text.Italic("Создание виша отменено");
          Keyboard.AddButton<SetWishNameQuery>("Добавить другой виш")
             .NewRow()
-            .AddButton<MyWishesQuery>("Назад к моим вишам");
+            .AddButton<CompactListQuery>("Назад к моим вишам");
       }
 
       user.CurrentWish = null;

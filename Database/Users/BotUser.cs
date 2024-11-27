@@ -14,6 +14,7 @@ public class BotUser : BasePropertyChanged
    private int _lastBotMessageId = -1;
    private string _queryParams;
    private Wish _currentWish;
+   private string _subscribeId;
 
    [JsonInclude]
    public long SenderId
@@ -78,6 +79,17 @@ public class BotUser : BasePropertyChanged
       }
    }
 
+   [JsonInclude]
+   public string SubscribeId
+   {
+      get => _subscribeId;
+      set => Set(ref _subscribeId, value);
+   }
+
+   [JsonInclude]
+   [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
+   public ObservableCollection<string> Subscriptions { get; } = new();
+
    [JsonConstructor]
    public BotUser()
    {
@@ -88,6 +100,7 @@ public class BotUser : BasePropertyChanged
    {
       SenderId = senderId;
       FirstName = firstName;
+      SubscribeId = Guid.NewGuid().ToString("N");
    }
 
    private void OnWishesCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)

@@ -3,6 +3,7 @@ using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Database.Users;
+using WishlistBot.BotMessages.Subscription;
 
 namespace WishlistBot.BotMessages;
 
@@ -15,14 +16,17 @@ public class MainMenuMessage : BotMessage
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters)
-         .AddButton<MyWishesQuery>()
-         .AddButton("@my_subscriptions", "Мои подписки")
+         .AddButton<CompactListQuery>("Мои виши")
+         .AddButton<MySubscriptionsQuery>()
          .AddButton("@settings", "Настройки");
 
-      Text.Bold("Добро пожаловать в главное меню, ")
+      Text.Italic("Добро пожаловать в главное меню, ")
          .InlineMention(user.FirstName, user.SenderId)
-         .Bold("!");
-
-      user.BotState = BotState.MainMenu;
+         .Italic("!")
+         .LineBreak()
+         .LineBreak().Bold("Ссылка на ваш вишлист")
+         .Italic(" (нажмите, чтобы скопировать)")
+         .Bold(":")
+         .LineBreak().Monospace($"t.me/smartwishlistbot?start={user.SubscribeId}");
    }
 }

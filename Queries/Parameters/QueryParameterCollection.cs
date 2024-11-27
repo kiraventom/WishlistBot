@@ -32,7 +32,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       return _parameters.ContainsKey(type);
    }
    
-   public bool Peek(QueryParameterType type, out int value)
+   public bool Peek(QueryParameterType type, out long value)
    {
       if (_parameters.ContainsKey(type))
       {
@@ -56,7 +56,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       return found;
    }
 
-   public bool Pop(QueryParameterType type, out int value)
+   public bool Pop(QueryParameterType type, out long value)
    {
       var found = Peek(type, out value);
       if (found)
@@ -65,7 +65,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       return found;
    }
 
-   public int? GetValue(QueryParameterType type)
+   public long? GetValue(QueryParameterType type)
    {
       if (_parameters.ContainsKey(type))
          return _parameters[type].Value;
