@@ -30,6 +30,8 @@ public abstract class BotMessage
       if (!QueryParameterCollection.TryParse(user.QueryParams, out var parameters))
          parameters = new QueryParameterCollection();
 
+      user.BotState = BotState.Default;
+
       try
       {
          InitInternal(user, parameters);

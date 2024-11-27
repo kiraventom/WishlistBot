@@ -9,11 +9,12 @@ public struct QueryParameter
 
    public static QueryParameter ForceNewWish { get; } = new QueryParameter(QueryParameterType.ForceNewWish);
    public static QueryParameter ReturnToFullList { get; } = new QueryParameter(QueryParameterType.ReturnToFullList);
+   public static QueryParameter ReadOnly { get; } = new QueryParameter(QueryParameterType.ReadOnly);
 
    public QueryParameterType Type { get; }
-   public int? Value { get; }
+   public long? Value { get; }
 
-   public QueryParameter(QueryParameterType type, int? value = null)
+   public QueryParameter(QueryParameterType type, long? value = null)
    {
       Type = type;
       Value = value;
@@ -22,12 +23,12 @@ public struct QueryParameter
    public static bool TryParse(string str, out QueryParameter parameter)
    {
       int type = default;
-      int value = default;
+      long value = default;
 
       var parts = str.Split(EQUALS_CH);
 
       var isValidValue = parts.Length == 2 && 
-         int.TryParse(parts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
+         long.TryParse(parts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
 
       var isValidType = parts.Length >= 1 && 
          int.TryParse(parts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out type) && 

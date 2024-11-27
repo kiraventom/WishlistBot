@@ -9,6 +9,7 @@ using WishlistBot.Actions;
 using WishlistBot.Actions.Commands;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
+using WishlistBot.Queries.Subscription;
 using WishlistBot.BotMessages;
 
 namespace WishlistBot;
@@ -31,13 +32,12 @@ public class TelegramController
       _client = client;
       _wishMessagesListener = new WishMessagesListener(_logger, _client);
 
-      var messagesFactory = new MessageFactory(_logger, _client);
+      var messagesFactory = new MessageFactory(_logger, _client, _usersDb);
 
       _actions = new UserAction[]
       {
-         new StartCommand(_logger, _client),
+         new StartCommand(_logger, _client, _usersDb),
          new QueryAction<MainMenuQuery>(_logger, _client, messagesFactory),
-         new QueryAction<MyWishesQuery>(_logger, _client, messagesFactory),
          new QueryAction<CompactListQuery>(_logger, _client, messagesFactory),
          new QueryAction<EditWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<DeleteWishQuery>(_logger, _client, messagesFactory),
@@ -49,6 +49,10 @@ public class TelegramController
          new QueryAction<CancelEditWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<FinishEditWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<FullListQuery>(_logger, _client, messagesFactory),
+         new QueryAction<ShowWishQuery>(_logger, _client, messagesFactory),
+         new QueryAction<MySubscriptionsQuery>(_logger, _client, messagesFactory),
+         new QueryAction<ConfirmUnsubscribeQuery>(_logger, _client, messagesFactory),
+         new QueryAction<UnsubscribeQuery>(_logger, _client, messagesFactory),
       };
    }
 
@@ -115,16 +119,16 @@ public class TelegramController
       }
       
       user.LastQueryId = callbackQuery.Id;
-      await HandleUserActionAsync(callbackQuery.Data, user);
+      await HandleUserActionAsync(callbackQuery.Data, callbackQuery.Data, user);
    }
 
    private async Task HandleBotCommandAsync(MessageEntity botCommand, string messageText, BotUser user)
    {
       var commandText = messageText.Substring(botCommand.Offset, botCommand.Length);
-      await HandleUserActionAsync(commandText, user);
+      await HandleUserActionAsync(commandText, messageText, user);
    }
 
-   private async Task HandleUserActionAsync(string actionText, BotUser user)
+   private async Task HandleUserActionAsync(string actionText, string fullText, BotUser user)
    {
       var action = _actions.FirstOrDefault(c => c.IsMatch(actionText));
       if (action is null)
@@ -133,7 +137,7 @@ public class TelegramController
          return;
       }
 
-      await action.ExecuteAsync(user, actionText);
+      await action.ExecuteAsync(user, fullText);
    }
 
    private Task OnError(ITelegramBotClient client, Exception exception, CancellationToken cts)

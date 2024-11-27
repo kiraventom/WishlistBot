@@ -22,10 +22,8 @@ public class FinishEditWishMessage : BotMessage
       if (parameters.Pop(QueryParameterType.ReturnToFullList))
          Keyboard.AddButton<FullListQuery>("Назад к списку");
       else
-         Keyboard.AddButton<MyWishesQuery>("Назад к моим вишам");
+         Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
 
-      user.BotState = BotState.WishAdded;
-      
       if (!user.Wishes.Contains(user.CurrentWish))
       {
          user.Wishes.Add(user.CurrentWish);

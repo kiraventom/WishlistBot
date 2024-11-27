@@ -41,6 +41,6 @@ public class SetWishLinksMessage : BotMessage
          Text.Verbatim("Пришлите новые ссылки или удалите текущие:");
       }
 
-      user.BotState = BotState.SettingWishLinks;
+      user.BotState = BotState.ListenForWishLinks;
    }
 }

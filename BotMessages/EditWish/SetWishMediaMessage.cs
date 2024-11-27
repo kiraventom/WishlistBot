@@ -31,6 +31,6 @@ public class SetWishMediaMessage : BotMessage
       else
          Text.Verbatim("Пришлите фото виша:");
 
-      user.BotState = BotState.SettingWishMedia;
+      user.BotState = BotState.ListenForWishMedia;
    }
 }

@@ -38,6 +38,6 @@ public class SetWishDescriptionMessage : BotMessage
             .LineBreak().Verbatim("Укажите новое описание или удалите текущее:");
       }
 
-      user.BotState = BotState.SettingWishDescription;
+      user.BotState = BotState.ListenForWishDescription;
    }
 }

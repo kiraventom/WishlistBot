@@ -34,6 +34,6 @@ public class SetWishNameMessage : BotMessage
             .LineBreak().Verbatim("Укажите новое название виша:");
       }
 
-      user.BotState = BotState.SettingWishName;
+      user.BotState = BotState.ListenForWishName;
    }
 }

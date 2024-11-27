@@ -23,16 +23,15 @@ public class EditWishMessage : BotMessage
          .AddButton<SetWishLinksQuery>()
          .NewRow();
 
-      // TODO: Also check if in editing mode
       if (parameters.Peek(QueryParameterType.ReturnToFullList))
       {
-         Keyboard.AddButton<DeleteWishQuery>();
+         Keyboard.AddButton<ConfirmDeleteWishQuery>();
          Keyboard.NewRow();
       }
 
       if (parameters.Pop(QueryParameterType.SetCurrentWishTo, out var setWishIndex))
       {
-         user.CurrentWish = user.Wishes[setWishIndex];
+         user.CurrentWish = user.Wishes[(int)setWishIndex];
       }
 
       Keyboard.AddButton<FinishEditWishQuery>();
@@ -86,7 +85,5 @@ public class EditWishMessage : BotMessage
 
 
       PhotoFileId = wish.FileId;
-
-      user.BotState = BotState.EditWish;
    }
 }

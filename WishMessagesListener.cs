@@ -28,19 +28,19 @@ public class WishMessagesListener
    {
       switch (user.BotState)
       {
-         case BotState.SettingWishName:
+         case BotState.ListenForWishName:
             await HandleSettingWishNameAsync(message, user);
             break;
 
-         case BotState.SettingWishDescription:
+         case BotState.ListenForWishDescription:
             await HandleSettingWishDescriptionAsync(message, user);
             break;
 
-         case BotState.SettingWishMedia:
+         case BotState.ListenForWishMedia:
             await HandleSettingWishMediaAsync(message, user);
             return;
 
-         case BotState.SettingWishLinks:
+         case BotState.ListenForWishLinks:
             await HandleSettingWishLinksAsync(message, user);
             break;
 
