@@ -1,4 +1,4 @@
-namespace WishlistBot.Queries;
+namespace WishlistBot.Queries.Subscription;
 
 public class ConfirmUnsubscribeQuery : IQuery
 {

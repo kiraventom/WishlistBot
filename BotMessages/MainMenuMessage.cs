@@ -2,6 +2,7 @@ using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
+using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
 using WishlistBot.BotMessages.Subscription;
 
