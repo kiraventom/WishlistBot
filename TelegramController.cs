@@ -1,6 +1,5 @@
 using Serilog;
 using Telegram.Bot;
-using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
@@ -32,10 +31,10 @@ public class TelegramController
       _client = client;
       _wishMessagesListener = new WishMessagesListener(_logger, _client);
 
-      var messagesFactory = new MessageFactory(_logger, _client, _usersDb);
+      var messagesFactory = new MessageFactory(_logger, _usersDb);
 
-      _actions = new UserAction[]
-      {
+      _actions =
+      [
          new StartCommand(_logger, _client, _usersDb),
          new QueryAction<MainMenuQuery>(_logger, _client, messagesFactory),
          new QueryAction<CompactListQuery>(_logger, _client, messagesFactory),
@@ -58,8 +57,8 @@ public class TelegramController
          new QueryAction<SubscriberQuery>(_logger, _client, messagesFactory),
          new QueryAction<ConfirmDeleteSubscriberQuery>(_logger, _client, messagesFactory),
          new QueryAction<DeleteSubscriberQuery>(_logger, _client, messagesFactory),
-         new QueryAction<SubscriptionQuery>(_logger, _client, messagesFactory),
-      };
+         new QueryAction<SubscriptionQuery>(_logger, _client, messagesFactory)
+      ];
    }
 
    public void StartReceiving()
@@ -74,7 +73,7 @@ public class TelegramController
 
       var receiverOptions = new ReceiverOptions()
       {
-         AllowedUpdates = new[] {UpdateType.Message, UpdateType.CallbackQuery}
+         AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery]
       };
 
       _client.StartReceiving(OnUpdate, OnError, receiverOptions);
@@ -85,16 +84,16 @@ public class TelegramController
    {
       _logger.Information("Received update: {updateType}", update.Type);
 
-      if (update.Message is Message message)
-         await HandleMessageAsync(client, message);
+      if (update.Message is { } message)
+         await HandleMessageAsync(message);
 
-      if (update.CallbackQuery is CallbackQuery callbackQuery)
-         await HandleCallbackQueryAsync(client, callbackQuery);
+      if (update.CallbackQuery is { } callbackQuery)
+         await HandleCallbackQueryAsync(callbackQuery);
    }
 
-   private async Task HandleMessageAsync(ITelegramBotClient client, Message message)
+   private async Task HandleMessageAsync(Message message)
    {
-      User sender = message.From;
+      var sender = message.From!;
 
       _logger.Information("Received '{text}' ([{messageId}]) from '{first} {last}' (@{tag} [{id}])", message.Text, message.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
 
@@ -110,9 +109,9 @@ public class TelegramController
       await _wishMessagesListener.HandleWishMessageAsync(message, user);
    }
 
-   private async Task HandleCallbackQueryAsync(ITelegramBotClient client, CallbackQuery callbackQuery)
+   private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery)
    {
-      User sender = callbackQuery.From;
+      var sender = callbackQuery.From!;
 
       _logger.Information("Received callback query ([{callbackQueryId}]) with data '{data}' from '{first} {last}' (@{tag} [{id}])", callbackQuery.Id, callbackQuery.Data, sender.FirstName, sender.LastName, sender.Username, sender.Id);
 
@@ -123,7 +122,7 @@ public class TelegramController
          _logger.Warning("Callback query [{callbackQueryId}] does not contain data", callbackQuery.Id);
          return;
       }
-      
+
       user.LastQueryId = callbackQuery.Id;
       await HandleUserActionAsync(callbackQuery.Data, callbackQuery.Data, user);
    }
@@ -146,8 +145,5 @@ public class TelegramController
       await action.ExecuteAsync(user, fullText);
    }
 
-   private Task OnError(ITelegramBotClient client, Exception exception, CancellationToken cts)
-   {
-      return Task.CompletedTask;
-   }
+   private static Task OnError(ITelegramBotClient client, Exception exception, CancellationToken ct) => Task.CompletedTask;
 }

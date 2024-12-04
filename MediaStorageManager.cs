@@ -15,7 +15,7 @@ public class MediaStorageManager
    private ITelegramBotClient _client;
    private MediaStorageDb _database;
 
-   public static MediaStorageManager Instance { get; } = new MediaStorageManager();
+   public static MediaStorageManager Instance { get; } = new();
 
    public void Init(ILogger logger, ITelegramBotClient client, MediaStorageDb mediaStorageDb, long storageChannelId)
    {
@@ -60,7 +60,7 @@ public class MediaStorageManager
       var usedFileIds = wishesFileIds.Concat(currentWishesFileIds);
       var unusedFileIds = storedFileIds.Except(usedFileIds);
 
-      int count = 0;
+      var count = 0;
       foreach (var unusedFileId in unusedFileIds)
       {
          ++count;
@@ -72,10 +72,9 @@ public class MediaStorageManager
 
    private async Task Remove(string fileId)
    {
-      if (!_database.Values.ContainsKey(fileId))
+      if (!_database.Values.TryGetValue(fileId, out var messageId))
          return;
 
-      var messageId = _database.Values[fileId];
       await _client.DeleteMessage(chatId: _storageChannelId, messageId: messageId);
       _database.Remove(fileId);
    }

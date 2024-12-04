@@ -18,9 +18,8 @@ public class UsersDb : Database<long, BotUser>
 
    public BotUser GetOrAddUser(long senderId, string firstName, string tag)
    {
-      if (_values.ContainsKey(senderId))
+      if (Dict.TryGetValue(senderId, out var existingUser))
       {
-         var existingUser = _values[senderId];
          if (existingUser.FirstName != firstName)
             existingUser.FirstName = firstName;
 
@@ -31,9 +30,9 @@ public class UsersDb : Database<long, BotUser>
       }
 
       var user = new BotUser(senderId, firstName, tag);
-      _values.Add(senderId, user);
+      Dict.Add(senderId, user);
 
-      _logger.Information("New user '{firstName}' [{senderId}] added to DB", firstName, senderId);
+      Logger.Information("New user '{firstName}' [{senderId}] added to DB", firstName, senderId);
 
       user.PropertyChanged += OnUserPropertyChanged;
       Save();
@@ -43,19 +42,19 @@ public class UsersDb : Database<long, BotUser>
 
    public bool RemoveUser(long senderId)
    {
-      var contains = _values.ContainsKey(senderId);
+      var contains = Dict.ContainsKey(senderId);
       if (contains)
       {
-         var user = _values[senderId];
+         var user = Dict[senderId];
          user.PropertyChanged -= OnUserPropertyChanged;
-         _values.Remove(senderId);
+         Dict.Remove(senderId);
 
-         _logger.Information("BotUser [{senderId}] removed from DB", senderId);
+         Logger.Information("BotUser [{senderId}] removed from DB", senderId);
          Save();
       }
       else
       {
-         _logger.Warning("Attempt to remove non-existent user [{senderId}]", senderId);
+         Logger.Warning("Attempt to remove non-existent user [{senderId}]", senderId);
       }
 
       return contains;
@@ -64,16 +63,13 @@ public class UsersDb : Database<long, BotUser>
    public static UsersDb Load(ILogger logger, string filePath)
    {
       var values = LoadValues(logger, filePath, UsersDatabaseName);
-      if (values is null)
-         return null;
-
-      return new UsersDb(logger, filePath, values);
+      return values is null ? null : new UsersDb(logger, filePath, values);
    }
 
    private void OnUserPropertyChanged(BasePropertyChanged item, string propertyName)
    {
       if (item is BotUser user)
-         _logger.Debug("Property {propertyName} of user [{senderId}] changed", propertyName, user.SenderId);
+         Logger.Debug("Property {propertyName} of user [{senderId}] changed", propertyName, user.SenderId);
 
       Save();
    }

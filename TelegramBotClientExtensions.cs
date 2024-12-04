@@ -1,7 +1,6 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 using Serilog;
 using WishlistBot.BotMessages;
 using WishlistBot.Database.Users;
@@ -72,7 +71,7 @@ public static class TelegramBotClientExtensions
             else
             {
                var photo = new InputMediaPhoto(InputFile.FromFileId(photoFileId));
-               message = await client.EditMessageMedia(chatId: user.SenderId, messageId: user.LastBotMessageId, media: photo, replyMarkup: keyboardMarkup);
+               await client.EditMessageMedia(chatId: user.SenderId, messageId: user.LastBotMessageId, media: photo, replyMarkup: keyboardMarkup);
                message = await client.EditMessageCaption(chatId: user.SenderId, messageId: user.LastBotMessageId, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
             }
 

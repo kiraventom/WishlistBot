@@ -2,21 +2,14 @@ using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
-using WishlistBot.Queries.EditWish;
 using WishlistBot.BotMessages.Notification;
 using WishlistBot.Database.Users;
 using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class DeleteWishMessage : BotMessage
+public class DeleteWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   private readonly UsersDb _usersDb;
-
-   public DeleteWishMessage(ILogger logger, UsersDb usersDb) : base(logger)
-   {
-      _usersDb = usersDb;
-   }
 
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
@@ -28,16 +21,16 @@ public class DeleteWishMessage : BotMessage
       else
          Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
 
-      Text.Italic("Виш удалён!");
+      parameters.Peek(QueryParameterType.SetCurrentWishTo, out var wishIndex);
 
-      var deletedWish = user.CurrentWish;
-
-      user.Wishes.Remove(user.CurrentWish);
+      var deletedWish = user.Wishes[(int)wishIndex];
+      user.Wishes.Remove(deletedWish);
       user.CurrentWish = null;
 
+      Text.Italic("Виш удалён!");
+
       // TODO DRY
-      var subscribers = _usersDb.Values.Values
-         .Where(u => u.Subscriptions.Contains(user.SubscribeId));
+      var subscribers = Users.Where(u => u.Subscriptions.Contains(user.SubscribeId));
       var deleteWishNotification = new DeleteWishNotificationMessage(Logger, user, deletedWish);
       await NotificationService.Instance.Send(deleteWishNotification, subscribers);
    }

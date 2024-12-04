@@ -3,24 +3,18 @@ using System.Text;
 
 namespace WishlistBot.Queries.Parameters;
 
-public struct QueryParameter
+public readonly struct QueryParameter(QueryParameterType type, long? value = null)
 {
    private const char EQUALS_CH = '=';
 
-   public static QueryParameter ForceNewWish { get; } = new QueryParameter(QueryParameterType.ForceNewWish);
-   public static QueryParameter ReturnToFullList { get; } = new QueryParameter(QueryParameterType.ReturnToFullList);
-   public static QueryParameter ReadOnly { get; } = new QueryParameter(QueryParameterType.ReadOnly);
-   public static QueryParameter ReturnToSubscriber { get; } = new QueryParameter(QueryParameterType.ReturnToSubscriber);
+   public static QueryParameter ForceNewWish { get; } = new(QueryParameterType.ForceNewWish);
+   public static QueryParameter ReturnToFullList { get; } = new(QueryParameterType.ReturnToFullList);
+   public static QueryParameter ReadOnly { get; } = new(QueryParameterType.ReadOnly);
+   public static QueryParameter ReturnToSubscriber { get; } = new(QueryParameterType.ReturnToSubscriber);
 
-   public QueryParameterType Type { get; }
-   public long? Value { get; }
+   public QueryParameterType Type { get; } = type;
+   public long? Value { get; } = value;
 
-   public QueryParameter(QueryParameterType type, long? value = null)
-   {
-      Type = type;
-      Value = value;
-   }
-   
    public static bool TryParse(string str, out QueryParameter parameter)
    {
       int type = default;
@@ -33,14 +27,14 @@ public struct QueryParameter
 
       var isValidType = parts.Length >= 1 && 
          int.TryParse(parts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out type) && 
-         Enum.IsDefined<QueryParameterType>((QueryParameterType)type);
+         Enum.IsDefined((QueryParameterType)type);
 
-      if (isValidType && isValidValue)
-         parameter = new QueryParameter((QueryParameterType)type, value);
-      else if (isValidType)
-         parameter = new QueryParameter((QueryParameterType)type, null);
-      else
-         parameter = default;
+      parameter = isValidType switch
+      {
+         true when isValidValue => new QueryParameter((QueryParameterType)type, value),
+         true => new QueryParameter((QueryParameterType)type),
+         _ => default
+      };
 
       return isValidType || isValidValue;
    }

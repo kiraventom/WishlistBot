@@ -1,24 +1,14 @@
-using System.Text; 
-using Telegram.Bot;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
-using WishlistBot.Actions;
 
 namespace WishlistBot.Keyboard;
 
-public class BotKeyboard
+public class BotKeyboard(QueryParameterCollection commonParameters)
 {
-   private readonly List<List<BotButton>> _rows = new();
-   private readonly QueryParameterCollection _commonParameters;
+   private readonly List<List<BotButton>> _rows = [];
 
-   public BotKeyboard(QueryParameterCollection parameters)
-   {
-      _commonParameters = parameters;
-   }
-
-   public BotKeyboard AddButton<T>(string customCaption = null) where T : IQuery, new() => AddButton<T>(customCaption, Array.Empty<QueryParameter>());
+   public BotKeyboard AddButton<T>(string customCaption = null) where T : IQuery, new() => AddButton<T>(customCaption, []);
 
    public BotKeyboard AddButton<T>(params QueryParameter[] parameters) where T : IQuery, new() => AddButton<T>(null, parameters);
 
@@ -35,12 +25,11 @@ public class BotKeyboard
       var lastRow = _rows.LastOrDefault();
       if (lastRow is null)
       {
-         lastRow = new List<BotButton>();
+         lastRow = [];
          _rows.Add(lastRow);
       }
 
-      if (parameters is null)
-         parameters = Array.Empty<QueryParameter>();
+      parameters ??= [];
 
       var button = new BotButton(data, caption, parameters);
       lastRow.Add(button);
@@ -49,16 +38,16 @@ public class BotKeyboard
 
    public BotKeyboard NewRow()
    {
-      _rows.Add(new List<BotButton>());
+      _rows.Add([]);
       return this;
    }
 
    public InlineKeyboardMarkup ToInlineKeyboardMarkup()
    {
       var markupRows = _rows
-         .Where(r => r.Any())
-         .Select(r => r.Select(b => b.ToInlineKeyboardButton(_commonParameters)));
+         .Where(r => r.Count != 0)
+         .Select(r => r.Select(b => b.ToInlineKeyboardButton(commonParameters)));
 
-      return new InlineKeyboardMarkup() { InlineKeyboard = markupRows }; 
+      return new InlineKeyboardMarkup() { InlineKeyboard = markupRows };
    }
 }

@@ -3,16 +3,11 @@ using WishlistBot.Keyboard;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
-using System.Text;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class SetWishLinksMessage : BotMessage
+public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
 {
-   public SetWishLinksMessage(ILogger logger) : base(logger)
-   {
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -33,7 +28,7 @@ public class SetWishLinksMessage : BotMessage
       {
          Text.Bold("Текущие ссылки: ");
 
-         for (int i = 0; i < user.CurrentWish.Links.Count; ++i)
+         for (var i = 0; i < user.CurrentWish.Links.Count; ++i)
          {
             var link = user.CurrentWish.Links[i];
             Text.LineBreak().InlineUrl($"Ссылка {i + 1}", link);

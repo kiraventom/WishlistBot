@@ -4,16 +4,11 @@ using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
-using WishlistBot.BotMessages.Subscription;
 
 namespace WishlistBot.BotMessages;
 
-public class MainMenuMessage : BotMessage
+public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 {
-   public MainMenuMessage(ILogger logger) : base(logger)
-   {
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {

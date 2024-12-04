@@ -3,16 +3,11 @@ using WishlistBot.Keyboard;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
-using System.Text;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class SetWishNameMessage : BotMessage
+public class SetWishNameMessage(ILogger logger) : BotMessage(logger)
 {
-   public SetWishNameMessage(ILogger logger) : base(logger)
-   {
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {

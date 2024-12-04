@@ -124,7 +124,7 @@ public class MessageText
       _sb.Append("**"); 
       var lines = text.Split('\n');
 
-      for (int i = 0; i < lines.Length; ++i)
+      for (var i = 0; i < lines.Length; ++i)
       {
          var line = lines[i];
          _sb.Append('>');
@@ -152,6 +152,6 @@ public class MessageText
 
    private static string EscapeLink(string link)
    {
-      return link.Replace("\\", "\\\\").Replace(")", "\\)");
+      return link.Replace("\\", @"\\").Replace(")", "\\)");
    }
 }
