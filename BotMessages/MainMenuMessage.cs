@@ -18,11 +18,14 @@ public class MainMenuMessage : BotMessage
    {
       Keyboard = new BotKeyboard(parameters)
          .AddButton<CompactListQuery>("Мои виши")
+         .NewRow()
          .AddButton<MySubscriptionsQuery>()
+         .AddButton<MySubscribersQuery>()
+         .NewRow()
          .AddButton("@settings", "Настройки");
 
       Text.Italic("Добро пожаловать в главное меню, ")
-         .InlineMention(user.FirstName, user.SenderId)
+         .InlineMention(user)
          .Italic("!")
          .LineBreak()
          .LineBreak().Bold("Ссылка на ваш вишлист")

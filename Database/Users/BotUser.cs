@@ -9,6 +9,7 @@ public class BotUser : BasePropertyChanged
 {
    private long _senderId;
    private string _firstName;
+   private string _tag;
    private BotState _botState;
    private string _lastQueryId;
    private int _lastBotMessageId = -1;
@@ -28,6 +29,13 @@ public class BotUser : BasePropertyChanged
    {
       get => _firstName;
       set => Set(ref _firstName, value);
+   }
+
+   [JsonInclude]
+   public string Tag
+   {
+      get => _tag;
+      set => Set(ref _tag, value);
    }
 
    [JsonInclude]
@@ -96,10 +104,11 @@ public class BotUser : BasePropertyChanged
       Wishes.CollectionChanged += OnWishesCollectionChanged;
    }
 
-   public BotUser(long senderId, string firstName) : this()
+   public BotUser(long senderId, string firstName, string tag) : this()
    {
       SenderId = senderId;
       FirstName = firstName;
+      Tag = tag;
       SubscribeId = Guid.NewGuid().ToString("N");
    }
 

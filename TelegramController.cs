@@ -51,8 +51,14 @@ public class TelegramController
          new QueryAction<FullListQuery>(_logger, _client, messagesFactory),
          new QueryAction<ShowWishQuery>(_logger, _client, messagesFactory),
          new QueryAction<MySubscriptionsQuery>(_logger, _client, messagesFactory),
+         new QueryAction<MySubscribersQuery>(_logger, _client, messagesFactory),
          new QueryAction<ConfirmUnsubscribeQuery>(_logger, _client, messagesFactory),
          new QueryAction<UnsubscribeQuery>(_logger, _client, messagesFactory),
+         new QueryAction<FinishSubscriptionQuery>(_logger, _client, messagesFactory),
+         new QueryAction<SubscriberQuery>(_logger, _client, messagesFactory),
+         new QueryAction<ConfirmDeleteSubscriberQuery>(_logger, _client, messagesFactory),
+         new QueryAction<DeleteSubscriberQuery>(_logger, _client, messagesFactory),
+         new QueryAction<SubscriptionQuery>(_logger, _client, messagesFactory),
       };
    }
 
@@ -92,7 +98,7 @@ public class TelegramController
 
       _logger.Information("Received '{text}' ([{messageId}]) from '{first} {last}' (@{tag} [{id}])", message.Text, message.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
 
-      var user = _usersDb.GetOrAddUser(sender.Id, sender.FirstName);
+      var user = _usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
 
       var botCommand = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);
       if (botCommand is not null)
@@ -110,7 +116,7 @@ public class TelegramController
 
       _logger.Information("Received callback query ([{callbackQueryId}]) with data '{data}' from '{first} {last}' (@{tag} [{id}])", callbackQuery.Id, callbackQuery.Data, sender.FirstName, sender.LastName, sender.Username, sender.Id);
 
-      var user = _usersDb.GetOrAddUser(sender.Id, sender.FirstName);
+      var user = _usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
 
       if (callbackQuery.Data is null)
       {

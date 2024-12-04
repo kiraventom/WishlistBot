@@ -35,7 +35,7 @@ public static class TelegramBotClientExtensions
          {
             if (photoFileId is null)
             {
-               message = await client.SendMessage(chatId: user.SenderId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+               message = await client.SendMessage(chatId: user.SenderId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: true);
             }
             else
             {
@@ -51,13 +51,13 @@ public static class TelegramBotClientExtensions
             {
                try
                {
-                  message = await client.EditMessageText(chatId: user.SenderId, messageId: user.LastBotMessageId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+                  message = await client.EditMessageText(chatId: user.SenderId, messageId: user.LastBotMessageId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: true);
                }
                catch (Exception) // Message contains media
                {
                   logger.Information("Failed to edit text of message [{messageId}], looks like it contains media", user.LastBotMessageId);
 
-                  message = await client.SendMessage(chatId: user.SenderId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+                  message = await client.SendMessage(chatId: user.SenderId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: true);
 
                   try
                   {

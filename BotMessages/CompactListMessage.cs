@@ -43,9 +43,10 @@ public class CompactListMessage : BotMessage
 
       if (isReadOnly)
       {
-         Keyboard.AddButton<ConfirmUnsubscribeQuery>($"Отписаться от {user.FirstName}")
-            .NewRow()
-            .AddButton<MySubscriptionsQuery>("К моим подпискам");
+         if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
+            Keyboard.AddButton<SubscriberQuery>("К подписчику");
+         else
+            Keyboard.AddButton<SubscriptionQuery>("К подписке");
       }
       else
       {
@@ -54,7 +55,7 @@ public class CompactListMessage : BotMessage
 
       if (isReadOnly)
          Text.Bold("Краткий список вишей ")
-            .InlineMention(user.FirstName, user.SenderId)
+            .InlineMention(user)
             .Bold(":");
       else
          Text.Bold("Краткий список ваших вишей:");

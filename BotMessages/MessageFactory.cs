@@ -42,8 +42,14 @@ public class MessageFactory
          FullListQuery => new FullListMessage(Logger, UsersDb),
          ShowWishQuery => new ShowWishMessage(Logger, UsersDb),
          MySubscriptionsQuery => new MySubscriptionsMessage(Logger, UsersDb),
+         MySubscribersQuery => new MySubscribersMessage(Logger, UsersDb),
          ConfirmUnsubscribeQuery => new ConfirmUnsubscribeMessage(Logger, UsersDb),
          UnsubscribeQuery => new UnsubscribeMessage(Logger, UsersDb),
+         FinishSubscriptionQuery => new FinishSubscriptionMessage(Logger, UsersDb),
+         SubscriberQuery => new SubscriberMessage(Logger, UsersDb),
+         SubscriptionQuery => new SubscriptionMessage(Logger, UsersDb),
+         ConfirmDeleteSubscriberQuery => new ConfirmDeleteSubscriberMessage(Logger, UsersDb),
+         DeleteSubscriberQuery => new DeleteSubscriberMessage(Logger, UsersDb),
          _ => new InvalidMessage(Logger),
       };
 
