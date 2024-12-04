@@ -22,7 +22,7 @@ public abstract class BotMessage
       Text = new MessageText();
    }
 
-   public void Init(BotUser user)
+   public async Task Init(BotUser user)
    {
       if (_isInited)
          return;
@@ -34,7 +34,7 @@ public abstract class BotMessage
 
       try
       {
-         InitInternal(user, parameters);
+         await InitInternal(user, parameters);
       }
       catch (Exception e)
       {
@@ -48,5 +48,5 @@ public abstract class BotMessage
       _isInited = true;
    }
 
-   protected abstract void InitInternal(BotUser user, QueryParameterCollection parameters);
+   protected abstract Task InitInternal(BotUser user, QueryParameterCollection parameters);
 }

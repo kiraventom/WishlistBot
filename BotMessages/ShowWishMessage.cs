@@ -15,7 +15,8 @@ public class ShowWishMessage : BotMessage
       _usersDb = usersDb;
    }
 
-   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
+#pragma warning disable CS1998
+   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters)
          .AddButton<FullListQuery>("Назад");

@@ -17,7 +17,7 @@ public static class TelegramBotClientExtensions
 
       try
       {
-         botMessage.Init(user);
+         await botMessage.Init(user);
 
          var text = botMessage.Text.ToString();
 
