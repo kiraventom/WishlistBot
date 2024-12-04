@@ -8,11 +8,11 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
-public class ConfirmUnsubscribeMessage : BotMessage
+public class ConfirmDeleteSubscriberMessage : BotMessage
 {
    private readonly UsersDb _usersDb;
 
-   public ConfirmUnsubscribeMessage(ILogger logger, UsersDb usersDb) : base(logger)
+   public ConfirmDeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : base(logger)
    {
       _usersDb = usersDb;
    }
@@ -20,9 +20,9 @@ public class ConfirmUnsubscribeMessage : BotMessage
    protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters)
-         .AddButton<UnsubscribeQuery>()
+         .AddButton<DeleteSubscriberQuery>()
          .NewRow()
-         .AddButton<CompactListQuery>("Отмена \u274c");
+         .AddButton<SubscriberQuery>("Отмена \u274c");
 
       if (parameters.Peek(QueryParameterType.SetUserTo, out var userId))
       {
@@ -32,8 +32,12 @@ public class ConfirmUnsubscribeMessage : BotMessage
             Logger.Error("Can't set user to [{userId}], users db does not contain user with this ID", userId);
       }
 
-      Text.Italic("Действительно отписаться от ")
+      Text.Italic("Действительно удалить ")
          .InlineMention(user)
-         .Italic("?");
+         .Italic(" из списка подписчиков?")
+         .LineBreak()
+         .ItalicBold("После этого ")
+         .InlineMention(user)
+         .ItalicBold(" больше не сможет видеть ваши виши.");
    }
 }

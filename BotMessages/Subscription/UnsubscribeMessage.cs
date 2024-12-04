@@ -32,7 +32,7 @@ public class UnsubscribeMessage : BotMessage
       }
 
       Text.Italic("Вы отписались от вишлиста ")
-         .InlineMention(userToUnsubscribeFrom.FirstName, userToUnsubscribeFrom.SenderId);
+         .InlineMention(userToUnsubscribeFrom);
 
       user.Subscriptions.Remove(userToUnsubscribeFrom.SubscribeId);
    }

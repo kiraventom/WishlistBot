@@ -11,6 +11,12 @@ namespace WishlistBot.BotMessages.Subscription;
 public class FinishSubscriptionMessage : BotMessage
 {
    private readonly BotUser _userToSubscribeTo;
+   private readonly UsersDb _usersDb;
+
+   public FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : base(logger)
+   {
+      _usersDb = usersDb;
+   }
 
    public FinishSubscriptionMessage(ILogger logger, BotUser userToSubscribeTo) : base(logger)
    {
@@ -21,26 +27,39 @@ public class FinishSubscriptionMessage : BotMessage
    {
       Keyboard = new BotKeyboard(parameters);
 
-      if (_userToSubscribeTo is not null)
+      BotUser userToSubscribeTo = _userToSubscribeTo;
+
+      if (userToSubscribeTo is null)
       {
-         if (user.Subscriptions.Contains(_userToSubscribeTo.SubscribeId))
+         if (parameters.Pop(QueryParameterType.SetUserTo, out var userId))
+         {
+            if (_usersDb.Values.ContainsKey(userId))
+               userToSubscribeTo = _usersDb.Values[userId];
+            else
+               Logger.Error("Can't set user to [{userId}], users db does not contain user with this ID", userId);
+         }
+      }
+
+      if (userToSubscribeTo is not null)
+      {
+         if (user.Subscriptions.Contains(userToSubscribeTo.SubscribeId))
          {
             Text.Italic("Вы уже подписаны на вишлист ")
-               .InlineMention(_userToSubscribeTo.FirstName, _userToSubscribeTo.SenderId)
+               .InlineMention(userToSubscribeTo)
                .Italic(".");
          }
          else
          {
             Text.Italic("Вы успешно подписались на вишлист ")
-               .InlineMention(_userToSubscribeTo.FirstName, _userToSubscribeTo.SenderId)
+               .InlineMention(userToSubscribeTo)
                .Italic("!");
 
-            user.Subscriptions.Add(_userToSubscribeTo.SubscribeId);
+            user.Subscriptions.Add(userToSubscribeTo.SubscribeId);
          }
 
-         Keyboard.AddButton<CompactListQuery>($"Открыть вишлист {_userToSubscribeTo.FirstName}", 
+         Keyboard.AddButton<CompactListQuery>($"Открыть вишлист {userToSubscribeTo.FirstName}", 
                QueryParameter.ReadOnly, 
-               new QueryParameter(QueryParameterType.SetUserTo, _userToSubscribeTo.SenderId));
+               new QueryParameter(QueryParameterType.SetUserTo, userToSubscribeTo.SenderId));
       }
       else
       {

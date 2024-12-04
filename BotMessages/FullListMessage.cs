@@ -95,7 +95,7 @@ public class FullListMessage : BotMessage
 
       if (isReadOnly)
          Text.Bold("Виши ")
-            .InlineMention(user.FirstName, user.SenderId)
+            .InlineMention(user)
             .Bold(":");
       else
          Text.Bold("Ваши виши:");

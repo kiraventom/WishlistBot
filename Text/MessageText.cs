@@ -1,4 +1,5 @@
 using System.Text;
+using WishlistBot.Database.Users;
 
 namespace WishlistBot.Text;
 
@@ -56,7 +57,7 @@ public class MessageText
    {
       _sb.Append("*_");
       Verbatim(text);
-      _sb.Append("*_");
+      _sb.Append("_*");
 
       return this;
    }
@@ -69,6 +70,28 @@ public class MessageText
 
       var escapedLink = EscapeLink(link);
       _sb.Append('(').Append(escapedLink).Append(')');
+      return this;
+   }
+
+   public MessageText InlineMention(BotUser user)
+   {
+      if (string.IsNullOrEmpty(user.Tag))
+         return InlineMention(user.FirstName, user.SenderId);
+
+      return InlineMention(user.FirstName, user.Tag);
+   }
+
+   public MessageText InlineMention(string text, string tag)
+   {
+      _sb.Append('[');
+      Verbatim(text);
+      _sb.Append(']');
+
+      _sb.Append('(')
+         .Append(@"t.me/")
+         .Append(tag)
+         .Append(')');
+
       return this;
    }
 

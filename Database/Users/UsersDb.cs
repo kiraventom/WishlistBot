@@ -16,12 +16,21 @@ public class UsersDb : Database<long, BotUser>
       }
    }
 
-   public BotUser GetOrAddUser(long senderId, string firstName)
+   public BotUser GetOrAddUser(long senderId, string firstName, string tag)
    {
       if (_values.ContainsKey(senderId))
-         return _values[senderId];
+      {
+         var existingUser = _values[senderId];
+         if (existingUser.FirstName != firstName)
+            existingUser.FirstName = firstName;
 
-      var user = new BotUser(senderId, firstName);
+         if (existingUser.Tag != tag)
+            existingUser.Tag = tag;
+
+         return existingUser;
+      }
+
+      var user = new BotUser(senderId, firstName, tag);
       _values.Add(senderId, user);
 
       _logger.Information("New user '{firstName}' [{senderId}] added to DB", firstName, senderId);

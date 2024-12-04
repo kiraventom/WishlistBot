@@ -10,6 +10,7 @@ public struct QueryParameter
    public static QueryParameter ForceNewWish { get; } = new QueryParameter(QueryParameterType.ForceNewWish);
    public static QueryParameter ReturnToFullList { get; } = new QueryParameter(QueryParameterType.ReturnToFullList);
    public static QueryParameter ReadOnly { get; } = new QueryParameter(QueryParameterType.ReadOnly);
+   public static QueryParameter ReturnToSubscriber { get; } = new QueryParameter(QueryParameterType.ReturnToSubscriber);
 
    public QueryParameterType Type { get; }
    public long? Value { get; }

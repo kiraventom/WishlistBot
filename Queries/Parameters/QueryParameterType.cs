@@ -8,5 +8,6 @@ public enum QueryParameterType : int
    ReturnToFullList = 0x4,
    SetListPageTo = 0x7,
    ReadOnly = 0x8,
-   SetUserTo = 0x9
+   SetUserTo = 0x9,
+   ReturnToSubscriber = 0xA,
 }
