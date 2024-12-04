@@ -41,6 +41,8 @@ class Program
       MediaStorageManager.Instance.Init(logger, client, mediaStorageDb, config.StorageChannelId);
       await MediaStorageManager.Instance.Cleanup(usersDb);
 
+      NotificationService.Instance.Init(logger, client, usersDb);
+
       var telegramController = new TelegramController(logger, client, usersDb);
       telegramController.StartReceiving();
 

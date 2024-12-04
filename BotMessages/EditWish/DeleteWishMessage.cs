@@ -3,14 +3,19 @@ using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
+using WishlistBot.BotMessages.Notification;
 using WishlistBot.Database.Users;
+using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages.EditWish;
 
 public class DeleteWishMessage : BotMessage
 {
-   public DeleteWishMessage(ILogger logger) : base(logger)
+   private readonly UsersDb _usersDb;
+
+   public DeleteWishMessage(ILogger logger, UsersDb usersDb) : base(logger)
    {
+      _usersDb = usersDb;
    }
 
 #pragma warning disable CS1998
@@ -25,7 +30,15 @@ public class DeleteWishMessage : BotMessage
 
       Text.Italic("Виш удалён!");
 
+      var deletedWish = user.CurrentWish;
+
       user.Wishes.Remove(user.CurrentWish);
       user.CurrentWish = null;
+
+      // TODO DRY
+      var subscribers = _usersDb.Values.Values
+         .Where(u => u.Subscriptions.Contains(user.SubscribeId));
+      var deleteWishNotification = new DeleteWishNotificationMessage(Logger, user, deletedWish);
+      await NotificationService.Instance.Send(deleteWishNotification, subscribers);
    }
 }
