@@ -18,7 +18,8 @@ public class MySubscribersMessage : BotMessage
    }
 
    // TODO: A lot of code is similar to MySubscriptionsMessage
-   protected override void InitInternal(BotUser user, QueryParameterCollection parameters)
+#pragma warning disable CS1998
+   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters);
 
