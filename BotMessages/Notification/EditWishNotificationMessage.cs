@@ -48,15 +48,10 @@ public class EditWishNotificationMessage : BotMessage
       Text
          .InlineMention(_notificationSource)
          .Italic(" изменил ")
-         .ItalicBold(wishPropertyName);
-
-      if (_wishPropertyType != WishPropertyType.Name)
-      {
-         Text
-            .Italic(" у виша '")
-            .ItalicBold(_editedWish.Name)
-            .Italic("'");
-      }
+         .ItalicBold(wishPropertyName)
+         .Italic(" у виша '")
+         .ItalicBold(_editedWish.Name)
+         .Italic("'");
 
       Text.Italic("'!");
    }
