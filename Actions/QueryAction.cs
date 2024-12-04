@@ -1,30 +1,19 @@
-using System.Text;
 using Telegram.Bot;
 using Serilog;
-using WishlistBot;
 using WishlistBot.Database.Users;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.BotMessages;
-using WishlistBot.Actions;
 
 namespace WishlistBot.Actions;
 
-public class QueryAction<T> : UserAction where T : IQuery, new()
+public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFactory messageFactory)
+   : UserAction(logger, client) where T : IQuery, new()
 {
-   private readonly IQuery _query;
+   private readonly IQuery _query = new T();
 
-   private MessageFactory MessageFactory { get; }
+   private MessageFactory MessageFactory { get; } = messageFactory;
 
    public override string Name => _query.Data;
-   public string Caption => _query.Caption;
-
-   public QueryAction(ILogger logger, ITelegramBotClient client, MessageFactory messageFactory) 
-      : base(logger, client)
-   {
-      _query = new T();
-      MessageFactory = messageFactory;
-   }
 
    public sealed override async Task ExecuteAsync(BotUser user, string actionText)
    {

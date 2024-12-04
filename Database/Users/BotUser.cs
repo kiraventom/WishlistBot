@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -69,7 +68,7 @@ public class BotUser : BasePropertyChanged
 
    [JsonInclude]
    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
-   public ObservableCollection<Wish> Wishes { get; } = new();
+   public ObservableCollection<Wish> Wishes { get; } = [];
 
    [JsonInclude]
    public Wish CurrentWish
@@ -96,7 +95,7 @@ public class BotUser : BasePropertyChanged
 
    [JsonInclude]
    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
-   public ObservableCollection<string> Subscriptions { get; } = new();
+   public ObservableCollection<string> Subscriptions { get; } = [];
 
    [JsonConstructor]
    public BotUser()
@@ -125,8 +124,5 @@ public class BotUser : BasePropertyChanged
       RaisePropertyChanged(nameof(Wishes));
    }
 
-   private void OnWishPropertyChanged(BasePropertyChanged sender, string propertyName)
-   {
-      RaisePropertyChanged(nameof(Wishes));
-   }
+   private void OnWishPropertyChanged(BasePropertyChanged sender, string propertyName) => RaisePropertyChanged(nameof(Wishes));
 }

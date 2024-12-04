@@ -1,18 +1,14 @@
 using Serilog;
+using WishlistBot.Database.Users;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
-using WishlistBot.Database.Users;
+using WishlistBot.Queries.Parameters;
 
-namespace WishlistBot.BotMessages;
+namespace WishlistBot.BotMessages.EditWish;
 
-public class CancelEditWishMessage : BotMessage
+public class CancelEditWishMessage(ILogger logger) : BotMessage(logger)
 {
-   public CancelEditWishMessage(ILogger logger) : base(logger)
-   {
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {

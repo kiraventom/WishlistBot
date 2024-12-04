@@ -1,40 +1,20 @@
 using Serilog;
+using WishlistBot.Database.Users;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
-using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Subscription;
-using WishlistBot.Database.Users;
-using WishlistBot.BotMessages.Subscription;
-using System.Text;
 
-namespace WishlistBot.BotMessages;
+namespace WishlistBot.BotMessages.Subscription;
 
-public class SubscriptionMessage : BotMessage
+public class SubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   private readonly UsersDb _usersDb;
-
-   public SubscriptionMessage(ILogger logger, UsersDb usersDb) : base(logger)
-   {
-      _usersDb = usersDb;
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters);
 
-      var sender = user;
-
-      if (parameters.Peek(QueryParameterType.SetUserTo, out var userId))
-      {
-         if (_usersDb.Values.ContainsKey(userId))
-            user = _usersDb.Values[userId];
-         else
-            Logger.Error("Can't set user to [{userId}], users db does not contain user with this ID", userId);
-      }
-
-      var isSenderSubscribed = sender.Subscriptions.Contains(user.SubscribeId);
+      user = GetParameterUser(parameters);
 
       Keyboard.AddButton<ConfirmUnsubscribeQuery>("Отписаться");
 

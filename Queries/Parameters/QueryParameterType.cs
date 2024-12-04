@@ -1,6 +1,6 @@
 namespace WishlistBot.Queries.Parameters;
 
-public enum QueryParameterType : int
+public enum QueryParameterType
 {
    ForceNewWish = 0x1,
    ClearWishProperty = 0x2,

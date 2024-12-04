@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 
 namespace WishlistBot.Queries.Parameters;
@@ -24,21 +23,18 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
 
    public void Push(QueryParameter parameter)
    {
-      _parameters[parameter.Type] = parameter; 
+      _parameters[parameter.Type] = parameter;
    }
 
-   public bool Peek(QueryParameterType type)
-   {
-      return _parameters.ContainsKey(type);
-   }
-   
+   public bool Peek(QueryParameterType type) => _parameters.ContainsKey(type);
+
    public bool Peek(QueryParameterType type, out long value)
    {
-      if (_parameters.ContainsKey(type))
+      if (_parameters.TryGetValue(type, out var parameter))
       {
-         if (_parameters[type].Value.HasValue)
+         if (parameter.Value.HasValue)
          {
-            value = _parameters[type].Value.Value;
+            value = parameter.Value.Value;
             return true;
          }
       }
@@ -65,14 +61,6 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       return found;
    }
 
-   public long? GetValue(QueryParameterType type)
-   {
-      if (_parameters.ContainsKey(type))
-         return _parameters[type].Value;
-
-      return null;
-   }
-
    public static bool TryParse(string queryParamsStr, out QueryParameterCollection parameters)
    {
       parameters = new QueryParameterCollection();
@@ -82,9 +70,8 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
 
       var queryParams = queryParamsStr.Split(PARAM_SEPARATOR);
 
-      for (int i = 0; i < queryParams.Length; ++i)
+      foreach (var queryParam in queryParams)
       {
-         var queryParam = queryParams[i];
          if (!QueryParameter.TryParse(queryParam, out var parameter))
             return false;
 
@@ -99,10 +86,10 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       var merged = new QueryParameterCollection();
       foreach (var p in col0)
          merged.Push(p);
-      
+
       foreach (var p in col1)
          merged.Push(p);
-            
+
       return merged;
    }
 

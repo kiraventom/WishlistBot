@@ -2,21 +2,13 @@ using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
-using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
-public class MySubscribersMessage : BotMessage
+public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   private readonly UsersDb _usersDb;
-
-   public MySubscribersMessage(ILogger logger, UsersDb usersDb) : base(logger)
-   {
-      _usersDb = usersDb;
-   }
-
    // TODO: A lot of code is similar to MySubscriptionsMessage
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
@@ -26,17 +18,17 @@ public class MySubscribersMessage : BotMessage
       parameters.Pop(QueryParameterType.ReadOnly);
       parameters.Pop(QueryParameterType.SetUserTo);
 
-      int currentPageIndex = 0;
+      var currentPageIndex = 0;
       if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndex))
          currentPageIndex = (int)pageIndex;
 
       const int usersPerPage = 5;
 
-      var subscribers = _usersDb.Values.Values
+      var subscribers = Users
          .Where(u => u.Subscriptions.Contains(user.SubscribeId))
          .ToList();
 
-      int pagesCount = (int)Math.Ceiling((double)subscribers.Count / usersPerPage);
+      var pagesCount = (int)Math.Ceiling((double)subscribers.Count / usersPerPage);
 
       if (pagesCount == 0)
       {
@@ -49,7 +41,7 @@ public class MySubscribersMessage : BotMessage
       if (currentPageIndex >= pagesCount)
          currentPageIndex = pagesCount - 1;
 
-      for (int i = 0; i < usersPerPage; ++i)
+      for (var i = 0; i < usersPerPage; ++i)
       {
          var userIndex = currentPageIndex * usersPerPage + i;
          if (userIndex >= subscribers.Count)
@@ -58,10 +50,10 @@ public class MySubscribersMessage : BotMessage
          var subscriber = subscribers[userIndex];
 
          Keyboard.AddButton<SubscriberQuery>(
-               subscriber.FirstName,
-               QueryParameter.ReadOnly,
-               new QueryParameter(QueryParameterType.SetUserTo, subscriber.SenderId), 
-               new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex));
+            subscriber.FirstName,
+            QueryParameter.ReadOnly,
+            new QueryParameter(QueryParameterType.SetUserTo, subscriber.SenderId),
+            new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex));
 
          Keyboard.NewRow();
       }
@@ -69,7 +61,7 @@ public class MySubscribersMessage : BotMessage
       if (currentPageIndex > 0)
          Keyboard.AddButton<MySubscribersQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
 
-      Keyboard.AddButton<MainMenuQuery>("Назад");
+      Keyboard.AddButton<MainMenuQuery>("В главное меню");
 
       if (currentPageIndex < pagesCount - 1)
          Keyboard.AddButton<MySubscribersQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));

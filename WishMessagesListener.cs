@@ -1,29 +1,14 @@
 using Serilog;
 using Telegram.Bot;
-using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Polling;
 using WishlistBot.Database.Users;
-using WishlistBot.Actions;
-using WishlistBot.Actions.Commands;
-using WishlistBot.Queries;
-using WishlistBot.BotMessages;
 using WishlistBot.BotMessages.EditWish;
 
 namespace WishlistBot;
 
-public class WishMessagesListener
+public class WishMessagesListener(ILogger logger, ITelegramBotClient client)
 {
-   private readonly ILogger _logger;
-   private readonly ITelegramBotClient _client;
-
-   public WishMessagesListener(ILogger logger, ITelegramBotClient client)
-   {
-      _logger = logger;
-      _client = client;
-   }
-
    public async Task HandleWishMessageAsync(Message message, BotUser user)
    {
       switch (user.BotState)
@@ -56,12 +41,12 @@ public class WishMessagesListener
       var name = message.Text ?? message.Caption;
       if (name is null)
       {
-         _logger.Warning("Received empty wish name, ignoring");
+         logger.Warning("Received empty wish name, ignoring");
          return Task.CompletedTask;
       }
 
       user.CurrentWish.Name = name;
-      _logger.Information("'{name}' is set as {firstName} [{userId}] wish name", name, user.FirstName, user.SenderId);
+      logger.Information("'{name}' is set as {firstName} [{userId}] wish name", name, user.FirstName, user.SenderId);
       return Task.CompletedTask;
    }
 
@@ -70,12 +55,12 @@ public class WishMessagesListener
       var description = message.Text ?? message.Caption;
       if (description is null)
       {
-         _logger.Warning("Received empty wish description, ignoring");
+         logger.Warning("Received empty wish description, ignoring");
          return Task.CompletedTask;
       }
 
       user.CurrentWish.Description = description;
-      _logger.Information("'{description}' is set as {firstName} [{userId}] wish description", description, user.FirstName, user.SenderId);
+      logger.Information("'{description}' is set as {firstName} [{userId}] wish description", description, user.FirstName, user.SenderId);
       return Task.CompletedTask;
    }
 
@@ -84,15 +69,15 @@ public class WishMessagesListener
       var fileId = message.Photo?.FirstOrDefault()?.FileId;
       if (fileId is null)
       {
-         _logger.Warning("Received message with no photo, ignoring");
+         logger.Warning("Received message with no photo, ignoring");
          return;
       }
 
       user.CurrentWish.FileId = fileId;
-      _logger.Information("Photo [{fileId}] is added to {firstName} [{userId}] wish", fileId, user.FirstName, user.SenderId);
+      logger.Information("Photo [{fileId}] is added to {firstName} [{userId}] wish", fileId, user.FirstName, user.SenderId);
 
       if (message.MediaGroupId is not null)
-         _logger.Warning("Media groups are not supported, ignoring other photos");
+         logger.Warning("Media groups are not supported, ignoring other photos");
 
       await SendEditWishMessageAsync(user);
    }
@@ -103,7 +88,7 @@ public class WishMessagesListener
       var linksEntities = message.Entities?.Where(e => e.Type == MessageEntityType.Url);
       if (text is null || linksEntities is null)
       {
-         _logger.Warning("Received message without links, ignoring");
+         logger.Warning("Received message without links, ignoring");
          return Task.CompletedTask;
       }
 
@@ -112,7 +97,7 @@ public class WishMessagesListener
       foreach (var link in links)
       {
          user.CurrentWish.Links.Add(link);
-         _logger.Information("Link '{link}' is added to {firstName} [{userId}] wish", link, user.FirstName, user.SenderId);
+         logger.Information("Link '{link}' is added to {firstName} [{userId}] wish", link, user.FirstName, user.SenderId);
       }
 
       return Task.CompletedTask;
@@ -120,7 +105,7 @@ public class WishMessagesListener
 
    private async Task SendEditWishMessageAsync(BotUser user)
    {
-      var message = new EditWishMessage(_logger);
-      await _client.SendOrEditBotMessage(_logger, user, message, forceNewMessage: true);
+      var message = new EditWishMessage(logger);
+      await client.SendOrEditBotMessage(logger, user, message, forceNewMessage: true);
    }
 }

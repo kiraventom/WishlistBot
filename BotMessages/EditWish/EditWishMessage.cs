@@ -1,18 +1,13 @@
 using Serilog;
 using WishlistBot.Keyboard;
-using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class EditWishMessage : BotMessage
+public class EditWishMessage(ILogger logger) : BotMessage(logger)
 {
-   public EditWishMessage(ILogger logger) : base(logger)
-   {
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -26,16 +21,19 @@ public class EditWishMessage : BotMessage
 
       if (parameters.Peek(QueryParameterType.ReturnToFullList))
       {
-         Keyboard.AddButton<ConfirmDeleteWishQuery>();
+         parameters.Peek(QueryParameterType.SetCurrentWishTo, out var setWishIndex);
+
+         user.CurrentWish ??= user.Wishes[(int)setWishIndex].Clone();
+
+         Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.SetCurrentWishTo, setWishIndex));
          Keyboard.NewRow();
+         Keyboard.AddButton<FinishEditWishQuery>(new QueryParameter(QueryParameterType.SetCurrentWishTo, setWishIndex));
       }
-
-      if (parameters.Pop(QueryParameterType.SetCurrentWishTo, out var setWishIndex))
+      else
       {
-         user.CurrentWish = user.Wishes[(int)setWishIndex];
+         Keyboard.AddButton<FinishEditWishQuery>();
       }
 
-      Keyboard.AddButton<FinishEditWishQuery>();
       Keyboard.AddButton<CancelEditWishQuery>();
 
       var wish = user.CurrentWish;
@@ -64,14 +62,14 @@ public class EditWishMessage : BotMessage
       Text.Italic("Редактирование виша")
          .LineBreak()
          .LineBreak().Bold("Название: ").Monospace(name);
-      
+
       if (description is not null)
          Text.LineBreak().Bold("Описание: ").LineBreak().ExpandableQuote(description);
 
       if (links.Count > 1)
       {
          Text.LineBreak().Bold("Ссылки: ");
-         for (int i = 0; i < links.Count; ++i)
+         for (var i = 0; i < links.Count; ++i)
          {
             var link = links[i];
             Text.InlineUrl($"Ссылка {i + 1}", link);
@@ -83,7 +81,6 @@ public class EditWishMessage : BotMessage
       {
          Text.LineBreak().InlineUrl("Ссылка", links.First());
       }
-
 
       PhotoFileId = wish.FileId;
    }

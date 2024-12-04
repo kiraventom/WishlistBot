@@ -6,21 +6,15 @@ using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages;
 
-public abstract class BotMessage
+public abstract class BotMessage(ILogger logger)
 {
    private bool _isInited;
 
-   protected ILogger Logger { get; }
+   protected ILogger Logger { get; } = logger;
 
-   public MessageText Text { get; protected set; }
+   public MessageText Text { get; } = new();
    public BotKeyboard Keyboard { get; protected set; }
    public string PhotoFileId { get; protected set; }
-
-   protected BotMessage(ILogger logger)
-   {
-      Logger = logger;
-      Text = new MessageText();
-   }
 
    public async Task Init(BotUser user)
    {

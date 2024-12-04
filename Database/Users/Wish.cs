@@ -1,5 +1,3 @@
-using Telegram.Bot.Types;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -12,7 +10,7 @@ public class Wish : BasePropertyChanged
    private string _description;
    private string _fileId;
 
-   public string Name 
+   public string Name
    {
       get => _name;
       set => Set(ref _name, value);
@@ -32,7 +30,7 @@ public class Wish : BasePropertyChanged
 
    [JsonInclude]
    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
-   public ObservableCollection<string> Links { get; } = new();
+   public ObservableCollection<string> Links { get; } = [];
 
    [JsonConstructor]
    public Wish()
@@ -40,9 +38,20 @@ public class Wish : BasePropertyChanged
       Links.CollectionChanged += OnLinksCollectionChanged;
    }
 
-   private void OnLinksCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
+   public Wish Clone()
    {
-      RaisePropertyChanged(nameof(Links));
-   }
-}
+      var clone = new Wish
+      {
+         Name = Name,
+         Description = Description,
+         FileId = FileId
+      };
 
+      foreach (var link in Links)
+         clone.Links.Add(link);
+
+      return clone;
+   }
+
+   private void OnLinksCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea) => RaisePropertyChanged(nameof(Links));
+}

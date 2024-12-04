@@ -3,16 +3,11 @@ using WishlistBot.Keyboard;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
-using System.Text;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class SetWishMediaMessage : BotMessage
+public class SetWishMediaMessage(ILogger logger) : BotMessage(logger)
 {
-   public SetWishMediaMessage(ILogger logger) : base(logger)
-   {
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -27,10 +22,7 @@ public class SetWishMediaMessage : BotMessage
 
       PhotoFileId = user.CurrentWish.FileId;
 
-      if (PhotoFileId is not null)
-         Text.Verbatim("Пришлите новое фото или удалите текущее");
-      else
-         Text.Verbatim("Пришлите фото виша:");
+      Text.Verbatim(PhotoFileId is not null ? "Пришлите новое фото или удалите текущее" : "Пришлите фото виша:");
 
       user.BotState = BotState.ListenForWishMedia;
    }
