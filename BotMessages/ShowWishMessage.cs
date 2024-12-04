@@ -19,7 +19,7 @@ public class ShowWishMessage : BotMessage
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters)
-         .AddButton<FullListQuery>("Назад");
+         .AddButton<FullListQuery>("Назад", QueryParameter.ReadOnly);
 
       // TODO: This code appears in three different classes. Fix
       if (parameters.Peek(QueryParameterType.SetUserTo, out var userId))

@@ -40,6 +40,18 @@ public class Wish : BasePropertyChanged
       Links.CollectionChanged += OnLinksCollectionChanged;
    }
 
+   public Wish Clone()
+   {
+      var clone = new Wish();
+      clone.Name = Name;
+      clone.Description = Description;
+      clone.FileId = FileId;
+      foreach (var link in Links)
+         clone.Links.Add(link);
+
+      return clone;
+   }
+
    private void OnLinksCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
    {
       RaisePropertyChanged(nameof(Links));

@@ -32,6 +32,7 @@ public class EditWishNotificationMessage : BotMessage
 
       Keyboard
          .AddButton<ShowWishQuery>("Перейти к вишу", 
+               new QueryParameter(QueryParameterType.SetUserTo, _notificationSource.SenderId),
                new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex),
                new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
          .AddButton<MainMenuQuery>("В главное меню");
@@ -51,8 +52,6 @@ public class EditWishNotificationMessage : BotMessage
          .ItalicBold(wishPropertyName)
          .Italic(" у виша '")
          .ItalicBold(_editedWish.Name)
-         .Italic("'");
-
-      Text.Italic("'!");
+         .Italic("'!");
    }
 }

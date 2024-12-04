@@ -28,12 +28,13 @@ public class DeleteWishMessage : BotMessage
       else
          Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
 
-      Text.Italic("Виш удалён!");
+      parameters.Peek(QueryParameterType.SetCurrentWishTo, out var wishIndex);
 
-      var deletedWish = user.CurrentWish;
-
-      user.Wishes.Remove(user.CurrentWish);
+      var deletedWish = user.Wishes[(int)wishIndex];
+      user.Wishes.Remove(deletedWish);
       user.CurrentWish = null;
+
+      Text.Italic("Виш удалён!");
 
       // TODO DRY
       var subscribers = _usersDb.Values.Values

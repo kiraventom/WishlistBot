@@ -70,7 +70,7 @@ public class MySubscriptionsMessage : BotMessage
       if (currentPageIndex > 0)
          Keyboard.AddButton<MySubscriptionsQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
 
-      Keyboard.AddButton<MainMenuQuery>("Назад");
+      Keyboard.AddButton<MainMenuQuery>("В главное меню");
 
       if (currentPageIndex < pagesCount - 1)
          Keyboard.AddButton<MySubscriptionsQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));

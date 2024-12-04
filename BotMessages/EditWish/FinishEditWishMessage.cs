@@ -30,31 +30,49 @@ public class FinishEditWishMessage : BotMessage
       else
          Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
 
-      if (!user.Wishes.Contains(user.CurrentWish))
+      if (parameters.Pop(QueryParameterType.SetCurrentWishTo, out var wishIndex))
       {
-         user.Wishes.Add(user.CurrentWish);
-         Text.Italic("Виш добавлен!");
+         var editedWish = user.CurrentWish;
 
+         var wishBeforeEditing = user.Wishes[(int)wishIndex];
+         user.Wishes.Remove(wishBeforeEditing);
+         user.Wishes.Insert((int)wishIndex, editedWish);
+         Text.Italic("Виш изменён!");
+
+         var subscribers = _usersDb.Values.Values
+            .Where(u => u.Subscriptions.Contains(user.SubscribeId));
+
+         WishPropertyType wishPropertyType;
+
+         if (wishBeforeEditing.Name != editedWish.Name)
+            wishPropertyType = WishPropertyType.Name;
+         else if (wishBeforeEditing.Description != editedWish.Description)
+            wishPropertyType = WishPropertyType.Description;
+         else if (!Enumerable.SequenceEqual(wishBeforeEditing.Links, editedWish.Links))
+            wishPropertyType = WishPropertyType.Links;
+         else if (wishBeforeEditing.FileId != editedWish.FileId)
+            wishPropertyType = WishPropertyType.Media;
+         else
+            wishPropertyType = (WishPropertyType)0;
+         
+         if (wishPropertyType != (WishPropertyType)0)
+         {
+            var editWishNotification = new EditWishNotificationMessage(Logger, user, editedWish, wishPropertyType);
+            await NotificationService.Instance.Send(editWishNotification, subscribers);
+         }
+      }
+      else
+      {
          var newWish = user.CurrentWish;
+
+         user.Wishes.Add(newWish);
+         Text.Italic("Виш добавлен!");
 
          var subscribers = _usersDb.Values.Values
             .Where(u => u.Subscriptions.Contains(user.SubscribeId));
          
          var newWishNotification = new NewWishNotificationMessage(Logger, user, newWish);
          await NotificationService.Instance.Send(newWishNotification, subscribers);
-      }
-      else
-      {
-         Text.Italic("Виш изменён!");
-
-         var editedWish = user.CurrentWish;
-
-         var subscribers = _usersDb.Values.Values
-            .Where(u => u.Subscriptions.Contains(user.SubscribeId));
-         
-         // TODO Track what wish property changed
-         var editWishNotification = new EditWishNotificationMessage(Logger, user, editedWish, WishPropertyType.Name);
-         await NotificationService.Instance.Send(editWishNotification, subscribers);
       }
 
       user.CurrentWish = null;

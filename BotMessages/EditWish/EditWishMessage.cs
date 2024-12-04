@@ -26,16 +26,20 @@ public class EditWishMessage : BotMessage
 
       if (parameters.Peek(QueryParameterType.ReturnToFullList))
       {
-         Keyboard.AddButton<ConfirmDeleteWishQuery>();
+         parameters.Peek(QueryParameterType.SetCurrentWishTo, out var setWishIndex);
+
+         if (user.CurrentWish is null)
+            user.CurrentWish = user.Wishes[(int)setWishIndex].Clone();
+
+         Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.SetCurrentWishTo, setWishIndex));
          Keyboard.NewRow();
+         Keyboard.AddButton<FinishEditWishQuery>(new QueryParameter(QueryParameterType.SetCurrentWishTo, setWishIndex));
       }
-
-      if (parameters.Pop(QueryParameterType.SetCurrentWishTo, out var setWishIndex))
+      else
       {
-         user.CurrentWish = user.Wishes[(int)setWishIndex];
+         Keyboard.AddButton<FinishEditWishQuery>();
       }
 
-      Keyboard.AddButton<FinishEditWishQuery>();
       Keyboard.AddButton<CancelEditWishQuery>();
 
       var wish = user.CurrentWish;

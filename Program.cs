@@ -3,6 +3,7 @@ using Serilog.Events;
 using Telegram.Bot;
 using WishlistBot.Database.Users;
 using WishlistBot.Database.MediaStorage;
+using WishlistBot.Notification;
 
 namespace WishlistBot;
 

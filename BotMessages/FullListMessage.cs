@@ -22,7 +22,6 @@ public class FullListMessage : BotMessage
       Keyboard = new BotKeyboard(parameters);
 
       // Needs to be cleared if returned from ShowWish.
-      // TODO Remove FinishEdit/CancelEdit?
       parameters.Pop(QueryParameterType.ReturnToFullList); 
 
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
