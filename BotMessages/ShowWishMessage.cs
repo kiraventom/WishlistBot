@@ -6,15 +6,8 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
-public class ShowWishMessage : BotMessage
+public class ShowWishMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
 {
-   private readonly UsersDb _usersDb;
-
-   public ShowWishMessage(ILogger logger, UsersDb usersDb) : base(logger)
-   {
-      _usersDb = usersDb;
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -24,8 +17,8 @@ public class ShowWishMessage : BotMessage
       // TODO: This code appears in three different classes. Fix
       if (parameters.Peek(QueryParameterType.SetUserTo, out var userId))
       {
-         if (_usersDb.Values.ContainsKey(userId))
-            user = _usersDb.Values[userId];
+         if (usersDb.Values.TryGetValue(userId, out var user0))
+            user = user0;
          else
             Logger.Error("Can't set user to [{userId}], users db does not contain user with this ID", userId);
       }
@@ -38,14 +31,14 @@ public class ShowWishMessage : BotMessage
       var links = wish.Links;
 
       Text.Bold("Название: ").Monospace(name);
-      
+
       if (description is not null)
          Text.LineBreak().Bold("Описание: ").LineBreak().ExpandableQuote(description);
 
       if (links.Count > 1)
       {
          Text.LineBreak().Bold("Ссылки: ");
-         for (int i = 0; i < links.Count; ++i)
+         for (var i = 0; i < links.Count; ++i)
          {
             var link = links[i];
             Text.InlineUrl($"Ссылка {i + 1}", link);

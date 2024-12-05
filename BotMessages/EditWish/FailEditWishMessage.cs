@@ -7,12 +7,8 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class EditWishFailedMessage : BotMessage
+public class EditWishFailedMessage(ILogger logger) : BotMessage(logger)
 {
-   public EditWishFailedMessage(ILogger logger) : base(logger)
-   {
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {

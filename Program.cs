@@ -1,4 +1,5 @@
 ﻿using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Telegram.Bot;
 using WishlistBot.Database.Users;
@@ -7,11 +8,11 @@ using WishlistBot.Notification;
 
 namespace WishlistBot;
 
-class Program
+public static class Program
 {
    private const string PROJECT_NAME = "WishlistBot";
 
-   static async Task Main()
+   private static async Task Main()
    {
       var projectDirPath = GetProjectDirPath();
       Directory.CreateDirectory(projectDirPath);
@@ -42,7 +43,7 @@ class Program
       MediaStorageManager.Instance.Init(logger, client, mediaStorageDb, config.StorageChannelId);
       await MediaStorageManager.Instance.Cleanup(usersDb);
 
-      NotificationService.Instance.Init(logger, client, usersDb);
+      NotificationService.Instance.Init(logger, client);
 
       var telegramController = new TelegramController(logger, client, usersDb);
       telegramController.StartReceiving();
@@ -58,7 +59,7 @@ class Program
 
    private static string GetProjectDirPath()
    {
-      if (System.OperatingSystem.IsWindows())
+      if (OperatingSystem.IsWindows())
       {
          var appDataDirPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
          return Path.Combine(appDataDirPath, PROJECT_NAME);
@@ -68,7 +69,7 @@ class Program
       return Path.Combine(homeDirPath, $".{PROJECT_NAME}");
    }
 
-   private static ILogger InitLogger(string projectDirPath)
+   private static Logger InitLogger(string projectDirPath)
    {
       var logsDirPath = Path.Combine(projectDirPath, "logs");
       Directory.CreateDirectory(logsDirPath);

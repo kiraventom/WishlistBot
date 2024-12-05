@@ -5,20 +5,11 @@ using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
-using WishlistBot.BotMessages.Subscription;
-using System.Text;
 
 namespace WishlistBot.BotMessages;
 
-public class CompactListMessage : BotMessage
+public class CompactListMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
 {
-   private readonly UsersDb _usersDb;
-
-   public CompactListMessage(ILogger logger, UsersDb usersDb) : base(logger)
-   {
-      _usersDb = usersDb;
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -26,8 +17,8 @@ public class CompactListMessage : BotMessage
 
       if (parameters.Peek(QueryParameterType.SetUserTo, out var userId))
       {
-         if (_usersDb.Values.ContainsKey(userId))
-            user = _usersDb.Values[userId];
+         if (usersDb.Values.TryGetValue(userId, out var user0))
+            user = user0;
          else
             Logger.Error("Can't set user to [{userId}], users db does not contain user with this ID", userId);
       }
@@ -61,7 +52,7 @@ public class CompactListMessage : BotMessage
       else
          Text.Bold("Краткий список ваших вишей:");
 
-      for (int i = 0; i < user.Wishes.Count; ++i)
+      for (var i = 0; i < user.Wishes.Count; ++i)
       {
          var wish = user.Wishes[i];
          Text.LineBreak().Bold($"{i + 1}. ").Monospace(wish.Name);
@@ -70,7 +61,7 @@ public class CompactListMessage : BotMessage
             Text.Verbatim(" \U0001f4ac"); // speech bubble
 
          if (wish.FileId is not null)
-            Text.Verbatim(" \U0001f5bc\U0000fe0f"); // picture
+            Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
 
          if (wish.Links.Any())
             Text.Verbatim(" \U0001f310"); // globe

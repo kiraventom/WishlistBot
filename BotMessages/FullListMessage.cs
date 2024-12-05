@@ -7,39 +7,32 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
-public class FullListMessage : BotMessage
+public class FullListMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
 {
-   private readonly UsersDb _usersDb;
-
-   public FullListMessage(ILogger logger, UsersDb usersDb) : base(logger)
-   {
-      _usersDb = usersDb;
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard = new BotKeyboard(parameters);
 
       // Needs to be cleared if returned from ShowWish.
-      parameters.Pop(QueryParameterType.ReturnToFullList); 
+      parameters.Pop(QueryParameterType.ReturnToFullList);
 
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
       if (parameters.Peek(QueryParameterType.SetUserTo, out var userId))
       {
-         if (_usersDb.Values.ContainsKey(userId))
-            user = _usersDb.Values[userId];
+         if (usersDb.Values.ContainsKey(userId))
+            user = usersDb.Values[userId];
          else
             Logger.Error("Can't set user to [{userId}], users db does not contain user with this ID", userId);
       }
 
-      int currentPageIndex = 0;
+      var currentPageIndex = 0;
       if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndex))
          currentPageIndex = (int)pageIndex;
 
       const int wishesPerPage = 5;
 
-      int pagesCount = (int)Math.Ceiling((double)user.Wishes.Count / wishesPerPage);
+      var pagesCount = (int)Math.Ceiling((double)user.Wishes.Count / wishesPerPage);
 
       if (pagesCount == 0)
       {
@@ -52,7 +45,7 @@ public class FullListMessage : BotMessage
       if (currentPageIndex >= pagesCount)
          currentPageIndex = pagesCount - 1;
 
-      for (int i = 0; i < wishesPerPage; ++i)
+      for (var i = 0; i < wishesPerPage; ++i)
       {
          var wishIndex = currentPageIndex * wishesPerPage + i;
          if (wishIndex >= user.Wishes.Count)
@@ -66,20 +59,20 @@ public class FullListMessage : BotMessage
             const string eyeEmoji = "\U0001f441\U0000fe0f ";
 
             Keyboard.AddButton<ShowWishQuery>(
-                  eyeEmoji + wish.Name,
-                  new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex), 
-                  new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex),
-                  QueryParameter.ReturnToFullList);
+               eyeEmoji + wish.Name,
+               new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex),
+               new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex),
+               QueryParameter.ReturnToFullList);
          }
          else
          {
             const string pencilEmoji = "\u270f\ufe0f ";
 
             Keyboard.AddButton<EditWishQuery>(
-                  pencilEmoji + wish.Name,
-                  new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex), 
-                  new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex),
-                  QueryParameter.ReturnToFullList);
+               pencilEmoji + wish.Name,
+               new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex),
+               new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex),
+               QueryParameter.ReturnToFullList);
          }
 
          Keyboard.NewRow();

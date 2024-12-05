@@ -15,7 +15,7 @@ public static class QueryUtils
       if (parameters.Count > 0)
       {
          stringBuilder.Append(DATA_SEPARATOR);
-         stringBuilder.Append(parameters.ToString());
+         stringBuilder.Append(parameters);
       }
 
       return stringBuilder.ToString();
@@ -25,22 +25,20 @@ public static class QueryUtils
    {
       var parts = queryStr.Split(DATA_SEPARATOR);
 
-      if (parts.Length == 2)
+      switch (parts.Length)
       {
-         name = parts[0];
-         var queryParamsStr = parts[1];
-         return QueryParameterCollection.TryParse(queryParamsStr, out parameters);
+         case 2:
+            name = parts[0];
+            var queryParamsStr = parts[1];
+            return QueryParameterCollection.TryParse(queryParamsStr, out parameters);
+         case 1:
+            name = parts[0];
+            parameters = new QueryParameterCollection();
+            return true;
+         default:
+            name = null;
+            parameters = null;
+            return false;
       }
-
-      if (parts.Length == 1)
-      {
-         name = parts[0];
-         parameters = new QueryParameterCollection();
-         return true;
-      }
-
-      name = null;
-      parameters = null;
-      return false;
    }
 }

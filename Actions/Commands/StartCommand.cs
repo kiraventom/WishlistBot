@@ -6,16 +6,9 @@ using WishlistBot.BotMessages.Subscription;
 
 namespace WishlistBot.Actions.Commands;
 
-public class StartCommand : Command
+public class StartCommand(ILogger logger, ITelegramBotClient client, UsersDb usersDb) : Command(logger, client)
 {
-   private readonly UsersDb _usersDb;
-
    public override string Name => "/start";
-
-   public StartCommand(ILogger logger, ITelegramBotClient client, UsersDb usersDb) : base(logger, client)
-   {
-      _usersDb = usersDb;
-   }
 
    public override async Task ExecuteAsync(BotUser user, string actionText)
    {
@@ -25,7 +18,7 @@ public class StartCommand : Command
       if (isSubscribe)
       {
          // TODO [SQL] Fix this
-         var userToSubscribeTo = _usersDb.Values.Values.FirstOrDefault(u => u.SubscribeId == subscribeId);
+         var userToSubscribeTo = usersDb.Values.Values.FirstOrDefault(u => u.SubscribeId == subscribeId);
 
          if (userToSubscribeTo is null)
             Logger.Warning("User with SubscribeId '{subscribeId}' was not found", subscribeId);

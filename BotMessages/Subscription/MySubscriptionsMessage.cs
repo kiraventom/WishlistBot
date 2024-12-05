@@ -2,21 +2,13 @@ using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
-using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
-public class MySubscriptionsMessage : BotMessage
+public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
 {
-   private readonly UsersDb _usersDb;
-
-   public MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : base(logger)
-   {
-      _usersDb = usersDb;
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -25,13 +17,13 @@ public class MySubscriptionsMessage : BotMessage
       parameters.Pop(QueryParameterType.ReadOnly);
       parameters.Pop(QueryParameterType.SetUserTo);
 
-      int currentPageIndex = 0;
+      var currentPageIndex = 0;
       if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndex))
          currentPageIndex = (int)pageIndex;
 
       const int usersPerPage = 5;
 
-      int pagesCount = (int)Math.Ceiling((double)user.Subscriptions.Count / usersPerPage);
+      var pagesCount = (int)Math.Ceiling((double)user.Subscriptions.Count / usersPerPage);
 
       if (pagesCount == 0)
       {
@@ -44,14 +36,14 @@ public class MySubscriptionsMessage : BotMessage
       if (currentPageIndex >= pagesCount)
          currentPageIndex = pagesCount - 1;
 
-      for (int i = 0; i < usersPerPage; ++i)
+      for (var i = 0; i < usersPerPage; ++i)
       {
          var userIndex = currentPageIndex * usersPerPage + i;
          if (userIndex >= user.Subscriptions.Count)
             break;
 
          var subscribeId = user.Subscriptions[userIndex];
-         var userWeSubscribedTo = _usersDb.Values.Values.FirstOrDefault(u => u.SubscribeId == subscribeId);
+         var userWeSubscribedTo = usersDb.Values.Values.FirstOrDefault(u => u.SubscribeId == subscribeId);
          if (userWeSubscribedTo is null)
          {
             Logger.Error("Users DB does not contain user wish subscribe id [{subscribeId}]", subscribeId);

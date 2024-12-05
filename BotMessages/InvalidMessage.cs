@@ -5,12 +5,8 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
-public class InvalidMessage : BotMessage
+public class InvalidMessage(ILogger logger) : BotMessage(logger)
 {
-   public InvalidMessage(ILogger logger) : base(logger)
-   {
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {

@@ -9,15 +9,8 @@ using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class FinishEditWishMessage : BotMessage
+public class FinishEditWishMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
 {
-   private readonly UsersDb _usersDb;
-
-   public FinishEditWishMessage(ILogger logger, UsersDb usersDb) : base(logger)
-   {
-      _usersDb = usersDb;
-   }
-
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -39,7 +32,7 @@ public class FinishEditWishMessage : BotMessage
          user.Wishes.Insert((int)wishIndex, editedWish);
          Text.Italic("Виш изменён!");
 
-         var subscribers = _usersDb.Values.Values
+         var subscribers = usersDb.Values.Values
             .Where(u => u.Subscriptions.Contains(user.SubscribeId));
 
          WishPropertyType wishPropertyType;
@@ -48,13 +41,13 @@ public class FinishEditWishMessage : BotMessage
             wishPropertyType = WishPropertyType.Name;
          else if (wishBeforeEditing.Description != editedWish.Description)
             wishPropertyType = WishPropertyType.Description;
-         else if (!Enumerable.SequenceEqual(wishBeforeEditing.Links, editedWish.Links))
+         else if (!wishBeforeEditing.Links.SequenceEqual(editedWish.Links))
             wishPropertyType = WishPropertyType.Links;
          else if (wishBeforeEditing.FileId != editedWish.FileId)
             wishPropertyType = WishPropertyType.Media;
          else
             wishPropertyType = (WishPropertyType)0;
-         
+
          if (wishPropertyType != (WishPropertyType)0)
          {
             var editWishNotification = new EditWishNotificationMessage(Logger, user, editedWish, wishPropertyType);
@@ -68,9 +61,9 @@ public class FinishEditWishMessage : BotMessage
          user.Wishes.Add(newWish);
          Text.Italic("Виш добавлен!");
 
-         var subscribers = _usersDb.Values.Values
+         var subscribers = usersDb.Values.Values
             .Where(u => u.Subscriptions.Contains(user.SubscribeId));
-         
+
          var newWishNotification = new NewWishNotificationMessage(Logger, user, newWish);
          await NotificationService.Instance.Send(newWishNotification, subscribers);
       }

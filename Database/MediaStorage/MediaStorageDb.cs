@@ -14,29 +14,22 @@ public class MediaStorageDb : Database<string, int>
 
    public void Add(string fileId, int messageId)
    {
-      _values[fileId] = messageId;
+      Dict[fileId] = messageId;
       Save();
    }
 
    public void Remove(string fileId)
    {
-      if (_values.ContainsKey(fileId))
-      {
-         _values.Remove(fileId);
+      var wasRemoved = Dict.Remove(fileId);
+      if (wasRemoved)
          Save();
-      }
       else
-      {
-         _logger.Warning("Attempt to remove non-existent media [{fileId}]", fileId);
-      }
+         Logger.Warning("Attempt to remove non-existent media [{fileId}]", fileId);
    }
 
    public static MediaStorageDb Load(ILogger logger, string filePath)
    {
       var values = LoadValues(logger, filePath, MediaStorageDatabaseName);
-      if (values is null)
-         return null;
-
-      return new MediaStorageDb(logger, filePath, values);
+      return values is null ? null : new MediaStorageDb(logger, filePath, values);
    }
 }

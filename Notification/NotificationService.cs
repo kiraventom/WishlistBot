@@ -1,8 +1,5 @@
 using Serilog;
-using System.Threading.Tasks;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using WishlistBot;
 using WishlistBot.Database.Users;
 using WishlistBot.BotMessages;
 
@@ -14,11 +11,10 @@ public class NotificationService
 
    private ILogger _logger;
    private ITelegramBotClient _client;
-   private UsersDb _usersDb;
 
-   public static NotificationService Instance { get; } = new NotificationService();
+   public static NotificationService Instance { get; } = new();
 
-   public void Init(ILogger logger, ITelegramBotClient client, UsersDb usersDb)
+   public void Init(ILogger logger, ITelegramBotClient client)
    {
       if (_inited)
          return;
@@ -26,15 +22,12 @@ public class NotificationService
       _logger = logger;
 
       _client = client;
-      _usersDb = usersDb;
       _inited = true;
    }
 
-   public async Task Send(BotMessage notification, IEnumerable<BotUser> recepients)
+   public async Task Send(BotMessage notification, IEnumerable<BotUser> recipients)
    {
-      foreach (var recepient in recepients)
-      {
-         await _client.SendOrEditBotMessage(_logger, recepient, notification, forceNewMessage: true);
-      }
+      foreach (var recipient in recipients)
+         await _client.SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
    }
 }
