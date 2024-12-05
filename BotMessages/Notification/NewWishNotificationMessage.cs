@@ -11,9 +11,7 @@ public class NewWishNotificationMessage(ILogger logger, BotUser notificationSour
    {
       var wishIndex = notificationSource.Wishes.IndexOf(newWish);
 
-      // TODO Fix all notifications
-      const int wishesPerPage = 5;
-      var pageIndex = wishIndex / wishesPerPage;
+      var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
       Keyboard
          .AddButton<ShowWishQuery>("Перейти к вишу",
