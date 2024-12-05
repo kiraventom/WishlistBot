@@ -8,8 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [ChildMessage(typeof(EditWishMessage))]
 public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (user.CurrentWish.Links.Any())
          Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));
@@ -29,12 +28,14 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
          for (var i = 0; i < user.CurrentWish.Links.Count; ++i)
          {
             var link = user.CurrentWish.Links[i];
-            Text.LineBreak().InlineUrl($"Ссылка {i + 1}", link);
+            Text.LineBreak().Monospace(link);
          }
 
-         Text.Verbatim("Пришлите новые ссылки или удалите текущие:");
+         Text.LineBreak().LineBreak().Verbatim("Пришлите новые ссылки или удалите текущие:");
       }
 
       user.BotState = BotState.ListenForWishLinks;
+
+      return Task.CompletedTask;
    }
 }

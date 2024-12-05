@@ -9,10 +9,9 @@ namespace WishlistBot.BotMessages.Subscription;
 [ChildMessage(typeof(MySubscriptionsMessage))]
 public class SubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       Keyboard.AddButton<ConfirmUnsubscribeQuery>("Отписаться");
 
@@ -33,5 +32,7 @@ public class SubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessa
          .LineBreak()
          .Bold("Вишей в вишлисте: ")
          .Monospace(user.Wishes.Count.ToString());
+
+      return Task.CompletedTask;
    }
 }

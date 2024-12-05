@@ -6,11 +6,11 @@ using WishlistBot.Queries.Parameters;
 
 namespace WishlistBot.BotMessages.EditWish;
 
+[ChildMessage(typeof(EditWishMessage))]
 [AllowedTypes(QueryParameterType.ReturnToFullList)]
 public class CancelEditWishMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (parameters.Pop(QueryParameterType.ReturnToFullList))
       {
@@ -26,5 +26,7 @@ public class CancelEditWishMessage(ILogger logger) : BotMessage(logger)
       }
 
       user.CurrentWish = null;
+
+      return Task.CompletedTask;
    }
 }

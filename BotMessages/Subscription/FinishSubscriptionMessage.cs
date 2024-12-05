@@ -9,11 +9,10 @@ namespace WishlistBot.BotMessages.Subscription;
 [AllowedTypes(QueryParameterType.SetUserTo)]
 public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var sender = user;
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       if (sender.Subscriptions.Contains(user.SubscribeId))
       {
@@ -36,5 +35,7 @@ public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBo
                                       new QueryParameter(QueryParameterType.SetUserTo, user.SenderId))
          .NewRow()
          .AddButton<MySubscriptionsQuery>("К моим подпискам");
+
+      return Task.CompletedTask;
    }
 }

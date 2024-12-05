@@ -9,20 +9,9 @@ public abstract class UserBotMessage(ILogger logger, UsersDb usersDb) : BotMessa
 {
    protected IEnumerable<BotUser> Users => usersDb.Values.Values;
 
-   protected BotUser GetParameterUser(QueryParameterCollection parameters)
+   protected BotUser GetUser(BotUser sender, QueryParameterCollection parameters)
    {
       parameters.Peek(QueryParameterType.SetUserTo, out var userId);
-      if (usersDb.Values.TryGetValue(userId, out var user))
-         return user;
-
-      try
-      {
-         throw new NotSupportedException($"Can't set user to [{userId}], users db does not contain user with this ID");
-      }
-      catch (Exception e)
-      {
-         Logger.Error(e.ToString());
-         throw;
-      }
+      return usersDb.Values.GetValueOrDefault(userId, sender);
    }
 }

@@ -8,12 +8,12 @@ namespace WishlistBot.BotMessages.Notification;
 
 public class DeleteWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish oldWish) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
-         .AddButton<SubscriptionQuery>("Перейти к подписке", 
-               new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId))
+         .AddButton<SubscriptionQuery>("Перейти к подписке",
+                                       QueryParameter.ReadOnly,
+                                       new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId))
          .AddButton<MainMenuQuery>("В главное меню");
 
       Text
@@ -21,5 +21,7 @@ public class DeleteWishNotificationMessage(ILogger logger, BotUser notificationS
          .Italic(" удалил виш '")
          .ItalicBold(oldWish.Name)
          .Italic("'!");
+
+      return Task.CompletedTask;
    }
 }
