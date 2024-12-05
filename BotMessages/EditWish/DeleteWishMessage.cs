@@ -8,7 +8,7 @@ using WishlistBot.Notification;
 namespace WishlistBot.BotMessages.EditWish;
 
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo)]
-public class DeleteWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
+public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 {
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
@@ -26,9 +26,7 @@ public class DeleteWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage
 
       Text.Italic("Виш удалён!");
 
-      // TODO DRY
-      var subscribers = Users.Where(u => u.Subscriptions.Contains(user.SubscribeId));
       var deleteWishNotification = new DeleteWishNotificationMessage(Logger, user, deletedWish);
-      await NotificationService.Instance.Send(deleteWishNotification, subscribers);
+      await NotificationService.Instance.Send(deleteWishNotification, user);
    }
 }

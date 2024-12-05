@@ -12,32 +12,13 @@ public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : UserBotMe
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      var currentPageIndex = 0;
-      if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndex))
-         currentPageIndex = (int)pageIndex;
+      var totalCount = user.Subscriptions.Count;
 
-      const int usersPerPage = 5;
+      Text.Bold(totalCount == 0 ? "Вы ещё ни на кого не подписаны :(" : "Ваши подписки:");
 
-      var pagesCount = (int)Math.Ceiling((double)user.Subscriptions.Count / usersPerPage);
-
-      if (pagesCount == 0)
+      ListMessageUtils.AddListControls<MySubscriptionsQuery, MainMenuQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
       {
-         Text.Bold("Вы ещё ни на кого не подписаны :(");
-         Keyboard.AddButton<MainMenuQuery>("В главное меню");
-         return;
-      }
-
-      // Can happen if the only subscription on the last page was removed
-      if (currentPageIndex >= pagesCount)
-         currentPageIndex = pagesCount - 1;
-
-      for (var i = 0; i < usersPerPage; ++i)
-      {
-         var userIndex = currentPageIndex * usersPerPage + i;
-         if (userIndex >= user.Subscriptions.Count)
-            break;
-
-         var subscribeId = user.Subscriptions[userIndex];
+         var subscribeId = user.Subscriptions[itemIndex];
          var userWeSubscribedTo = Users.FirstOrDefault(u => u.SubscribeId == subscribeId);
          if (userWeSubscribedTo is null)
          {
@@ -49,20 +30,7 @@ public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : UserBotMe
             userWeSubscribedTo.FirstName,
             QueryParameter.ReadOnly,
             new QueryParameter(QueryParameterType.SetUserTo, userWeSubscribedTo.SenderId),
-            new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex));
-
-         Keyboard.NewRow();
-      }
-
-      if (currentPageIndex > 0)
-         Keyboard.AddButton<MySubscriptionsQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
-
-      Keyboard.AddButton<MainMenuQuery>("В главное меню");
-
-      if (currentPageIndex < pagesCount - 1)
-         Keyboard.AddButton<MySubscriptionsQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));
-
-      Text.Bold("Ваши подписки:")
-         .LineBreak().Bold($"Страница {currentPageIndex + 1} из {pagesCount}");
+            new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
+      });
    }
 }
