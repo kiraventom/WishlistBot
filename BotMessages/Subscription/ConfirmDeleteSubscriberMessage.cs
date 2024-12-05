@@ -1,5 +1,4 @@
 using Serilog;
-using WishlistBot.Keyboard;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
@@ -11,7 +10,7 @@ public class ConfirmDeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : U
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters)
+      Keyboard
          .AddButton<DeleteSubscriberQuery>()
          .NewRow()
          .AddButton<SubscriberQuery>("Отмена \u274c");

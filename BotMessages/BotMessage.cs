@@ -13,7 +13,7 @@ public abstract class BotMessage(ILogger logger)
    protected ILogger Logger { get; } = logger;
 
    public MessageText Text { get; } = new();
-   public BotKeyboard Keyboard { get; protected set; }
+   public BotKeyboard Keyboard { get; private set; }
    public string PhotoFileId { get; protected set; }
 
    public async Task Init(BotUser user)
@@ -25,6 +25,8 @@ public abstract class BotMessage(ILogger logger)
          parameters = new QueryParameterCollection();
 
       user.BotState = BotState.Default;
+
+      Keyboard = new BotKeyboard(parameters);
 
       try
       {
