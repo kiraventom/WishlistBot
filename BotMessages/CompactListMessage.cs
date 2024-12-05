@@ -7,6 +7,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
+[AllowedTypes(QueryParameterType.ReadOnly, QueryParameterType.ReturnToSubscriber)]
 public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998

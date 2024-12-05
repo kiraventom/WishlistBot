@@ -6,6 +6,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
+[ChildMessage(typeof(SubscriberMessage))]
 public class ConfirmUnsubscribeMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998

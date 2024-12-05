@@ -6,6 +6,7 @@ using WishlistBot.Queries.Parameters;
 
 namespace WishlistBot.BotMessages.EditWish;
 
+[AllowedTypes(QueryParameterType.ReturnToFullList)]
 public class CancelEditWishMessage(ILogger logger) : BotMessage(logger)
 {
 #pragma warning disable CS1998

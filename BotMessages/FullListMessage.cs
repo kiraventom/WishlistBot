@@ -6,14 +6,12 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
+[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.ReadOnly, QueryParameterType.SetListPageTo)]
 public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      // Needs to be cleared if returned from ShowWish.
-      parameters.Pop(QueryParameterType.ReturnToFullList);
-
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
       user = GetParameterUser(parameters);
 

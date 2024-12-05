@@ -4,9 +4,12 @@ using WishlistBot.Queries.Parameters;
 
 namespace WishlistBot.Keyboard;
 
-public class BotKeyboard(QueryParameterCollection commonParameters)
+public class BotKeyboard()
 {
    private readonly List<List<BotButton>> _rows = [];
+   private QueryParameterCollection _commonParameters = new();
+
+   public void InitCommonParameters(QueryParameterCollection commonParameters) => _commonParameters = commonParameters;
 
    public BotKeyboard AddButton<T>(string customCaption = null) where T : IQuery, new() => AddButton<T>(customCaption, []);
 
@@ -46,7 +49,7 @@ public class BotKeyboard(QueryParameterCollection commonParameters)
    {
       var markupRows = _rows
          .Where(r => r.Count != 0)
-         .Select(r => r.Select(b => b.ToInlineKeyboardButton(commonParameters)));
+         .Select(r => r.Select(b => b.ToInlineKeyboardButton(_commonParameters)));
 
       return new InlineKeyboardMarkup() { InlineKeyboard = markupRows };
    }

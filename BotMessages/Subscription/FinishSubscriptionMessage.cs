@@ -6,6 +6,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
+[AllowedTypes(QueryParameterType.SetUserTo)]
 public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998

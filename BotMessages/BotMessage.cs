@@ -1,4 +1,6 @@
 using Serilog;
+using System.Reflection;
+using WishlistBot.Actions.Commands;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Keyboard;
 using WishlistBot.Database.Users;
@@ -13,7 +15,7 @@ public abstract class BotMessage(ILogger logger)
    protected ILogger Logger { get; } = logger;
 
    public MessageText Text { get; } = new();
-   public BotKeyboard Keyboard { get; private set; }
+   public BotKeyboard Keyboard { get; } = new();
    public string PhotoFileId { get; protected set; }
 
    public async Task Init(BotUser user)
@@ -26,7 +28,9 @@ public abstract class BotMessage(ILogger logger)
 
       user.BotState = BotState.Default;
 
-      Keyboard = new BotKeyboard(parameters);
+      var allowedTypes = GetAllowedTypes();
+      FilterParameters(parameters, allowedTypes);
+      Keyboard.InitCommonParameters(parameters);
 
       try
       {
@@ -45,4 +49,40 @@ public abstract class BotMessage(ILogger logger)
    }
 
    protected abstract Task InitInternal(BotUser user, QueryParameterCollection parameters);
+
+   private static void FilterParameters(QueryParameterCollection parameters, IReadOnlyCollection<QueryParameterType> allowedTypes)
+   {
+      var disallowedTypes = parameters
+         .Select(p => p.Type)
+         .Except(allowedTypes);
+
+      foreach (var disallowedType in disallowedTypes)
+         parameters.Pop(disallowedType);
+   }
+
+#pragma warning disable CA1859
+
+   private IReadOnlyCollection<QueryParameterType> GetAllowedTypes() => GetAllowedTypes(GetType());
+
+   private static IReadOnlyCollection<QueryParameterType> GetAllowedTypes(Type type)
+   {
+      var parentAllowedTypes = GetParentAllowedTypes(type);
+
+      var allowedTypesAttribute = type.GetCustomAttribute<AllowedTypesAttribute>(inherit: true);
+      var allowedTypes = allowedTypesAttribute is not null
+         ? allowedTypesAttribute.AllowedTypes
+         : [];
+
+      return parentAllowedTypes.Concat(allowedTypes).ToList();
+   }
+
+   private static IReadOnlyCollection<QueryParameterType> GetParentAllowedTypes(Type type)
+   {
+      var childMessageAttribute = type.GetCustomAttribute<ChildMessageAttribute>(inherit: true);
+      if (childMessageAttribute is null)
+         return [];
+
+      var parentType = childMessageAttribute.ParentMessageType;
+      return GetAllowedTypes(parentType);
+   }
 }

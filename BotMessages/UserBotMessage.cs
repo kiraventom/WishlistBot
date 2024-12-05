@@ -4,6 +4,7 @@ using WishlistBot.Queries.Parameters;
 
 namespace WishlistBot.BotMessages;
 
+[AllowedTypes(QueryParameterType.SetUserTo)]
 public abstract class UserBotMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
 {
    protected IEnumerable<BotUser> Users => usersDb.Values.Values;
