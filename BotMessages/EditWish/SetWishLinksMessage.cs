@@ -5,6 +5,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.EditWish;
 
+[ChildMessage(typeof(EditWishMessage))]
 public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
 {
 #pragma warning disable CS1998

@@ -6,15 +6,13 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
+[AllowedTypes(QueryParameterType.SetListPageTo)]
 public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
    // TODO: A lot of code is similar to MySubscriptionsMessage
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      parameters.Pop(QueryParameterType.ReadOnly);
-      parameters.Pop(QueryParameterType.SetUserTo);
-
       var currentPageIndex = 0;
       if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndex))
          currentPageIndex = (int)pageIndex;

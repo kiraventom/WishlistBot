@@ -21,9 +21,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client, UsersDb use
          // TODO [SQL] Fix this
          var userToSubscribeTo = usersDb.Values.Values.First(u => u.SubscribeId == subscribeId);
 
-         var collection = new QueryParameterCollection();
-         collection.Push(new QueryParameter(QueryParameterType.SetUserTo, userToSubscribeTo.SenderId));
-
+         var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.SetUserTo, userToSubscribeTo.SenderId)]);
          user.QueryParams = collection.ToString();
          await Client.SendOrEditBotMessage(Logger, user, new FinishSubscriptionMessage(Logger, usersDb), forceNewMessage: true);
       }

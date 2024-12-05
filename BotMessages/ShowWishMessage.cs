@@ -5,6 +5,8 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
+[AllowedTypes(QueryParameterType.SetCurrentWishTo)]
+[ChildMessage(typeof(FullListMessage))]
 public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998

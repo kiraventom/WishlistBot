@@ -5,6 +5,8 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.EditWish;
 
+[ChildMessage(typeof(EditWishMessage))]
+[AllowedTypes(QueryParameterType.ForceNewWish)]
 public class SetWishNameMessage(ILogger logger) : BotMessage(logger)
 {
 #pragma warning disable CS1998

@@ -8,6 +8,7 @@ using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages.EditWish;
 
+[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo)]
 public class FinishEditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998
