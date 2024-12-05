@@ -8,7 +8,7 @@ using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class DeleteWishMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
+public class DeleteWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 
 #pragma warning disable CS1998
@@ -30,8 +30,7 @@ public class DeleteWishMessage(ILogger logger, UsersDb usersDb) : BotMessage(log
       Text.Italic("Виш удалён!");
 
       // TODO DRY
-      var subscribers = usersDb.Values.Values
-         .Where(u => u.Subscriptions.Contains(user.SubscribeId));
+      var subscribers = Users.Where(u => u.Subscriptions.Contains(user.SubscribeId));
       var deleteWishNotification = new DeleteWishNotificationMessage(Logger, user, deletedWish);
       await NotificationService.Instance.Send(deleteWishNotification, subscribers);
    }

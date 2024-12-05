@@ -8,20 +8,14 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
-public class CompactListMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
+public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters);
+      user = GetParameterUser(parameters);
 
-      if (parameters.Peek(QueryParameterType.SetUserTo, out var userId))
-      {
-         if (usersDb.Values.TryGetValue(userId, out var user0))
-            user = user0;
-         else
-            Logger.Error("Can't set user to [{userId}], users db does not contain user with this ID", userId);
-      }
+      Keyboard = new BotKeyboard(parameters);
 
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 

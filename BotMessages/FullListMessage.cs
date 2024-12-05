@@ -7,7 +7,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
-public class FullListMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
+public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
@@ -18,13 +18,7 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : BotMessage(logge
       parameters.Pop(QueryParameterType.ReturnToFullList);
 
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
-      if (parameters.Peek(QueryParameterType.SetUserTo, out var userId))
-      {
-         if (usersDb.Values.ContainsKey(userId))
-            user = usersDb.Values[userId];
-         else
-            Logger.Error("Can't set user to [{userId}], users db does not contain user with this ID", userId);
-      }
+      user = GetParameterUser(parameters);
 
       var currentPageIndex = 0;
       if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndex))
@@ -56,7 +50,7 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : BotMessage(logge
          // TODO This is ugly. Maybe divide method to two different Inits for readonly and non-readonly versions?
          if (isReadOnly)
          {
-            const string eyeEmoji = "\U0001f441\U0000fe0f ";
+            const string eyeEmoji = "\U0001f441\ufe0f ";
 
             Keyboard.AddButton<ShowWishQuery>(
                eyeEmoji + wish.Name,

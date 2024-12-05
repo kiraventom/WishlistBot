@@ -9,7 +9,7 @@ using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-public class FinishEditWishMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
+public class FinishEditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
@@ -32,8 +32,7 @@ public class FinishEditWishMessage(ILogger logger, UsersDb usersDb) : BotMessage
          user.Wishes.Insert((int)wishIndex, editedWish);
          Text.Italic("Виш изменён!");
 
-         var subscribers = usersDb.Values.Values
-            .Where(u => u.Subscriptions.Contains(user.SubscribeId));
+         var subscribers = Users.Where(u => u.Subscriptions.Contains(user.SubscribeId));
 
          WishPropertyType wishPropertyType;
 
@@ -46,9 +45,9 @@ public class FinishEditWishMessage(ILogger logger, UsersDb usersDb) : BotMessage
          else if (wishBeforeEditing.FileId != editedWish.FileId)
             wishPropertyType = WishPropertyType.Media;
          else
-            wishPropertyType = (WishPropertyType)0;
+            wishPropertyType = 0;
 
-         if (wishPropertyType != (WishPropertyType)0)
+         if (wishPropertyType != 0)
          {
             var editWishNotification = new EditWishNotificationMessage(Logger, user, editedWish, wishPropertyType);
             await NotificationService.Instance.Send(editWishNotification, subscribers);
@@ -61,8 +60,7 @@ public class FinishEditWishMessage(ILogger logger, UsersDb usersDb) : BotMessage
          user.Wishes.Add(newWish);
          Text.Italic("Виш добавлен!");
 
-         var subscribers = usersDb.Values.Values
-            .Where(u => u.Subscriptions.Contains(user.SubscribeId));
+         var subscribers = Users.Where(u => u.Subscriptions.Contains(user.SubscribeId));
 
          var newWishNotification = new NewWishNotificationMessage(Logger, user, newWish);
          await NotificationService.Instance.Send(newWishNotification, subscribers);

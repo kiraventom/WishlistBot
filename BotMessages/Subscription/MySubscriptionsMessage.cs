@@ -7,7 +7,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
-public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
+public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
@@ -43,7 +43,7 @@ public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : BotMessag
             break;
 
          var subscribeId = user.Subscriptions[userIndex];
-         var userWeSubscribedTo = usersDb.Values.Values.FirstOrDefault(u => u.SubscribeId == subscribeId);
+         var userWeSubscribedTo = Users.FirstOrDefault(u => u.SubscribeId == subscribeId);
          if (userWeSubscribedTo is null)
          {
             Logger.Error("Users DB does not contain user wish subscribe id [{subscribeId}]", subscribeId);
@@ -51,10 +51,10 @@ public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : BotMessag
          }
 
          Keyboard.AddButton<SubscriptionQuery>(
-               userWeSubscribedTo.FirstName,
-               QueryParameter.ReadOnly,
-               new QueryParameter(QueryParameterType.SetUserTo, userWeSubscribedTo.SenderId), 
-               new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex));
+            userWeSubscribedTo.FirstName,
+            QueryParameter.ReadOnly,
+            new QueryParameter(QueryParameterType.SetUserTo, userWeSubscribedTo.SenderId),
+            new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex));
 
          Keyboard.NewRow();
       }

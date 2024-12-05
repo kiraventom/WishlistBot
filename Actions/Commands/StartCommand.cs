@@ -3,6 +3,7 @@ using Serilog;
 using WishlistBot.Database.Users;
 using WishlistBot.BotMessages;
 using WishlistBot.BotMessages.Subscription;
+using WishlistBot.Queries.Parameters;
 
 namespace WishlistBot.Actions.Commands;
 
@@ -18,12 +19,13 @@ public class StartCommand(ILogger logger, ITelegramBotClient client, UsersDb use
       if (isSubscribe)
       {
          // TODO [SQL] Fix this
-         var userToSubscribeTo = usersDb.Values.Values.FirstOrDefault(u => u.SubscribeId == subscribeId);
+         var userToSubscribeTo = usersDb.Values.Values.First(u => u.SubscribeId == subscribeId);
 
-         if (userToSubscribeTo is null)
-            Logger.Warning("User with SubscribeId '{subscribeId}' was not found", subscribeId);
+         var collection = new QueryParameterCollection();
+         collection.Push(new QueryParameter(QueryParameterType.SetUserTo, userToSubscribeTo.SenderId));
 
-         await Client.SendOrEditBotMessage(Logger, user, new FinishSubscriptionMessage(Logger, userToSubscribeTo), forceNewMessage: true);
+         user.QueryParams = collection.ToString();
+         await Client.SendOrEditBotMessage(Logger, user, new FinishSubscriptionMessage(Logger, usersDb), forceNewMessage: true);
       }
       else
       {

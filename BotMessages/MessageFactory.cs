@@ -15,15 +15,15 @@ public class MessageFactory(ILogger logger, UsersDb usersDb)
       BotMessage botMessage = query switch
       {
          MainMenuQuery => new MainMenuMessage(logger),
-         CompactListQuery => new CompactListMessage(logger, usersDb),
          EditWishQuery => new EditWishMessage(logger),
          ConfirmDeleteWishQuery => new ConfirmDeleteWishMessage(logger),
-         DeleteWishQuery => new DeleteWishMessage(logger, usersDb),
          SetWishNameQuery => new SetWishNameMessage(logger),
          SetWishDescriptionQuery => new SetWishDescriptionMessage(logger),
          SetWishMediaQuery => new SetWishMediaMessage(logger),
          SetWishLinksQuery => new SetWishLinksMessage(logger),
          CancelEditWishQuery => new CancelEditWishMessage(logger),
+         CompactListQuery => new CompactListMessage(logger, usersDb),
+         DeleteWishQuery => new DeleteWishMessage(logger, usersDb),
          FinishEditWishQuery => new FinishEditWishMessage(logger, usersDb),
          FullListQuery => new FullListMessage(logger, usersDb),
          ShowWishQuery => new ShowWishMessage(logger, usersDb),

@@ -7,7 +7,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
-public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
+public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
    // TODO: A lot of code is similar to MySubscriptionsMessage
 #pragma warning disable CS1998
@@ -24,7 +24,7 @@ public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : BotMessage(
 
       const int usersPerPage = 5;
 
-      var subscribers = usersDb.Values.Values
+      var subscribers = Users
          .Where(u => u.Subscriptions.Contains(user.SubscribeId))
          .ToList();
 
@@ -50,10 +50,10 @@ public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : BotMessage(
          var subscriber = subscribers[userIndex];
 
          Keyboard.AddButton<SubscriberQuery>(
-               subscriber.FirstName,
-               QueryParameter.ReadOnly,
-               new QueryParameter(QueryParameterType.SetUserTo, subscriber.SenderId), 
-               new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex));
+            subscriber.FirstName,
+            QueryParameter.ReadOnly,
+            new QueryParameter(QueryParameterType.SetUserTo, subscriber.SenderId),
+            new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex));
 
          Keyboard.NewRow();
       }
