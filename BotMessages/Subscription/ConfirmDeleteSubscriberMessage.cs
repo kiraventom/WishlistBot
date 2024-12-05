@@ -15,7 +15,7 @@ public class ConfirmDeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : U
          .NewRow()
          .AddButton<SubscriberQuery>("Отмена \u274c");
 
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       Text.Italic("Действительно удалить ")
          .InlineMention(user)

@@ -13,7 +13,7 @@ public class SubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotMessage
    {
       var sender = user;
 
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       var isSenderSubscribed = sender.Subscriptions.Contains(user.SubscribeId);
 

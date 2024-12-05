@@ -13,7 +13,7 @@ public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
    {
       Keyboard.AddButton<FullListQuery>("Назад", QueryParameter.ReadOnly);
 
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       parameters.Pop(QueryParameterType.SetCurrentWishTo, out var setWishIndex);
 

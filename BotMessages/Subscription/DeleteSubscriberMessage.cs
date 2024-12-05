@@ -13,7 +13,7 @@ public class DeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotM
 
       var sender = user;
 
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       Text.Italic("Вы удалили ")
          .InlineMention(user)

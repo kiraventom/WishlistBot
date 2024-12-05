@@ -12,7 +12,7 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       var totalCount = user.Wishes.Count;
 

@@ -11,7 +11,7 @@ public class UnsubscribeMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
    {
       Keyboard.AddButton<MySubscriptionsQuery>("К моим подпискам");
 
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       Text.Italic("Вы отписались от вишлиста ")
          .InlineMention(user);

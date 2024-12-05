@@ -12,7 +12,7 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 

@@ -11,7 +11,7 @@ public class SubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessa
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       Keyboard.AddButton<ConfirmUnsubscribeQuery>("Отписаться");
 

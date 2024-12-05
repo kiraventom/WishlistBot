@@ -12,7 +12,7 @@ public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBo
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var sender = user;
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       if (sender.Subscriptions.Contains(user.SubscribeId))
       {

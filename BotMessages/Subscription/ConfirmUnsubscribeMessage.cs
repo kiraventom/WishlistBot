@@ -16,7 +16,7 @@ public class ConfirmUnsubscribeMessage(ILogger logger, UsersDb usersDb) : UserBo
          .NewRow()
          .AddButton<CompactListQuery>("Отмена \u274c");
 
-      user = GetParameterUser(parameters);
+      user = GetUser(user, parameters);
 
       Text.Italic("Действительно отписаться от ")
          .InlineMention(user)
