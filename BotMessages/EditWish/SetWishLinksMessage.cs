@@ -1,5 +1,4 @@
 using Serilog;
-using WishlistBot.Keyboard;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
@@ -11,8 +10,6 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters);
-
       if (user.CurrentWish.Links.Any())
          Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));
 

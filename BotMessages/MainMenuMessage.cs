@@ -1,5 +1,4 @@
 using Serilog;
-using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Subscription;
@@ -12,7 +11,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters)
+      Keyboard
          .AddButton<CompactListQuery>("Мои виши")
          .NewRow()
          .AddButton<MySubscriptionsQuery>()

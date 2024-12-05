@@ -1,5 +1,4 @@
 using Serilog;
-using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Parameters;
@@ -14,8 +13,6 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       user = GetParameterUser(parameters);
-
-      Keyboard = new BotKeyboard(parameters);
 
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 

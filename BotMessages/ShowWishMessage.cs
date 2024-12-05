@@ -1,5 +1,4 @@
 using Serilog;
-using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Database.Users;
@@ -11,8 +10,7 @@ public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters)
-         .AddButton<FullListQuery>("Назад", QueryParameter.ReadOnly);
+      Keyboard.AddButton<FullListQuery>("Назад", QueryParameter.ReadOnly);
 
       user = GetParameterUser(parameters);
 

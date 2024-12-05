@@ -1,5 +1,4 @@
 using Serilog;
-using Telegram.Bot.Types;
 using WishlistBot.Database.Users;
 using WishlistBot.Queries.Parameters;
 
