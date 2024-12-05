@@ -29,7 +29,12 @@ public abstract class BotMessage(ILogger logger)
       user.BotState = BotState.Default;
 
       var allowedTypes = GetAllowedTypes();
+
+      Logger.Debug($"unfiltered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
+      Logger.Debug($"allowed types for {this.GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
       FilterParameters(parameters, allowedTypes);
+      Logger.Debug($"filtered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
+
       Keyboard.InitCommonParameters(parameters);
 
       try
@@ -68,17 +73,21 @@ public abstract class BotMessage(ILogger logger)
    {
       var parentAllowedTypes = GetParentAllowedTypes(type);
 
-      var allowedTypesAttribute = type.GetCustomAttribute<AllowedTypesAttribute>(inherit: true);
-      var allowedTypes = allowedTypesAttribute is not null
-         ? allowedTypesAttribute.AllowedTypes
-         : [];
+      var allAllowedTypes = new HashSet<QueryParameterType>(parentAllowedTypes);
+      var allowedTypesAttributes = type.GetCustomAttributes<AllowedTypesAttribute>();
+      foreach (var allowedTypesAttribute in allowedTypesAttributes)
+      {
+         var allowedTypes = allowedTypesAttribute.AllowedTypes;
+         foreach (var allowedType in allowedTypes)
+            allAllowedTypes.Add(allowedType);
+      }
 
-      return parentAllowedTypes.Concat(allowedTypes).ToList();
+      return allAllowedTypes;
    }
 
    private static IReadOnlyCollection<QueryParameterType> GetParentAllowedTypes(Type type)
    {
-      var childMessageAttribute = type.GetCustomAttribute<ChildMessageAttribute>(inherit: true);
+      var childMessageAttribute = type.GetCustomAttribute<ChildMessageAttribute>();
       if (childMessageAttribute is null)
          return [];
 

@@ -8,8 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [ChildMessage(typeof(EditWishMessage))]
 public class SetWishMediaMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (user.CurrentWish.FileId is not null)
          Keyboard.AddButton<EditWishQuery>("Удалить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Media));
@@ -23,5 +22,7 @@ public class SetWishMediaMessage(ILogger logger) : BotMessage(logger)
       Text.Verbatim(PhotoFileId is not null ? "Пришлите новое фото или удалите текущее" : "Пришлите фото виша:");
 
       user.BotState = BotState.ListenForWishMedia;
+
+      return Task.CompletedTask;
    }
 }

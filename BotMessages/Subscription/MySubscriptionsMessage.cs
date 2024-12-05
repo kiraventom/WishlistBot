@@ -6,11 +6,10 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Subscription;
 
-[AllowedTypes(QueryParameterType.SetListPageTo)]
+[AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ReadOnly)]
 public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var totalCount = user.Subscriptions.Count;
 
@@ -32,5 +31,7 @@ public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : UserBotMe
             new QueryParameter(QueryParameterType.SetUserTo, userWeSubscribedTo.SenderId),
             new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
       });
+
+      return Task.CompletedTask;
    }
 }

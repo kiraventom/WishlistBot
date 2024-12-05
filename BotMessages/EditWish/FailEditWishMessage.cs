@@ -8,8 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 
 public class EditWishFailedMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<SetWishNameQuery>("Добавить другой виш")
@@ -19,5 +18,7 @@ public class EditWishFailedMessage(ILogger logger) : BotMessage(logger)
       Text.Italic("Создание виша не удалось");
 
       user.CurrentWish = null;
+
+      return Task.CompletedTask;
    }
 }

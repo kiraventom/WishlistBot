@@ -7,16 +7,18 @@ namespace WishlistBot.BotMessages.Subscription;
 
 public class UnsubscribeMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard.AddButton<MySubscriptionsQuery>("К моим подпискам");
 
-      user = GetParameterUser(parameters);
+      var sender = user;
+      user = GetUser(user, parameters);
 
       Text.Italic("Вы отписались от вишлиста ")
          .InlineMention(user);
 
-      user.Subscriptions.Remove(user.SubscribeId);
+      sender.Subscriptions.Remove(user.SubscribeId);
+
+      return Task.CompletedTask;
    }
 }

@@ -8,8 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [ChildMessage(typeof(EditWishMessage))]
 public class SetWishDescriptionMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (!string.IsNullOrEmpty(user.CurrentWish.Description))
          Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Description));
@@ -21,7 +20,6 @@ public class SetWishDescriptionMessage(ILogger logger) : BotMessage(logger)
       if (user.CurrentWish.Description is null)
       {
          Text.Verbatim("Укажите подробное описание виша:");
-
       }
       else
       {
@@ -33,5 +31,7 @@ public class SetWishDescriptionMessage(ILogger logger) : BotMessage(logger)
       }
 
       user.BotState = BotState.ListenForWishDescription;
+
+      return Task.CompletedTask;
    }
 }

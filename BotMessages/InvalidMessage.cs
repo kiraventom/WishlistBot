@@ -6,9 +6,10 @@ namespace WishlistBot.BotMessages;
 
 public class InvalidMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Text.Bold("Некорректное действие");
+
+      return Task.CompletedTask;
    }
 }
