@@ -68,12 +68,15 @@ public abstract class BotMessage(ILogger logger)
    {
       var parentAllowedTypes = GetParentAllowedTypes(type);
 
-      var allowedTypesAttribute = type.GetCustomAttribute<AllowedTypesAttribute>(inherit: true);
-      var allowedTypes = allowedTypesAttribute is not null
-         ? allowedTypesAttribute.AllowedTypes
-         : [];
+      var allAllowedTypes = new List<QueryParameterType>();
+      var allowedTypesAttributes = type.GetCustomAttributes<AllowedTypesAttribute>(inherit: true);
+      foreach (var allowedTypesAttribute in allowedTypesAttributes)
+      {
+         var allowedTypes = allowedTypesAttribute.AllowedTypes;
+         allAllowedTypes.AddRange(allowedTypes);
+      }
 
-      return parentAllowedTypes.Concat(allowedTypes).ToList();
+      return parentAllowedTypes.Concat(allAllowedTypes).ToList();
    }
 
    private static IReadOnlyCollection<QueryParameterType> GetParentAllowedTypes(Type type)
