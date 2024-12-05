@@ -21,10 +21,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
       _parameters = parameters.ToDictionary(p => p.Type, p => p);
    }
 
-   public void Push(QueryParameter parameter)
-   {
-      _parameters[parameter.Type] = parameter;
-   }
+   private void Push(QueryParameter parameter) => _parameters[parameter.Type] = parameter;
 
    public bool Peek(QueryParameterType type) => _parameters.ContainsKey(type);
 

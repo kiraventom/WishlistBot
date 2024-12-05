@@ -5,6 +5,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.EditWish;
 
+[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo, QueryParameterType.ClearWishProperty)]
 public class EditWishMessage(ILogger logger) : BotMessage(logger)
 {
 #pragma warning disable CS1998

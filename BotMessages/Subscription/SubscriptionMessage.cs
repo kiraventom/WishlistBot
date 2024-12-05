@@ -6,6 +6,7 @@ using WishlistBot.Queries.Subscription;
 
 namespace WishlistBot.BotMessages.Subscription;
 
+[ChildMessage(typeof(MySubscriptionsMessage))]
 public class SubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
 #pragma warning disable CS1998
