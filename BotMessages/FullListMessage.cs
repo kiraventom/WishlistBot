@@ -15,74 +15,51 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
       user = GetParameterUser(parameters);
 
-      var currentPageIndex = 0;
-      if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndex))
-         currentPageIndex = (int)pageIndex;
+      var totalCount = user.Wishes.Count;
 
-      const int wishesPerPage = 5;
+      ListMessageUtils.AddListControls<FullListQuery, CompactListQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+      {
+         if (isReadOnly)
+            AddShowWishButton(user, itemIndex, pageIndex);
+         else
+            AddEditWishButton(user, itemIndex, pageIndex);
+      });
 
-      var pagesCount = (int)Math.Ceiling((double)user.Wishes.Count / wishesPerPage);
-
-      if (pagesCount == 0)
+      if (totalCount == 0)
       {
          Text.Bold("Список пуст");
-         Keyboard.AddButton<CompactListQuery>("Назад");
          return;
       }
 
-      // Can happen if the only wish on the last page was deleted
-      if (currentPageIndex >= pagesCount)
-         currentPageIndex = pagesCount - 1;
-
-      for (var i = 0; i < wishesPerPage; ++i)
-      {
-         var wishIndex = currentPageIndex * wishesPerPage + i;
-         if (wishIndex >= user.Wishes.Count)
-            break;
-
-         var wish = user.Wishes[wishIndex];
-
-         // TODO This is ugly. Maybe divide method to two different Inits for readonly and non-readonly versions?
-         if (isReadOnly)
-         {
-            const string eyeEmoji = "\U0001f441\ufe0f ";
-
-            Keyboard.AddButton<ShowWishQuery>(
-               eyeEmoji + wish.Name,
-               new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex),
-               new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex),
-               QueryParameter.ReturnToFullList);
-         }
-         else
-         {
-            const string pencilEmoji = "\u270f\ufe0f ";
-
-            Keyboard.AddButton<EditWishQuery>(
-               pencilEmoji + wish.Name,
-               new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex),
-               new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex),
-               QueryParameter.ReturnToFullList);
-         }
-
-         Keyboard.NewRow();
-      }
-
-      if (currentPageIndex > 0)
-         Keyboard.AddButton<FullListQuery>("\u2b05\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex - 1));
-
-      Keyboard.AddButton<CompactListQuery>("Назад");
-
-      if (currentPageIndex < pagesCount - 1)
-         Keyboard.AddButton<FullListQuery>("\u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, currentPageIndex + 1));
-
       if (isReadOnly)
-         Text.Bold("Виши ")
-            .InlineMention(user)
-            .Bold(":");
+         Text.Bold("Виши ").InlineMention(user).Bold(":");
       else
          Text.Bold("Ваши виши:");
+   }
 
+   private void AddShowWishButton(BotUser user, int itemIndex, int pageIndex)
+   {
+      var wish = user.Wishes[itemIndex];
 
-      Text.LineBreak().Bold($"Страница {currentPageIndex + 1} из {pagesCount}");
+      const string eyeEmoji = "\U0001f441\ufe0f ";
+
+      Keyboard.AddButton<ShowWishQuery>(
+         eyeEmoji + wish.Name,
+         new QueryParameter(QueryParameterType.SetCurrentWishTo, itemIndex),
+         new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
+         QueryParameter.ReturnToFullList);
+   }
+
+   private void AddEditWishButton(BotUser user, int itemIndex, int pageIndex)
+   {
+      var wish = user.Wishes[itemIndex];
+
+      const string pencilEmoji = "\u270f\ufe0f ";
+
+      Keyboard.AddButton<EditWishQuery>(
+         pencilEmoji + wish.Name,
+         new QueryParameter(QueryParameterType.SetCurrentWishTo, itemIndex),
+         new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
+         QueryParameter.ReturnToFullList);
    }
 }
