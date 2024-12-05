@@ -1,6 +1,5 @@
 using Serilog;
 using WishlistBot.Database.Users;
-using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Parameters;
@@ -12,8 +11,6 @@ public class CancelEditWishMessage(ILogger logger) : BotMessage(logger)
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters);
-
       if (parameters.Pop(QueryParameterType.ReturnToFullList))
       {
          Text.Italic("Редактирование виша отменено");

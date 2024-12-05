@@ -1,5 +1,4 @@
 using Serilog;
-using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
@@ -12,8 +11,6 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters);
-
       // Needs to be cleared if returned from ShowWish.
       parameters.Pop(QueryParameterType.ReturnToFullList);
 

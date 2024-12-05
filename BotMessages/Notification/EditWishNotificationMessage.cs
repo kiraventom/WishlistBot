@@ -1,5 +1,4 @@
 using Serilog;
-using WishlistBot.Keyboard;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Database.Users;
@@ -12,8 +11,6 @@ public class EditWishNotificationMessage(ILogger logger, BotUser notificationSou
 #pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
-      Keyboard = new BotKeyboard(parameters);
-
       var wishIndex = notificationSource.Wishes.IndexOf(editedWish);
       // TODO Fix
       const int wishesPerPage = 5;
