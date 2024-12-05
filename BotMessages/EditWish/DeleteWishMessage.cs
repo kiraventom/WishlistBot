@@ -10,7 +10,6 @@ namespace WishlistBot.BotMessages.EditWish;
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo)]
 public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (parameters.Pop(QueryParameterType.ReturnToFullList))

@@ -8,8 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo, QueryParameterType.ClearWishProperty)]
 public class EditWishMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<SetWishNameQuery>()
@@ -83,5 +82,7 @@ public class EditWishMessage(ILogger logger) : BotMessage(logger)
       }
 
       PhotoFileId = wish.FileId;
+
+      return Task.CompletedTask;
    }
 }

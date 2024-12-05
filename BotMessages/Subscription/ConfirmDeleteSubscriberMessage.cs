@@ -8,8 +8,7 @@ namespace WishlistBot.BotMessages.Subscription;
 [ChildMessage(typeof(SubscriberMessage))]
 public class ConfirmDeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<DeleteSubscriberQuery>()
@@ -25,5 +24,7 @@ public class ConfirmDeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : U
          .ItalicBold("После этого ")
          .InlineMention(user)
          .ItalicBold(" больше не сможет видеть ваши виши.");
+
+      return Task.CompletedTask;
    }
 }

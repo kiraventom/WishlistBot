@@ -11,7 +11,6 @@ namespace WishlistBot.BotMessages.EditWish;
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo)]
 public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard

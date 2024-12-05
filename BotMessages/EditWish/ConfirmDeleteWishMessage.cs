@@ -8,8 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [ChildMessage(typeof(EditWishMessage))]
 public class ConfirmDeleteWishMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<DeleteWishQuery>()
@@ -21,5 +20,7 @@ public class ConfirmDeleteWishMessage(ILogger logger) : BotMessage(logger)
          .Italic("\"")
          .ItalicBold(" навсегда")
          .Italic("?");
+
+      return Task.CompletedTask;
    }
 }

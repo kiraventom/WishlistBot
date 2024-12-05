@@ -4,7 +4,6 @@ using WishlistBot.Queries.Parameters;
 
 namespace WishlistBot.BotMessages;
 
-#pragma warning disable CS1998
 public static class ListMessageUtils
 {
    public static int ItemsPerPage = 5;

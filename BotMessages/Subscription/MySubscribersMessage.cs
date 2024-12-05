@@ -9,8 +9,7 @@ namespace WishlistBot.BotMessages.Subscription;
 [AllowedTypes(QueryParameterType.SetListPageTo)]
 public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var subscribers = Users
          .Where(u => u.Subscriptions.Contains(user.SubscribeId))
@@ -30,5 +29,7 @@ public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMess
             new QueryParameter(QueryParameterType.SetUserTo, subscriber.SenderId),
             new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
       });
+
+      return Task.CompletedTask;
    }
 }

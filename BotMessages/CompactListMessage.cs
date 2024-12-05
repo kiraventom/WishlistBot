@@ -10,8 +10,7 @@ namespace WishlistBot.BotMessages;
 [AllowedTypes(QueryParameterType.ReadOnly, QueryParameterType.ReturnToSubscriber)]
 public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       user = GetParameterUser(parameters);
 
@@ -58,5 +57,7 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
          if (wish.Links.Any())
             Text.Verbatim(" \U0001f310"); // globe
       }
+
+      return Task.CompletedTask;
    }
 }

@@ -9,8 +9,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [AllowedTypes(QueryParameterType.ForceNewWish)]
 public class SetWishNameMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard.AddButton<CancelEditWishQuery>();
 
@@ -31,5 +30,7 @@ public class SetWishNameMessage(ILogger logger) : BotMessage(logger)
       }
 
       user.BotState = BotState.ListenForWishName;
+
+      return Task.CompletedTask;
    }
 }

@@ -9,8 +9,7 @@ namespace WishlistBot.BotMessages;
 [ChildMessage(typeof(FullListMessage))]
 public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard.AddButton<FullListQuery>("Назад", QueryParameter.ReadOnly);
 
@@ -45,5 +44,7 @@ public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
       }
 
       PhotoFileId = wish.FileId;
+
+      return Task.CompletedTask;
    }
 }

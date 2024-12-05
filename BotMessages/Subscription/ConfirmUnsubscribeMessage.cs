@@ -9,8 +9,7 @@ namespace WishlistBot.BotMessages.Subscription;
 [ChildMessage(typeof(SubscriberMessage))]
 public class ConfirmUnsubscribeMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<UnsubscribeQuery>()
@@ -22,5 +21,7 @@ public class ConfirmUnsubscribeMessage(ILogger logger, UsersDb usersDb) : UserBo
       Text.Italic("Действительно отписаться от ")
          .InlineMention(user)
          .Italic("?");
+
+      return Task.CompletedTask;
    }
 }

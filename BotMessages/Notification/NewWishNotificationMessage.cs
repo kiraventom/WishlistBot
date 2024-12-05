@@ -7,12 +7,11 @@ namespace WishlistBot.BotMessages.Notification;
 
 public class NewWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish newWish) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var wishIndex = notificationSource.Wishes.IndexOf(newWish);
 
-      // TODO Fix
+      // TODO Fix all notifications
       const int wishesPerPage = 5;
       var pageIndex = wishIndex / wishesPerPage;
 
@@ -27,5 +26,7 @@ public class NewWishNotificationMessage(ILogger logger, BotUser notificationSour
          .Italic(" добавил новый виш '")
          .ItalicBold(newWish.Name)
          .Italic("'!");
+
+      return Task.CompletedTask;
    }
 }

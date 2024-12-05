@@ -9,8 +9,7 @@ namespace WishlistBot.BotMessages;
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.ReadOnly, QueryParameterType.SetListPageTo)]
 public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
       user = GetParameterUser(parameters);
@@ -28,13 +27,15 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
       if (totalCount == 0)
       {
          Text.Bold("Список пуст");
-         return;
+         return Task.CompletedTask;
       }
 
       if (isReadOnly)
          Text.Bold("Виши ").InlineMention(user).Bold(":");
       else
          Text.Bold("Ваши виши:");
+
+      return Task.CompletedTask;
    }
 
    private void AddShowWishButton(BotUser user, int itemIndex, int pageIndex)

@@ -8,8 +8,7 @@ namespace WishlistBot.BotMessages;
 
 public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<CompactListQuery>("Мои виши")
@@ -27,5 +26,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
          .Italic(" (нажмите, чтобы скопировать)")
          .Bold(":")
          .LineBreak().Monospace($"t.me/smartwishlistbot?start={user.SubscribeId}");
+
+      return Task.CompletedTask;
    }
 }

@@ -7,8 +7,7 @@ namespace WishlistBot.BotMessages.Subscription;
 
 public class DeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-#pragma warning disable CS1998
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard.AddButton<MySubscribersQuery>("К моим подписчикам");
 
@@ -21,5 +20,7 @@ public class DeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotM
          .Italic(" из списка своих подписчиков.");
 
       user.Subscriptions.Remove(sender.SubscribeId);
+
+      return Task.CompletedTask;
    }
 }
