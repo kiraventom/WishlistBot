@@ -29,7 +29,12 @@ public abstract class BotMessage(ILogger logger)
       user.BotState = BotState.Default;
 
       var allowedTypes = GetAllowedTypes();
+
+      Logger.Information($"unfiltered parameters: {parameters.ToString()}");
       FilterParameters(parameters, allowedTypes);
+      Logger.Information($"allowed types for {this.GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
+      Logger.Information($"filtered parameters: {parameters.ToString()}");
+
       Keyboard.InitCommonParameters(parameters);
 
       try
@@ -68,7 +73,7 @@ public abstract class BotMessage(ILogger logger)
    {
       var parentAllowedTypes = GetParentAllowedTypes(type);
 
-      var allAllowedTypes = new List<QueryParameterType>();
+      var allAllowedTypes = new List<QueryParameterType>(parentAllowedTypes);
       var allowedTypesAttributes = type.GetCustomAttributes<AllowedTypesAttribute>(inherit: true);
       foreach (var allowedTypesAttribute in allowedTypesAttributes)
       {
@@ -76,7 +81,7 @@ public abstract class BotMessage(ILogger logger)
          allAllowedTypes.AddRange(allowedTypes);
       }
 
-      return parentAllowedTypes.Concat(allAllowedTypes).ToList();
+      return allAllowedTypes;
    }
 
    private static IReadOnlyCollection<QueryParameterType> GetParentAllowedTypes(Type type)
