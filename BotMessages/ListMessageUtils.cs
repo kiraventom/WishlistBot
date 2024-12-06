@@ -33,13 +33,16 @@ public static class ListMessageUtils
          addButtonAt(itemIndex, pageIndex);
          keyboard.NewRow();
       }
+       
+      var prevPageIndex = pageIndex - 1;
+      var nextPageIndex = pageIndex + 1;
 
       if (pageIndex > 0)
-         keyboard.AddButton<TListQuery>($"\u2b05\ufe0f {pageIndex - 1}", new QueryParameter(QueryParameterType.SetListPageTo, pageIndex - 1));
+         keyboard.AddButton<TListQuery>($"\u2b05\ufe0f {prevPageIndex + 1}", new QueryParameter(QueryParameterType.SetListPageTo, prevPageIndex));
 
-      keyboard.AddButton<TParentQuery>();
+      keyboard.AddButton<TParentQuery>("Назад");
 
       if (pageIndex < pagesCount - 1)
-         keyboard.AddButton<TListQuery>($"{pageIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, pageIndex + 1));
+         keyboard.AddButton<TListQuery>($"{nextPageIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.SetListPageTo, nextPageIndex));
    }
 }

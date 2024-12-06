@@ -7,6 +7,7 @@ using WishlistBot.Database.Users;
 namespace WishlistBot.BotMessages;
 
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.ReadOnly, QueryParameterType.SetListPageTo)]
+[ChildMessage(typeof(CompactListMessage))]
 public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
