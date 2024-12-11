@@ -5,7 +5,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo, QueryParameterType.ClearWishProperty)]
+[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo, QueryParameterType.ClearWishProperty)]
 [ChildMessage(typeof(FullListMessage))]
 // TODO Separate to NewWish and EditWish
 public class EditWishMessage(ILogger logger) : BotMessage(logger)
@@ -22,13 +22,23 @@ public class EditWishMessage(ILogger logger) : BotMessage(logger)
 
       if (parameters.Peek(QueryParameterType.ReturnToFullList))
       {
-         parameters.Peek(QueryParameterType.SetCurrentWishTo, out var setWishIndex);
+         parameters.Peek(QueryParameterType.SetWishTo, out var wishId);
 
-         user.CurrentWish ??= user.Wishes[(int)setWishIndex].Clone();
+         if (user.CurrentWish is null)
+         {
+            var wishToClone = user.Wishes.FirstOrDefault(w => w.Id == wishId);
+            if (wishToClone is null)
+            {
+               throw new NotSupportedException($"Can't find wish {wishId} to clone");
+            }
 
-         Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.SetCurrentWishTo, setWishIndex));
+            var cloneId = DatabaseUtils.GenerateId(user.Wishes.Select(w => w.Id).ToList()); // TODO Ugly
+            user.CurrentWish = wishToClone.Clone(cloneId);
+         }
+
+         Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.SetWishTo, wishId));
          Keyboard.NewRow();
-         Keyboard.AddButton<FinishEditWishQuery>(new QueryParameter(QueryParameterType.SetCurrentWishTo, setWishIndex));
+         Keyboard.AddButton<FinishEditWishQuery>(new QueryParameter(QueryParameterType.SetWishTo, wishId));
       }
       else
       {

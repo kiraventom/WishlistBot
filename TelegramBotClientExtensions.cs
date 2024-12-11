@@ -17,7 +17,24 @@ public static class TelegramBotClientExtensions
       try
       {
          await botMessage.Init(user);
+      }
+      catch (Exception e)
+      {
+         if (botMessage is InvalidMessage)
+         {
+            logger.Fatal("Failed to initialize {invalidMessageName}, shit got real", nameof(InvalidMessage));
+            return null;
+         }
+         else
+         {
+            logger.Fatal(e.ToString());
+            var invalidMessage = new InvalidMessage(logger);
+            return await client.SendOrEditBotMessage(logger, user, invalidMessage, forceNewMessage: true);
+         }
+      }
 
+      try
+      {
          var text = botMessage.Text.ToString();
 
          logger.Debug(text);

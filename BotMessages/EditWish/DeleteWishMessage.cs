@@ -7,7 +7,7 @@ using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo)]
+[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo)]
 [ChildMessage(typeof(ConfirmDeleteWishMessage))]
 public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 {
@@ -18,10 +18,18 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
       else
          Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
 
-      parameters.Peek(QueryParameterType.SetCurrentWishTo, out var wishIndex);
+      parameters.Peek(QueryParameterType.SetWishTo, out var wishId);
 
-      var deletedWish = user.Wishes[(int)wishIndex];
-      user.Wishes.Remove(deletedWish);
+      var deletedWish = user.Wishes.FirstOrDefault(w => w.Id == wishId);
+      if (deletedWish is null)
+      {
+         Logger.Error("Can't delete wish {id} from user {userId}, not found", wishId, user.SenderId);
+      }
+      else
+      {
+         user.Wishes.Remove(deletedWish);
+      }
+
       user.CurrentWish = null;
 
       Text.Italic("Виш удалён!");

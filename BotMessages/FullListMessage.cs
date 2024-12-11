@@ -47,7 +47,7 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
 
       Keyboard.AddButton<ShowWishQuery>(
          eyeEmoji + wish.Name,
-         new QueryParameter(QueryParameterType.SetCurrentWishTo, itemIndex),
+         new QueryParameter(QueryParameterType.SetWishTo, wish.Id),
          new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
          QueryParameter.ReturnToFullList);
    }
@@ -60,7 +60,7 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
 
       Keyboard.AddButton<EditWishQuery>(
          pencilEmoji + wish.Name,
-         new QueryParameter(QueryParameterType.SetCurrentWishTo, itemIndex),
+         new QueryParameter(QueryParameterType.SetWishTo, wish.Id),
          new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
          QueryParameter.ReturnToFullList);
    }
