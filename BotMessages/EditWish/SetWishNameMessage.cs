@@ -8,7 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 
 [ChildMessage(typeof(EditWishMessage))]
 [AllowedTypes(QueryParameterType.ForceNewWish)]
-public class SetWishNameMessage(ILogger logger) : BotMessage(logger)
+public class SetWishNameMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -18,7 +18,7 @@ public class SetWishNameMessage(ILogger logger) : BotMessage(logger)
       {
          user.CurrentWish = new Wish()
          {
-            Id = DatabaseUtils.GenerateId(user.Wishes.Select(w => w.Id).ToList()) // TODO Ugly
+            Id = GenerateWishId()
          };
          Text.Verbatim("Укажите краткое название виша:");
          Keyboard.AddButton<CancelEditWishQuery>();

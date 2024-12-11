@@ -29,7 +29,8 @@ public static class TelegramBotClientExtensions
          {
             logger.Fatal(e.ToString());
             var invalidMessage = new InvalidMessage(logger);
-            return await client.SendOrEditBotMessage(logger, user, invalidMessage, forceNewMessage: true);
+            var sentMessage = await client.SendOrEditBotMessage(logger, user, invalidMessage, forceNewMessage: true);
+            return sentMessage;
          }
       }
 

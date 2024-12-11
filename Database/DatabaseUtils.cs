@@ -11,7 +11,7 @@ public static class DatabaseUtils
       var id = ids.First();
       while (ids.Contains(id))
       {
-         id = Random.Shared.NextInt64();
+         id = (long)Random.Shared.Next();
       }
 
       return id;

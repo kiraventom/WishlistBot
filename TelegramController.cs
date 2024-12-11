@@ -29,7 +29,7 @@ public class TelegramController
       _logger = logger;
       _usersDb = usersDb;
       _client = client;
-      _wishMessagesListener = new WishMessagesListener(_logger, _client);
+      _wishMessagesListener = new WishMessagesListener(_logger, _client, _usersDb);
 
       var messagesFactory = new MessageFactory(_logger, _usersDb);
 

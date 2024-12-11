@@ -7,7 +7,7 @@ using WishlistBot.BotMessages.EditWish;
 
 namespace WishlistBot;
 
-public class WishMessagesListener(ILogger logger, ITelegramBotClient client)
+public class WishMessagesListener(ILogger logger, ITelegramBotClient client, UsersDb usersDb)
 {
    public async Task HandleWishMessageAsync(Message message, BotUser user)
    {
@@ -105,7 +105,7 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client)
 
    private async Task SendEditWishMessageAsync(BotUser user)
    {
-      var message = new EditWishMessage(logger);
+      var message = new EditWishMessage(logger, usersDb);
       await client.SendOrEditBotMessage(logger, user, message, forceNewMessage: true);
    }
 }
