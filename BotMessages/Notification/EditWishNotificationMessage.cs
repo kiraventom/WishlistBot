@@ -18,6 +18,7 @@ public class EditWishNotificationMessage(ILogger logger, BotUser notificationSou
                                    new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId),
                                    new QueryParameter(QueryParameterType.SetWishTo, editedWish.Id),
                                    new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
+         .NewRow()
          .AddButton<MainMenuQuery>("В главное меню");
 
       var wishPropertyName = wishPropertyType switch

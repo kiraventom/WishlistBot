@@ -14,6 +14,7 @@ public class DeleteWishNotificationMessage(ILogger logger, BotUser notificationS
          .AddButton<SubscriptionQuery>("Перейти к подписке",
                                        QueryParameter.ReadOnly,
                                        new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId))
+         .NewRow()
          .AddButton<MainMenuQuery>("В главное меню");
 
       Text

@@ -17,6 +17,7 @@ public class NewWishNotificationMessage(ILogger logger, BotUser notificationSour
                                    new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId),
                                    new QueryParameter(QueryParameterType.SetWishTo, newWish.Id),
                                    new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
+         .NewRow()
          .AddButton<MainMenuQuery>("В главное меню");
 
       Text
