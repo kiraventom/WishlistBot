@@ -9,7 +9,7 @@ using WishlistBot.Notification;
 namespace WishlistBot.BotMessages.EditWish;
 
 [ChildMessage(typeof(EditWishMessage))]
-[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetCurrentWishTo)]
+[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo)]
 public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
 {
    protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
@@ -23,13 +23,22 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
       else
          Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
 
-      if (parameters.Pop(QueryParameterType.SetCurrentWishTo, out var wishIndex))
+      if (parameters.Pop(QueryParameterType.SetWishTo, out var wishId))
       {
          var editedWish = user.CurrentWish;
+         var wishBeforeEditing = user.Wishes.FirstOrDefault(w => w.Id == wishId);
+         if (wishBeforeEditing is null)
+         {
+            Logger.Error("Can't find wish {id} to remove after editing", wishId);
+            user.Wishes.Add(editedWish);
+         }
+         else
+         {
+            var wishIndex = user.Wishes.IndexOf(wishBeforeEditing);
+            user.Wishes.Remove(wishBeforeEditing);
+            user.Wishes.Insert(wishIndex, editedWish);
+         }
 
-         var wishBeforeEditing = user.Wishes[(int)wishIndex];
-         user.Wishes.Remove(wishBeforeEditing);
-         user.Wishes.Insert((int)wishIndex, editedWish);
          Text.Italic("Виш изменён!");
 
          WishPropertyType wishPropertyType;

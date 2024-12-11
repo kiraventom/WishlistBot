@@ -5,7 +5,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
-[AllowedTypes(QueryParameterType.SetCurrentWishTo)]
+[AllowedTypes(QueryParameterType.SetWishTo)]
 [ChildMessage(typeof(FullListMessage))]
 public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
@@ -15,9 +15,14 @@ public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
 
       user = GetUser(user, parameters);
 
-      parameters.Pop(QueryParameterType.SetCurrentWishTo, out var setWishIndex);
+      parameters.Pop(QueryParameterType.SetWishTo, out var wishId);
 
-      var wish = user.Wishes[(int)setWishIndex];
+      var wish = user.Wishes.FirstOrDefault(w => w.Id == wishId);
+      if (wish is null)
+      {
+         throw new NotSupportedException($"Can't find wish {wishId} to show");
+      }
+
       var name = wish.Name;
       var description = wish.Description;
       var links = wish.Links;

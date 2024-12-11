@@ -10,13 +10,12 @@ public class NewWishNotificationMessage(ILogger logger, BotUser notificationSour
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var wishIndex = notificationSource.Wishes.IndexOf(newWish);
-
       var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
       Keyboard
          .AddButton<ShowWishQuery>("Перейти к вишу",
                                    new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId),
-                                   new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex),
+                                   new QueryParameter(QueryParameterType.SetWishTo, newWish.Id),
                                    new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
          .AddButton<MainMenuQuery>("В главное меню");
 

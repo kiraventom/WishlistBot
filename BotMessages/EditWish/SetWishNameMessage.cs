@@ -1,3 +1,4 @@
+using System;
 using Serilog;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
@@ -15,7 +16,10 @@ public class SetWishNameMessage(ILogger logger) : BotMessage(logger)
 
       if (forceNewWish || user.CurrentWish is null)
       {
-         user.CurrentWish = new Wish();
+         user.CurrentWish = new Wish()
+         {
+            Id = DatabaseUtils.GenerateId(user.Wishes.Select(w => w.Id).ToList()) // TODO Ugly
+         };
          Text.Verbatim("Укажите краткое название виша:");
          Keyboard.AddButton<CancelEditWishQuery>();
       }

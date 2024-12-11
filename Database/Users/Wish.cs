@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -6,9 +7,16 @@ namespace WishlistBot.Database.Users;
 
 public class Wish : BasePropertyChanged
 {
+   private long _id;
    private string _name;
    private string _description;
    private string _fileId;
+
+   public long Id
+   {
+      get => _id;
+      set => Set(ref _id, value);
+   }
 
    public string Name
    {
@@ -38,10 +46,12 @@ public class Wish : BasePropertyChanged
       Links.CollectionChanged += OnLinksCollectionChanged;
    }
 
-   public Wish Clone()
+   // TODO Remove argument
+   public Wish Clone(long newId)
    {
       var clone = new Wish
       {
+         Id = newId,
          Name = Name,
          Description = Description,
          FileId = FileId

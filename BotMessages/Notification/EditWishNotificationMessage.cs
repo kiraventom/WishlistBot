@@ -16,7 +16,7 @@ public class EditWishNotificationMessage(ILogger logger, BotUser notificationSou
       Keyboard
          .AddButton<ShowWishQuery>("Перейти к вишу",
                                    new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId),
-                                   new QueryParameter(QueryParameterType.SetCurrentWishTo, wishIndex),
+                                   new QueryParameter(QueryParameterType.SetWishTo, editedWish.Id),
                                    new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
          .AddButton<MainMenuQuery>("В главное меню");
 
