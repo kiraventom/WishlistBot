@@ -14,4 +14,10 @@ public abstract class UserBotMessage(ILogger logger, UsersDb usersDb) : BotMessa
       parameters.Peek(QueryParameterType.SetUserTo, out var userId);
       return usersDb.Values.GetValueOrDefault(userId, sender);
    }
+
+   protected long GenerateWishId()
+   {
+      var ids = Users.SelectMany(u => u.Wishes).Select(w => w.Id).ToList();
+      return DatabaseUtils.GenerateId(ids);
+   }
 }

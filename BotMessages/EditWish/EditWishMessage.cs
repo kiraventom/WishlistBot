@@ -8,7 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo, QueryParameterType.ClearWishProperty)]
 [ChildMessage(typeof(FullListMessage))]
 // TODO Separate to NewWish and EditWish
-public class EditWishMessage(ILogger logger) : BotMessage(logger)
+public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -32,8 +32,7 @@ public class EditWishMessage(ILogger logger) : BotMessage(logger)
                throw new NotSupportedException($"Can't find wish {wishId} to clone");
             }
 
-            var cloneId = DatabaseUtils.GenerateId(user.Wishes.Select(w => w.Id).ToList()); // TODO Ugly
-            user.CurrentWish = wishToClone.Clone(cloneId);
+            user.CurrentWish = wishToClone.Clone(GenerateWishId());
          }
 
          Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.SetWishTo, wishId));

@@ -37,15 +37,7 @@ public abstract class BotMessage(ILogger logger)
 
       Keyboard.InitCommonParameters(parameters);
 
-      try
-      {
-         await InitInternal(user, parameters);
-      }
-      catch (Exception e)
-      {
-         Logger.Fatal(e.ToString());
-         return;
-      }
+      await InitInternal(user, parameters);
 
       // Parameters can change during message initialization
       user.QueryParams = parameters.ToString();
