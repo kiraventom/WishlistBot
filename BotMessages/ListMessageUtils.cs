@@ -21,7 +21,7 @@ public static class ListMessageUtils
       var pagesCount = (int)Math.Ceiling((double)totalCount / ItemsPerPage);
 
       // Can happen if the only item on the last page was removed
-      if (pageIndex >= pagesCount)
+      if (pagesCount != 0 && pageIndex >= pagesCount)
          pageIndex = pagesCount - 1;
 
       for (var itemOnPageIndex = 0; itemOnPageIndex < ItemsPerPage; ++itemOnPageIndex)
