@@ -18,11 +18,6 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
          .AddButton<SetWishNameQuery>("Добавить ещё виш")
          .NewRow();
 
-      if (parameters.Pop(QueryParameterType.ReturnToFullList))
-         Keyboard.AddButton<FullListQuery>("Назад к списку");
-      else
-         Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
-
       if (parameters.Pop(QueryParameterType.SetWishTo, out var wishId))
       {
          var editedWish = user.CurrentWish;
@@ -68,9 +63,18 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
          user.Wishes.Add(newWish);
          Text.Italic("Виш добавлен!");
 
+         Keyboard
+            .AddButton<EditWishQuery>("Изменить виш")
+            .NewRow();
+
          var newWishNotification = new NewWishNotificationMessage(Logger, user, newWish);
          await NotificationService.Instance.Send(newWishNotification, user);
       }
+
+      if (parameters.Pop(QueryParameterType.ReturnToFullList))
+         Keyboard.AddButton<FullListQuery>("Назад к списку");
+      else
+         Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
 
       user.CurrentWish = null;
    }
