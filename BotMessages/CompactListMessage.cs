@@ -12,6 +12,7 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
+      var sender = user;
       user = GetUser(user, parameters);
 
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
@@ -46,7 +47,17 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
       for (var i = 0; i < user.Wishes.Count; ++i)
       {
          var wish = user.Wishes[i];
-         Text.LineBreak().Bold($"{i + 1}. ").Monospace(wish.Name);
+         Text.LineBreak().Bold($"{i + 1}. ");
+         
+         // If user isn't looking at its own wishes
+         if (sender.SenderId != user.SenderId && wish.ClaimerId != 0)
+         {
+            Text.Bold("[БРОНЬ] ").Strikethrough(wish.Name);
+         }
+         else
+         {
+            Text.Monospace(wish.Name);
+         }
 
          if (!string.IsNullOrEmpty(wish.Description))
             Text.Verbatim(" \U0001f4ac"); // speech bubble

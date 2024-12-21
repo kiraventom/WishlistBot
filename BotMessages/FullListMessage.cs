@@ -45,8 +45,11 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
 
       const string eyeEmoji = "\U0001f441\ufe0f ";
 
+      var isClaimed = wish.ClaimerId != 0;
+      var claimedText = isClaimed ? "[БРОНЬ] " : string.Empty;
+
       Keyboard.AddButton<ShowWishQuery>(
-         eyeEmoji + wish.Name,
+         claimedText + eyeEmoji + wish.Name,
          new QueryParameter(QueryParameterType.SetWishTo, wish.Id),
          new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
          QueryParameter.ReturnToFullList);
