@@ -3,13 +3,15 @@ using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
+using WishlistBot.Notification;
+using WishlistBot.BotMessages.Notification;
 
 namespace WishlistBot.BotMessages.Subscription;
 
 [AllowedTypes(QueryParameterType.SetUserTo)]
 public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var sender = user;
       user = GetUser(user, parameters);
@@ -27,6 +29,9 @@ public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBo
             .Italic("!");
 
          sender.Subscriptions.Add(user.SubscribeId);
+
+         var newSubscriberNotification = new NewSubscriberNotificationMessage(Logger, sender, Users);
+         await NotificationService.Instance.SendToUser(newSubscriberNotification, sender, user);
       }
 
       Keyboard
@@ -35,7 +40,5 @@ public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBo
                                       new QueryParameter(QueryParameterType.SetUserTo, user.SenderId))
          .NewRow()
          .AddButton<MySubscriptionsQuery>("К моим подпискам");
-
-      return Task.CompletedTask;
    }
 }
