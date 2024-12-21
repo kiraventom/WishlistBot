@@ -27,11 +27,20 @@ public class NotificationService
       _inited = true;
    }
 
-   public async Task Send(BotMessage notification, BotUser user)
+   // Obsolete
+   public Task Send(BotMessage notification, BotUser notificationSource) => SendToSubscribers(notification, notificationSource);
+
+   public async Task SendToSubscribers(BotMessage notification, BotUser notificationSource)
    {
       var recipients = _usersDb.Values.Values
-         .Where(u => u.Subscriptions.Contains(user.SubscribeId));
+         .Where(u => u.Subscriptions.Contains(notificationSource.SubscribeId));
+
       foreach (var recipient in recipients)
          await _client.SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
+   }
+
+   public async Task SendToUser(BotMessage notification, BotUser notificationSource, BotUser notificationRecepient)
+   {
+      await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
    }
 }
