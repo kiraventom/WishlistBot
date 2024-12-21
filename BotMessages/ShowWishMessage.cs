@@ -5,6 +5,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages;
 
+// TODO Combine common code with EditWish
 [AllowedTypes(QueryParameterType.SetWishTo)]
 [ChildMessage(typeof(FullListMessage))]
 public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
@@ -32,20 +33,16 @@ public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
       if (description is not null)
          Text.LineBreak().Bold("Описание: ").LineBreak().ExpandableQuote(description);
 
-      if (links.Count > 1)
+      if (links.Any())
       {
          Text.LineBreak().Bold("Ссылки: ");
          for (var i = 0; i < links.Count; ++i)
          {
             var link = links[i];
-            Text.InlineUrl($"Ссылка {i + 1}", link);
+            Text.InlineUrl(link);
             if (i < links.Count - 1)
                Text.Verbatim(", ");
          }
-      }
-      else if (links.Count == 1)
-      {
-         Text.LineBreak().InlineUrl("Ссылка", links.First());
       }
 
       PhotoFileId = wish.FileId;

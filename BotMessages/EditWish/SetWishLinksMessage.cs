@@ -19,7 +19,9 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
 
       if (user.CurrentWish.Links is null)
       {
-         Text.Verbatim("Пришлите ссылки одним сообщением:");
+         Text.Verbatim("Пришлите ссылки одним сообщением:")
+            .LineBreak()
+            .LineBreak().Italic("(Некорректные ссылки будут проигнорированы)");
       }
       else
       {

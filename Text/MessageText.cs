@@ -73,6 +73,13 @@ public class MessageText
       return this;
    }
 
+   public MessageText InlineUrl(string link)
+   {
+      var domainName = MessageTextUtils.GetDomainFromLink(link);
+      domainName = char.ToUpper(domainName[0]) + domainName[1..];
+      return InlineUrl(domainName, link);
+   }
+
    public MessageText InlineMention(BotUser user)
    {
       if (string.IsNullOrEmpty(user.Tag))
