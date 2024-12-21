@@ -62,6 +62,24 @@ public class MessageText
       return this;
    }
 
+   public MessageText Strikethrough(string text)
+   {
+      _sb.Append('~');
+      Verbatim(text);
+      _sb.Append('~');
+
+      return this;
+   }
+
+   public MessageText Spoiler(string text)
+   {
+      _sb.Append("||");
+      Verbatim(text);
+      _sb.Append("||");
+
+      return this;
+   }
+
    public MessageText InlineUrl(string text, string link)
    {
       _sb.Append('[');

@@ -11,6 +11,7 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
    public static QueryParameter ReturnToFullList { get; } = new(QueryParameterType.ReturnToFullList);
    public static QueryParameter ReadOnly { get; } = new(QueryParameterType.ReadOnly);
    public static QueryParameter ReturnToSubscriber { get; } = new(QueryParameterType.ReturnToSubscriber);
+   public static QueryParameter ClaimWish { get; } = new(QueryParameterType.ClaimWish);
 
    public QueryParameterType Type { get; } = type;
    public long? Value { get; } = value;

@@ -15,6 +15,11 @@ public class ConfirmDeleteWishMessage(ILogger logger) : BotMessage(logger)
          .NewRow()
          .AddButton<EditWishQuery>("Отмена \u274c");
 
+      if (user.CurrentWish.ClaimerId != 0)
+      {
+         Text.ItalicBold("\u203c\ufe0f Будьте осторожны! Кто-то забронировал этот виш! \u203c\ufe0f").LineBreak().LineBreak();
+      }
+
       Text.Italic("Действительно удалить виш \"")
          .Monospace(user.CurrentWish.Name)
          .Italic("\"")

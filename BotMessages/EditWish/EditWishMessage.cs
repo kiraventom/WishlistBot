@@ -69,6 +69,11 @@ public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
       var description = wish.Description;
       var links = wish.Links;
 
+      if (wish.ClaimerId != 0)
+      {
+         Text.ItalicBold("\u203c\ufe0f Будьте осторожны! Кто-то забронировал этот виш! \u203c\ufe0f").LineBreak().LineBreak();
+      }
+
       Text.Italic("Редактирование виша")
          .LineBreak()
          .LineBreak().Bold("Название: ").Monospace(name);

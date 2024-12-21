@@ -20,6 +20,10 @@ public class DeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotM
          .Italic(" из списка своих подписчиков.");
 
       user.Subscriptions.Remove(sender.SubscribeId);
+      foreach (var claimedWish in sender.Wishes.Where(w => w.ClaimerId == user.SenderId))
+      {
+         claimedWish.ClaimerId = 0;
+      }
 
       return Task.CompletedTask;
    }

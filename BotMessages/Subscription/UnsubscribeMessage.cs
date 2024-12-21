@@ -18,6 +18,10 @@ public class UnsubscribeMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
          .InlineMention(user);
 
       sender.Subscriptions.Remove(user.SubscribeId);
+      foreach (var claimedWish in user.Wishes.Where(w => w.ClaimerId == sender.SenderId))
+      {
+         claimedWish.ClaimerId = 0;
+      }
 
       return Task.CompletedTask;
    }

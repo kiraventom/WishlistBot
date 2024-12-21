@@ -63,8 +63,14 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
          user.Wishes.Add(newWish);
          Text.Italic("Виш добавлен!");
 
+         var wishIndex = user.Wishes.IndexOf(newWish);
+         var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
+
          Keyboard
-            .AddButton<EditWishQuery>("Изменить виш")
+            .AddButton<EditWishQuery>("Изменить виш",
+               new QueryParameter(QueryParameterType.SetWishTo, newWish.Id),
+               new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
+               QueryParameter.ReturnToFullList)
             .NewRow();
 
          var newWishNotification = new NewWishNotificationMessage(Logger, user, newWish);

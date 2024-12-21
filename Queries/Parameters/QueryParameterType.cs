@@ -10,4 +10,5 @@ public enum QueryParameterType
    ReadOnly = 0x8,
    SetUserTo = 0x9,
    ReturnToSubscriber = 0xA,
+   ClaimWish = 0xB,
 }
