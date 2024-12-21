@@ -75,7 +75,15 @@ public class MediaStorageManager
       if (!_database.Values.TryGetValue(fileId, out var messageId))
          return;
 
-      await _client.DeleteMessage(chatId: _storageChannelId, messageId: messageId);
+      try
+      {
+         await _client.DeleteMessage(chatId: _storageChannelId, messageId: messageId);
+      }
+      catch (Exception e)
+      {
+         _logger.Error("Failed to delete media storage message [{messageId}], exception: {exception}", messageId, e.ToString());
+      }
+
       _database.Remove(fileId);
    }
 }
