@@ -15,8 +15,8 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
          .NewRow()
          .AddButton<MySubscriptionsQuery>()
          .AddButton<MySubscribersQuery>()
-         .NewRow()
-         .AddButton("@settings", "Настройки");
+         /*.NewRow()
+         .AddButton("@settings", "Настройки")*/;
 
       Text.Italic("Добро пожаловать в главное меню, ")
          .InlineMention(user)
