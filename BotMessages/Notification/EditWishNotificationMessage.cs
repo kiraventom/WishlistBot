@@ -1,3 +1,4 @@
+using System.Text;
 using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
@@ -21,19 +22,32 @@ public class EditWishNotificationMessage(ILogger logger, BotUser notificationSou
          .NewRow()
          .AddButton<MainMenuQuery>("В главное меню");
 
-      var wishPropertyName = wishPropertyType switch
+      var changedItemsNames = new List<string>();
+
+      if (wishPropertyType.HasFlag(WishPropertyType.Name))
+         changedItemsNames.Add("название");
+
+      if (wishPropertyType.HasFlag(WishPropertyType.Description))
+         changedItemsNames.Add("описание");
+
+      if (wishPropertyType.HasFlag(WishPropertyType.Media))
+         changedItemsNames.Add("фото");
+
+      if (wishPropertyType.HasFlag(WishPropertyType.Links))
+         changedItemsNames.Add("ссылки");
+
+      string changedItemsText;
+      changedItemsText = changedItemsNames.Count switch
       {
-         WishPropertyType.Description => "описание",
-         WishPropertyType.Media => "фото",
-         WishPropertyType.Links => "ссылки",
-         WishPropertyType.Name => "название",
-         _ => throw new NotSupportedException($"Unexpected value {wishPropertyType}")
+         0 => throw new NotSupportedException($"WishPropertyType value '{wishPropertyType}' is not supported"),
+         1 => changedItemsNames.Single(),
+         _ => string.Join(", ", changedItemsNames.SkipLast(1)) + $" и {changedItemsNames.Last()}",
       };
 
       Text
          .InlineMention(notificationSource)
          .Italic(" изменил ")
-         .ItalicBold(wishPropertyName)
+         .ItalicBold(changedItemsText)
          .Italic(" у виша '")
          .ItalicBold(editedWish.Name)
          .Italic("'!");
