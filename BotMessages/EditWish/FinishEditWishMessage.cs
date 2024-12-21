@@ -41,20 +41,21 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
 
          Text.Italic("Виш изменён!");
 
-         WishPropertyType wishPropertyType;
+         WishPropertyType wishPropertyType = WishPropertyType.None;
 
          if (wishBeforeEditing.Name != editedWish.Name)
-            wishPropertyType = WishPropertyType.Name;
-         else if (wishBeforeEditing.Description != editedWish.Description)
-            wishPropertyType = WishPropertyType.Description;
-         else if (!wishBeforeEditing.Links.SequenceEqual(editedWish.Links))
-            wishPropertyType = WishPropertyType.Links;
-         else if (wishBeforeEditing.FileId != editedWish.FileId)
-            wishPropertyType = WishPropertyType.Media;
-         else
-            wishPropertyType = 0;
+            wishPropertyType |= WishPropertyType.Name;
 
-         if (wishPropertyType != 0)
+         if (wishBeforeEditing.Description != editedWish.Description)
+            wishPropertyType |= WishPropertyType.Description;
+
+         if (!wishBeforeEditing.Links.SequenceEqual(editedWish.Links))
+            wishPropertyType |= WishPropertyType.Links;
+
+         if (wishBeforeEditing.FileId != editedWish.FileId)
+            wishPropertyType |= WishPropertyType.Media;
+
+         if (wishPropertyType != WishPropertyType.None)
          {
             var editWishNotification = new EditWishNotificationMessage(Logger, user, editedWish, wishPropertyType);
             await NotificationService.Instance.Send(editWishNotification, user);

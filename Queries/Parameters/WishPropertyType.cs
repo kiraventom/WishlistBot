@@ -1,9 +1,13 @@
+using System;
+
 namespace WishlistBot.Queries.Parameters;
 
+[Flags]
 public enum WishPropertyType
 {
-   Description = 0x1,
-   Media = 0x2,
-   Links = 0x3,
-   Name = 0x4
+   None = 0b0,
+   Description = 0b1,
+   Media = 0b10,
+   Links = 0b100,
+   Name = 0b1000,
 }
