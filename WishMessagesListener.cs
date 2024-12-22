@@ -94,6 +94,7 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client, Use
 
       var links = linksEntities.Select(l => text.Substring(l.Offset, l.Length));
 
+      user.CurrentWish.Links.Clear();
       foreach (var link in links)
       {
          user.CurrentWish.Links.Add(link);
