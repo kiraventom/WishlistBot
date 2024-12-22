@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace WishlistBot;
 
 [method: JsonConstructor]
-public class Config(string token, long storageChannelId)
+public class Config(string token, long storageChannelId, long adminId)
 {
    /// <summary>
    /// Telegram bot token. Received from <a href="https://t.me/BotFather">BotFather</a>
@@ -18,6 +18,11 @@ public class Config(string token, long storageChannelId)
    /// It is required because otherwise Telegram will delete them from servers if user deletes them from dialog.
    /// </summary>
    public long StorageChannelId { get; } = storageChannelId;
+
+   /// <summary>
+   /// Only user with this ID will have access to admin commands.
+   /// </summary>
+   public long AdminId { get; } 
 
    public static Config Load(ILogger logger, string filepath)
    {
