@@ -13,6 +13,7 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
    public static QueryParameter ReturnToSubscriber { get; } = new(QueryParameterType.ReturnToSubscriber);
    public static QueryParameter ClaimWish { get; } = new(QueryParameterType.ClaimWish);
    public static QueryParameter ForceNewMessage { get; } = new(QueryParameterType.ForceNewMessage);
+   public static QueryParameter CancelJob { get; } = new(QueryParameterType.CancelJob);
 
    public QueryParameterType Type { get; } = type;
    public long? Value { get; } = value;

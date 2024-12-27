@@ -6,13 +6,14 @@ using WishlistBot.Database.Admin;
 
 namespace WishlistBot.Jobs;
 
-public class Job<TItem, TObject>(TObject linkedObject, IEnumerable<TItem> items, TimeSpan interval, JobActionDelegate<TItem, TObject> action) : IJob
+public class Job<TItem, TObject>(TObject linkedObject, string name, IEnumerable<TItem> items, TimeSpan interval, JobActionDelegate<TItem, TObject> action) : IJob
 {
    private readonly CancellationTokenSource _cts = new();
    private bool _started;
    private Task _task;
 
    object IJob.LinkedObject => (object)linkedObject;
+   string IJob.Name => name;
 
    public event Action<IJob, TaskStatus> Finished;
 

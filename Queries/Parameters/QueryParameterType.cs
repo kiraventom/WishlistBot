@@ -14,5 +14,6 @@ public enum QueryParameterType
    ForceNewMessage = 0xC,
 
    // Admin
-   SetBroadcastTo = -0x1
+   SetBroadcastTo = -0x1,
+   CancelJob = -0x2
 }

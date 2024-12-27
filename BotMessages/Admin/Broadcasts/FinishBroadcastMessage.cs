@@ -25,7 +25,7 @@ public class FinishBroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsD
 
       Logger.Information("Started sending broadcast [{id}]", broadcastId);
 
-      JobManager.Instance.StartJob(broadcastToSend, Users, TimeSpan.FromSeconds(1), SendBroadcast);
+      JobManager.Instance.StartJob("Send broadcast", broadcastToSend, Users, TimeSpan.FromSeconds(10), SendBroadcast);
 
       Text.Italic("Broadcast started");
 

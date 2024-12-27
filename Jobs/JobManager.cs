@@ -31,8 +31,11 @@ public class JobManager
 
    public bool IsJobActive(object linkedObject) => ActiveJobs.ContainsKey(linkedObject.GetHashCode());
 
-   public void StartJob<TItem, TObject>(TObject linkedObject, IEnumerable<TItem> collection, TimeSpan interval, JobActionDelegate<TItem, TObject> action)
+   public string GetActiveJobName(object linkedObject) => ActiveJobs[linkedObject.GetHashCode()].Name;
+
+   public void StartJob<TItem, TObject>(string name, TObject linkedObject, IEnumerable<TItem> collection, TimeSpan interval, JobActionDelegate<TItem, TObject> action)
    {
+      ArgumentNullException.ThrowIfNull(name);
       ArgumentNullException.ThrowIfNull(linkedObject);
       ArgumentNullException.ThrowIfNull(collection);
       ArgumentNullException.ThrowIfNull(action);
@@ -42,7 +45,7 @@ public class JobManager
          throw new NotSupportedException($"Can't start two jobs on the same object [{linkedObject.GetHashCode()}]");
       }
 
-      var job = new Job<TItem, TObject>(linkedObject, collection, interval, action);
+      var job = new Job<TItem, TObject>(linkedObject, name, collection, interval, action);
       ActiveJobs.Add(linkedObject.GetHashCode(), job);
 
       job.Finished += OnJobFinished;
