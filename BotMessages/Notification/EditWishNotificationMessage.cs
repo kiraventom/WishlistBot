@@ -1,5 +1,6 @@
 using System.Text;
 using Serilog;
+using WishlistBot.Notification;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Parameters;
 using WishlistBot.Database.Users;
@@ -7,7 +8,7 @@ using WishlistBot.Database.Users;
 namespace WishlistBot.BotMessages.Notification;
 
 public class EditWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish editedWish, WishPropertyType wishPropertyType)
-   : BotMessage(logger)
+   : BotMessage(logger), INotificationMessage
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {

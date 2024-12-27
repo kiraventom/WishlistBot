@@ -23,6 +23,9 @@ public class MessageText
 
    public MessageText Verbatim(string text)
    {
+      if (text is null)
+         return this;
+
       foreach (var ch in text)
       {
          var charCode = (int)ch;

@@ -2,6 +2,7 @@
 using Serilog.Core;
 using Serilog.Events;
 using Telegram.Bot;
+using WishlistBot.Listeners;
 using WishlistBot.Database.Users;
 using WishlistBot.Database.MediaStorage;
 using WishlistBot.Notification;
@@ -10,7 +11,11 @@ using WishlistBot.Actions;
 using WishlistBot.Actions.Commands;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
+using WishlistBot.Queries.Admin;
+using WishlistBot.Queries.Admin.Broadcasts;
 using WishlistBot.Queries.Subscription;
+using WishlistBot.Database.Admin;
+using WishlistBot.Jobs;
 
 namespace WishlistBot;
 
@@ -45,6 +50,12 @@ public static class Program
          return;
       }
 
+      if (!TryLoadBroadcastsDb(logger, projectDirPath, out var broadcastsDb))
+      {
+         logger.Fatal("Couldn't parse broadcasts DB, exiting");
+         return;
+      }
+
       if (!TryInitTelegramClient(logger, config.Token, out var client))
       {
          logger.Fatal("Couldn't init {TelegramBotClient}, exiting", nameof(TelegramBotClient));
@@ -61,15 +72,17 @@ public static class Program
 
       NotificationService.Instance.Init(logger, client, usersDb);
 
-      var messagesFactory = new MessageFactory(logger, usersDb);
+      JobManager.Instance.Init(logger, client, usersDb);
 
-      var commands = BuildCommands(logger, client, usersDb, config.AdminId);
+      var messagesFactory = new MessageFactory(logger, usersDb, broadcastsDb);
+
+      var commands = BuildCommands(logger, client, usersDb, broadcastsDb, config.AdminId);
       var queryActions = BuildQueryActions(logger, client, messagesFactory);
       var actions = commands.Concat(queryActions);
 
-      var wishMessagesListener = new WishMessagesListener(logger, client, usersDb);
+      var listeners = BuildListeners(logger, client, usersDb, broadcastsDb);
 
-      var telegramController = new TelegramController(logger, client, usersDb, actions.ToList(), wishMessagesListener);
+      var telegramController = new TelegramController(logger, client, usersDb, actions.ToList(), listeners.ToList());
       telegramController.StartReceiving();
 
       while (true)
@@ -129,6 +142,13 @@ public static class Program
       return mediaStorageDb is not null;
    }
 
+   private static bool TryLoadBroadcastsDb(ILogger logger, string projectDirPath, out BroadcastsDb broadcastsDb)
+   {
+      var broadcastsDbFilePath  = Path.Combine(projectDirPath, "broadcasts.json");
+      broadcastsDb = BroadcastsDb.Load(logger, broadcastsDbFilePath);
+      return broadcastsDb is not null;
+   }
+
    private static bool TryInitTelegramClient(ILogger logger, string token, out TelegramBotClient client)
    {
       try
@@ -159,10 +179,10 @@ public static class Program
       }
    }
 
-   private static IEnumerable<UserAction> BuildCommands(ILogger logger, TelegramBotClient client, UsersDb usersDb, long adminId)
+   private static IEnumerable<UserAction> BuildCommands(ILogger logger, TelegramBotClient client, UsersDb usersDb, BroadcastsDb broadcastsDb, long adminId)
    {
       yield return new StartCommand(logger, client, usersDb);
-      yield return new AdminCommand(logger, client, adminId);
+      yield return new AdminCommand(logger, client, usersDb, adminId);
    }
    
    private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, TelegramBotClient client, MessageFactory messagesFactory)
@@ -189,5 +209,18 @@ public static class Program
       yield return new QueryAction<ConfirmDeleteSubscriberQuery>(logger, client, messagesFactory);
       yield return new QueryAction<DeleteSubscriberQuery>(logger, client, messagesFactory);
       yield return new QueryAction<SubscriptionQuery>(logger, client, messagesFactory);
+      yield return new QueryAction<AdminMenuQuery>(logger, client, messagesFactory);
+      yield return new QueryAction<BroadcastQuery>(logger, client, messagesFactory);
+      yield return new QueryAction<BroadcastsQuery>(logger, client, messagesFactory);
+      yield return new QueryAction<ConfirmBroadcastQuery>(logger, client, messagesFactory);
+      yield return new QueryAction<ConfirmDeleteBroadcastQuery>(logger, client, messagesFactory);
+      yield return new QueryAction<DeleteBroadcastQuery>(logger, client, messagesFactory);
+      yield return new QueryAction<FinishBroadcastQuery>(logger, client, messagesFactory);
+   }
+
+   private static IEnumerable<IListener> BuildListeners(ILogger logger, TelegramBotClient client, UsersDb usersDb, BroadcastsDb broadcastsDb)
+   {
+      yield return new AdminMessagesListener(logger, client, broadcastsDb);
+      yield return new WishMessagesListener(logger, client, usersDb);
    }
 }

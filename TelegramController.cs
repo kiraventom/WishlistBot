@@ -6,10 +6,11 @@ using Telegram.Bot.Polling;
 using WishlistBot.Database.Users;
 using WishlistBot.BotMessages;
 using WishlistBot.Actions;
+using WishlistBot.Listeners;
 
 namespace WishlistBot;
 
-public class TelegramController(ILogger logger, ITelegramBotClient client, UsersDb usersDb, IReadOnlyCollection<UserAction> actions, WishMessagesListener wishMessagesListener)
+public class TelegramController(ILogger logger, ITelegramBotClient client, UsersDb usersDb, IReadOnlyCollection<UserAction> actions, IReadOnlyCollection<IListener> listeners)
 {
    private bool _started;
 
@@ -58,7 +59,11 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
          return;
       }
 
-      await wishMessagesListener.HandleWishMessageAsync(message, user);
+      foreach (var listener in listeners)
+      {
+         if (await listener.HandleMessageAsync(message, user))
+            break;
+      }
    }
 
    private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery)

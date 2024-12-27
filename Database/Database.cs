@@ -25,6 +25,12 @@ public abstract class Database<TKey, TValue>
 
       Logger.Information("{DatabaseName} DB loaded from '{filepath}', {valuesCount} values",
                          DatabaseName, filepath, Dict.Count);
+
+      foreach (var item in Dict.Values.OfType<BasePropertyChanged>())
+      {
+         item.PropertyChanged += OnItemPropertyChanged;
+      }
+
    }
 
    protected static Dictionary<TKey, TValue> LoadValues(ILogger logger, string filePath, string dbName)
@@ -52,6 +58,11 @@ public abstract class Database<TKey, TValue>
    }
 
    protected void Save() => SaveTo(Logger, _filePath, DatabaseName, Dict);
+
+   protected void OnItemPropertyChanged(BasePropertyChanged item, string propertyName)
+   {
+      Save();
+   }
 
    private static void SaveTo(ILogger logger, string filePath, string dbName, Dictionary<TKey, TValue> values)
    {

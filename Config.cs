@@ -22,7 +22,7 @@ public class Config(string token, long storageChannelId, long adminId)
    /// <summary>
    /// Only user with this ID will have access to admin commands.
    /// </summary>
-   public long AdminId { get; } 
+   public long AdminId { get; } = adminId;
 
    public static Config Load(ILogger logger, string filepath)
    {

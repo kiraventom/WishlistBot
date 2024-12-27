@@ -1,14 +1,19 @@
 using Serilog;
 using WishlistBot.Database.Users;
+using WishlistBot.Database.Admin;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Subscription;
+using WishlistBot.Queries.Admin;
+using WishlistBot.Queries.Admin.Broadcasts;
 using WishlistBot.BotMessages.EditWish;
 using WishlistBot.BotMessages.Subscription;
+using WishlistBot.BotMessages.Admin;
+using WishlistBot.BotMessages.Admin.Broadcasts;
 
 namespace WishlistBot.BotMessages;
 
-public class MessageFactory(ILogger logger, UsersDb usersDb)
+public class MessageFactory(ILogger logger, UsersDb usersDb, BroadcastsDb broadcastsDb)
 {
    public BotMessage Build(IQuery query, BotUser user)
    {
@@ -36,6 +41,13 @@ public class MessageFactory(ILogger logger, UsersDb usersDb)
          SubscriptionQuery => new SubscriptionMessage(logger, usersDb),
          ConfirmDeleteSubscriberQuery => new ConfirmDeleteSubscriberMessage(logger, usersDb),
          DeleteSubscriberQuery => new DeleteSubscriberMessage(logger, usersDb),
+         AdminMenuQuery => new AdminMenuMessage(logger, usersDb),
+         BroadcastQuery => new BroadcastMessage(logger, usersDb, broadcastsDb),
+         BroadcastsQuery => new BroadcastsMessage(logger, usersDb, broadcastsDb),
+         ConfirmBroadcastQuery => new ConfirmBroadcastMessage(logger, broadcastsDb),
+         ConfirmDeleteBroadcastQuery => new ConfirmDeleteBroadcastMessage(logger, usersDb, broadcastsDb),
+         DeleteBroadcastQuery => new DeleteBroadcastMessage(logger, usersDb, broadcastsDb),
+         FinishBroadcastQuery => new FinishBroadcastMessage(logger, usersDb, broadcastsDb),
          _ => new InvalidMessage(logger),
       };
 

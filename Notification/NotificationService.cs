@@ -43,4 +43,10 @@ public class NotificationService
    {
       await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
    }
+
+   public async Task<int> BroadcastToUser(BotMessage notification, BotUser notificationRecepient)
+   {
+      var message = await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
+      return message.MessageId;
+   }
 }

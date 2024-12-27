@@ -16,7 +16,10 @@ public static class ListMessageUtils
          pageIndex = (int)pageIndexValue;
 
       if (totalCount == 0)
+      {
          keyboard.AddButton<TParentQuery>();
+         return;
+      }
 
       var pagesCount = (int)Math.Ceiling((double)totalCount / ItemsPerPage);
 

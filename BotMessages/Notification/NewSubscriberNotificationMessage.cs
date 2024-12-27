@@ -1,4 +1,5 @@
 using Serilog;
+using WishlistBot.Notification;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Queries.Parameters;
@@ -6,7 +7,7 @@ using WishlistBot.Database.Users;
 
 namespace WishlistBot.BotMessages.Notification;
 
-public class NewSubscriberNotificationMessage(ILogger logger, BotUser notificationSource, IEnumerable<BotUser> users) : BotMessage(logger)
+public class NewSubscriberNotificationMessage(ILogger logger, BotUser notificationSource, IEnumerable<BotUser> users) : BotMessage(logger), INotificationMessage
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
