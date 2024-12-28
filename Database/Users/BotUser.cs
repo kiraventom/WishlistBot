@@ -120,11 +120,11 @@ public class BotUser : BasePropertyChanged
 
    private void OnWishesCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
    {
-      var oldWish = ea.OldItems?.OfType<Wish>()?.Single();
+      var oldWish = ea.OldItems?.OfType<Wish>()?.SingleOrDefault();
       if (oldWish is not null)
          oldWish.PropertyChanged -= OnWishPropertyChanged;
 
-      var newWish = ea.NewItems?.OfType<Wish>()?.Single();
+      var newWish = ea.NewItems?.OfType<Wish>()?.SingleOrDefault();
       if (newWish is not null)
          newWish.PropertyChanged += OnWishPropertyChanged;
 

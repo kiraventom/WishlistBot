@@ -52,17 +52,17 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
 
       var user = usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
 
+      foreach (var listener in listeners)
+      {
+         if (await listener.HandleMessageAsync(message, user))
+            return;
+      }
+
       var botCommand = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);
       if (botCommand is not null)
       {
          await HandleBotCommandAsync(botCommand, message.Text, user);
          return;
-      }
-
-      foreach (var listener in listeners)
-      {
-         if (await listener.HandleMessageAsync(message, user))
-            break;
       }
    }
 

@@ -183,6 +183,7 @@ public static class Program
    {
       yield return new StartCommand(logger, client, usersDb);
       yield return new AdminCommand(logger, client, usersDb, adminId);
+      yield return new HelpCommand(logger, client);
    }
    
    private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, TelegramBotClient client, MessageFactory messagesFactory)

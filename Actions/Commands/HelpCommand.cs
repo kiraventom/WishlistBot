@@ -10,15 +10,12 @@ using WishlistBot.BotMessages.Admin.Broadcasts;
 
 namespace WishlistBot.Actions.Commands;
 
-public class AdminCommand(ILogger logger, ITelegramBotClient client, UsersDb usersDb, long adminId) : Command(logger, client)
+public class HelpCommand(ILogger logger, ITelegramBotClient client) : Command(logger, client)
 {
-   public override string Name => "/admin";
+   public override string Name => "/help";
 
    public override async Task ExecuteAsync(BotUser user, string actionText)
    {
-      if (user.SenderId == adminId)
-         await Client.SendOrEditBotMessage(Logger, user, new AdminMenuMessage(Logger, usersDb), forceNewMessage: true);
-      else
-         Logger.Warning("{command} called, but [{id}] is not admin", Name, user.SenderId);
+      await Client.SendOrEditBotMessage(Logger, user, new HelpMessage(Logger), forceNewMessage: true);
    }
 }

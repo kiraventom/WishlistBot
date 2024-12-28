@@ -66,7 +66,10 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
             Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
 
          if (wish.Links.Any())
-            Text.Verbatim(" \U0001f310"); // globe
+         {
+            var firstLink = wish.Links.First();
+            Text.InlineUrl(" \U0001f310", firstLink); // globe
+         }
       }
 
       return Task.CompletedTask;

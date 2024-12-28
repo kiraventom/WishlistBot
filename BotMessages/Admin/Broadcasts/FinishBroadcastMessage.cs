@@ -25,7 +25,7 @@ public class FinishBroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsD
 
       Logger.Information("Started sending broadcast [{id}]", broadcastId);
 
-      JobManager.Instance.StartJob("Send broadcast", broadcastToSend, Users, TimeSpan.FromSeconds(10), SendBroadcast);
+      JobManager.Instance.StartJob("Send broadcast", broadcastToSend, Users, TimeSpan.FromSeconds(1), SendBroadcast);
 
       Text.Italic("Broadcast started");
 
@@ -37,11 +37,18 @@ public class FinishBroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsD
       if (recepient.ReceivedBroadcasts.Any(b => b.BroadcastId == broadcast.Id))
          return;
 
-      var broadcastNotification = new BroadcastNotificationMessage(logger, broadcast);
-      var broadcastMessageId = await NotificationService.Instance.BroadcastToUser(broadcastNotification, recepient);
+      try
+      {
+         var broadcastNotification = new BroadcastNotificationMessage(logger, broadcast);
+         var broadcastMessageId = await NotificationService.Instance.BroadcastToUser(broadcastNotification, recepient);
 
-      recepient.ReceivedBroadcasts.Add(new ReceivedBroadcast(broadcast.Id, broadcastMessageId));
+         recepient.ReceivedBroadcasts.Add(new ReceivedBroadcast(broadcast.Id, broadcastMessageId));
 
-      logger.Information("Sent broadcast [{bId}] to [{uId}], messageId [{mId}]", broadcast.Id, recepient.SenderId, broadcastMessageId);
+         logger.Information("Sent broadcast [{bId}] to [{uId}], messageId [{mId}]", broadcast.Id, recepient.SenderId, broadcastMessageId);
+      }
+      catch
+      {
+         logger.Error("Failed to sent broadcast to [{uId}]", recepient.SenderId);
+      }
    }
 }

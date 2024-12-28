@@ -25,6 +25,13 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
          if (wishBeforeEditing is null)
          {
             Logger.Error("Can't find wish {id} to remove after editing", wishId);
+
+            if (editedWish is null)
+            {
+               Logger.Error("[{uId}]: Edited wish is null", user.SenderId);
+               throw new NotSupportedException("Edited wish is null");
+            }
+
             user.Wishes.Add(editedWish);
          }
          else
@@ -59,6 +66,12 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
       else
       {
          var newWish = user.CurrentWish;
+
+         if (newWish is null)
+         {
+            Logger.Error("[{uId}]: New wish is null", user.SenderId);
+            throw new NotSupportedException("Current wish is null");
+         }
 
          user.Wishes.Add(newWish);
          Text.Italic("Виш добавлен!");
