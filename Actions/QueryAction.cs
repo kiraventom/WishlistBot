@@ -7,7 +7,7 @@ using WishlistBot.Queries.Admin;
 
 namespace WishlistBot.Actions;
 
-public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFactory messageFactory, int adminId)
+public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFactory messageFactory, long adminId)
    : UserAction(logger, client) where T : IQuery, new()
 {
    private readonly IQuery _query = new T();

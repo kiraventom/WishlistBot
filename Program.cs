@@ -74,7 +74,7 @@ public static class Program
       var messagesFactory = new MessageFactory(logger, usersDb, broadcastsDb);
 
       var commands = BuildCommands(logger, client, usersDb, config.AdminId);
-      var queryActions = BuildQueryActions(logger, client, messagesFactory);
+      var queryActions = BuildQueryActions(logger, client, messagesFactory, config.AdminId);
       var actions = commands.Concat(queryActions);
 
       var listeners = BuildListeners(logger, client, usersDb, broadcastsDb);
@@ -183,7 +183,7 @@ public static class Program
       yield return new HelpCommand(logger, client);
    }
 
-   private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, TelegramBotClient client, MessageFactory messagesFactory)
+   private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, TelegramBotClient client, MessageFactory messagesFactory, long adminId)
    {
       var queryTypes = Assembly.GetExecutingAssembly()
          .GetTypes()
@@ -192,7 +192,7 @@ public static class Program
       foreach (var queryType in queryTypes)
       {
          var queryActionType = typeof(QueryAction<>).MakeGenericType(queryType);
-         var queryAction = (UserAction)Activator.CreateInstance(queryActionType, logger, client, messagesFactory);
+         var queryAction = (UserAction)Activator.CreateInstance(queryActionType, logger, client, messagesFactory, adminId);
          yield return queryAction;
       }
    }
