@@ -2,6 +2,7 @@ using Serilog;
 using Telegram.Bot;
 using WishlistBot.Database.Users;
 using WishlistBot.BotMessages;
+using WishlistBot.Jobs;
 
 namespace WishlistBot.Notification;
 
@@ -27,13 +28,13 @@ public class NotificationService
       _inited = true;
    }
 
-   public async Task SendToSubscribers(BotMessage notification, BotUser notificationSource)
+   public Task SendToSubscribers(BotMessage notification, BotUser notificationSource)
    {
       var recipients = _usersDb.Values.Values
          .Where(u => u.Subscriptions.Contains(notificationSource.SubscribeId));
 
-      foreach (var recipient in recipients)
-         await _client.SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
+      JobManager.Instance.StartJob($"Notification from {notificationSource.FirstName}", notification, recipients, TimeSpan.FromSeconds(1), SendToSubscriber);
+      return Task.CompletedTask;
    }
 
    public async Task SendToUser(BotMessage notification, BotUser notificationRecepient) =>
@@ -43,5 +44,10 @@ public class NotificationService
    {
       var message = await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
       return message.MessageId;
+   }
+
+   private async Task SendToSubscriber(ILogger logger, ITelegramBotClient client, UsersDb usersDb, BotUser recipient, BotMessage notification)
+   {
+      await _client.SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
    }
 }
