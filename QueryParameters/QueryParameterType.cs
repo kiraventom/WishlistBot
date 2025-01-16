@@ -1,4 +1,4 @@
-namespace WishlistBot.Queries.Parameters;
+namespace WishlistBot.QueryParameters;
 
 public enum QueryParameterType
 {

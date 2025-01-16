@@ -1,13 +1,10 @@
 using Serilog;
 using Telegram.Bot;
-using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Admin.Broadcasts;
-using WishlistBot.BotMessages.Notification;
 using WishlistBot.Database.Users;
 using WishlistBot.Database.Admin;
-using WishlistBot.Notification;
 using WishlistBot.Jobs;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
@@ -29,7 +26,7 @@ public class DeleteBroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsD
       return Task.CompletedTask;
    }
 
-   private static async Task DeleteBroadcast(ILogger logger, ITelegramBotClient client, UsersDb _usersDb, BotUser recepient, Broadcast deletedBroadcast)
+   private static async Task DeleteBroadcast(ILogger logger, ITelegramBotClient client, UsersDb usersDb, BotUser recepient, Broadcast deletedBroadcast)
    {
       var didReceiveBroadcast = recepient.ReceivedBroadcasts.Any(b => b.BroadcastId == deletedBroadcast.Id);
       if (!didReceiveBroadcast)

@@ -1,9 +1,8 @@
 using Serilog;
 using System.Reflection;
-using WishlistBot.Actions.Commands;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Keyboard;
 using WishlistBot.Database.Users;
+using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages;
@@ -34,7 +33,7 @@ public abstract class BotMessage(ILogger logger)
       var allowedTypes = GetAllowedTypes();
 
       Logger.Debug($"unfiltered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
-      Logger.Debug($"allowed types for {this.GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
+      Logger.Debug($"allowed types for {GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
       FilterParameters(parameters, allowedTypes);
       Logger.Debug($"filtered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
 

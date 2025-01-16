@@ -1,12 +1,12 @@
 using WishlistBot.Keyboard;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages;
 
 public static class ListMessageUtils
 {
-   public static int ItemsPerPage = 5;
+   public const int ItemsPerPage = 5;
 
    public static void AddListControls<TListQuery, TParentQuery>(BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, Action<int, int> addButtonAt)
       where TListQuery : IQuery, new() where TParentQuery : IQuery, new()
@@ -36,7 +36,7 @@ public static class ListMessageUtils
          addButtonAt(itemIndex, pageIndex);
          keyboard.NewRow();
       }
-       
+
       var prevPageIndex = pageIndex - 1;
       var nextPageIndex = pageIndex + 1;
 

@@ -1,10 +1,10 @@
 using Serilog;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
 using WishlistBot.Notification;
 using WishlistBot.BotMessages.Notification;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Subscription;
 
@@ -31,7 +31,7 @@ public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBo
          sender.Subscriptions.Add(user.SubscribeId);
 
          var newSubscriberNotification = new NewSubscriberNotificationMessage(Logger, sender, Users);
-         await NotificationService.Instance.SendToUser(newSubscriberNotification, sender, user);
+         await NotificationService.Instance.SendToUser(newSubscriberNotification, user);
       }
 
       Keyboard

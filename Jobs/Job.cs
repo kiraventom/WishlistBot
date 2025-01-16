@@ -1,8 +1,6 @@
 using Serilog;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using WishlistBot.Database.Users;
-using WishlistBot.Database.Admin;
 
 namespace WishlistBot.Jobs;
 
@@ -10,9 +8,8 @@ public class Job<TItem, TObject>(TObject linkedObject, string name, IEnumerable<
 {
    private readonly CancellationTokenSource _cts = new();
    private bool _started;
-   private Task _task;
 
-   object IJob.LinkedObject => (object)linkedObject;
+   object IJob.LinkedObject => linkedObject;
    string IJob.Name => name;
 
    public event Action<IJob, TaskStatus> Finished;
@@ -24,25 +21,19 @@ public class Job<TItem, TObject>(TObject linkedObject, string name, IEnumerable<
 
       _started = true;
 
-      _task = Task.Run(async () => 
-      {
-         foreach (var item in items)
+      Task.Run(async () =>
          {
-            _cts.Token.ThrowIfCancellationRequested();
-            await Task.Delay(interval);
-            await action.Invoke(logger, client, usersDb, item, linkedObject);
-         }
-      }, _cts.Token)
-      .ContinueWith(t => Finished.Invoke(this, t.Status));
+            foreach (var item in items)
+            {
+               _cts.Token.ThrowIfCancellationRequested();
+               await Task.Delay(interval);
+               await action.Invoke(logger, client, usersDb, item, linkedObject);
+            }
+         }, _cts.Token)
+         .ContinueWith(t => Finished?.Invoke(this, t.Status));
    }
 
-   public void Cancel()
-   {
-      _cts.Cancel();
-   }
+   public void Cancel() => _cts.Cancel();
 
-   public void Dispose()
-   {
-      _cts.Dispose();
-   }
+   public void Dispose() => _cts.Dispose();
 }

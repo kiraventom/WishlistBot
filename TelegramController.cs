@@ -4,7 +4,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
 using WishlistBot.Database.Users;
-using WishlistBot.BotMessages;
 using WishlistBot.Actions;
 using WishlistBot.Listeners;
 
@@ -62,7 +61,6 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
       if (botCommand is not null)
       {
          await HandleBotCommandAsync(botCommand, message.Text, user);
-         return;
       }
    }
 

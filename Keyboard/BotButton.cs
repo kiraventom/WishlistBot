@@ -1,6 +1,6 @@
 using Telegram.Bot.Types.ReplyMarkups;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.Keyboard;
 

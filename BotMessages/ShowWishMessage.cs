@@ -1,7 +1,7 @@
 using Serilog;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Database.Users;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages;
 
@@ -26,7 +26,7 @@ public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
       var name = wish.Name;
       var description = wish.Description;
       var links = wish.Links;
-      
+
       if (parameters.Pop(QueryParameterType.ClaimWish))
       {
          // Claim unclaimed wish

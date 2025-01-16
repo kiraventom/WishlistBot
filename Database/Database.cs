@@ -30,11 +30,12 @@ public abstract class Database<TKey, TValue>
       {
          item.PropertyChanged += OnItemPropertyChanged;
       }
-
    }
 
    protected static Dictionary<TKey, TValue> LoadValues(ILogger logger, string filePath, string dbName)
    {
+      ArgumentNullException.ThrowIfNull(filePath);
+
       if (!File.Exists(filePath))
       {
          logger.Warning("File '{filePath}' not found, creating empty {dbName} DB", filePath, dbName);
@@ -59,10 +60,7 @@ public abstract class Database<TKey, TValue>
 
    protected void Save() => SaveTo(Logger, _filePath, DatabaseName, Dict);
 
-   protected void OnItemPropertyChanged(BasePropertyChanged item, string propertyName)
-   {
-      Save();
-   }
+   protected void OnItemPropertyChanged(BasePropertyChanged item, string propertyName) => Save();
 
    private static void SaveTo(ILogger logger, string filePath, string dbName, Dictionary<TKey, TValue> values)
    {

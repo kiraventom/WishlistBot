@@ -1,10 +1,9 @@
 using Serilog;
-using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Admin;
 using WishlistBot.Queries.Admin.Broadcasts;
 using WishlistBot.Database.Users;
 using WishlistBot.Database.Admin;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
@@ -17,7 +16,7 @@ public class BroadcastsMessage(ILogger logger, UsersDb usersDb, BroadcastsDb bro
       var broadcasts = broadcastsDb.Values.Values.Reverse().ToList();
       var totalCount = broadcasts.Count;
 
-      if (broadcasts.Any())
+      if (broadcasts.Count != 0)
       {
          var sentBroadcastsCount = broadcasts.Count(b => b.IsSent);
          var draftsBroadcastsCount = broadcasts.Count - sentBroadcastsCount;

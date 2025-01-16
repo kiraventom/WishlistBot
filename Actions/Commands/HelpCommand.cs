@@ -1,12 +1,7 @@
 using Telegram.Bot;
 using Serilog;
 using WishlistBot.Database.Users;
-using WishlistBot.Database.Admin;
 using WishlistBot.BotMessages;
-using WishlistBot.BotMessages.Subscription;
-using WishlistBot.Queries.Parameters;
-using WishlistBot.BotMessages.Admin;
-using WishlistBot.BotMessages.Admin.Broadcasts;
 
 namespace WishlistBot.Actions.Commands;
 

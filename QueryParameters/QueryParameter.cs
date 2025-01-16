@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace WishlistBot.Queries.Parameters;
+namespace WishlistBot.QueryParameters;
 
 public readonly struct QueryParameter(QueryParameterType type, long? value = null)
 {

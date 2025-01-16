@@ -1,6 +1,4 @@
 using System.Text.Json.Serialization;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 
 namespace WishlistBot.Database.Admin;
 
