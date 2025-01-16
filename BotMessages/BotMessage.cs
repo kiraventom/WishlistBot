@@ -1,13 +1,13 @@
 using Serilog;
 using System.Reflection;
-using WishlistBot.Actions.Commands;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Keyboard;
 using WishlistBot.Database.Users;
+using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages;
 
+[AllowedTypes(QueryParameterType.ForceNewMessage)]
 public abstract class BotMessage(ILogger logger)
 {
    private bool _isInited;
@@ -17,6 +17,8 @@ public abstract class BotMessage(ILogger logger)
    public MessageText Text { get; } = new();
    public BotKeyboard Keyboard { get; } = new();
    public string PhotoFileId { get; protected set; }
+
+   public bool ForceNewMessage { get; private set; }
 
    public async Task Init(BotUser user)
    {
@@ -31,9 +33,12 @@ public abstract class BotMessage(ILogger logger)
       var allowedTypes = GetAllowedTypes();
 
       Logger.Debug($"unfiltered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
-      Logger.Debug($"allowed types for {this.GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
+      Logger.Debug($"allowed types for {GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
       FilterParameters(parameters, allowedTypes);
       Logger.Debug($"filtered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
+
+      if (parameters.Pop(QueryParameterType.ForceNewMessage))
+         ForceNewMessage = true;
 
       Keyboard.InitCommonParameters(parameters);
 

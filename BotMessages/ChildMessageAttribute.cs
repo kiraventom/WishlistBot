@@ -1,12 +1,8 @@
 namespace WishlistBot.BotMessages;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class ChildMessageAttribute : Attribute
+public class ChildMessageAttribute(Type parentMessageType) : Attribute
 {
-   public Type ParentMessageType { get; }
+   public Type ParentMessageType { get; } = parentMessageType;
 
-   public ChildMessageAttribute(Type parentMessageType)
-   {
-      ParentMessageType = parentMessageType;
-   }
 }

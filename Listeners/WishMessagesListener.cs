@@ -5,11 +5,11 @@ using Telegram.Bot.Types.Enums;
 using WishlistBot.Database.Users;
 using WishlistBot.BotMessages.EditWish;
 
-namespace WishlistBot;
+namespace WishlistBot.Listeners;
 
-public class WishMessagesListener(ILogger logger, ITelegramBotClient client, UsersDb usersDb)
+public class WishMessagesListener(ILogger logger, ITelegramBotClient client, UsersDb usersDb) : IListener
 {
-   public async Task HandleWishMessageAsync(Message message, BotUser user)
+   public async Task<bool> HandleMessageAsync(Message message, BotUser user)
    {
       switch (user.BotState)
       {
@@ -23,17 +23,18 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client, Use
 
          case BotState.ListenForWishMedia:
             await HandleSettingWishMediaAsync(message, user);
-            return;
+            break;
 
          case BotState.ListenForWishLinks:
             await HandleSettingWishLinksAsync(message, user);
             break;
 
          default:
-            return;
+            return false;
       }
 
       await SendEditWishMessageAsync(user);
+      return true;
    }
 
    private Task HandleSettingWishNameAsync(Message message, BotUser user)
@@ -94,6 +95,7 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client, Use
 
       var links = linksEntities.Select(l => text.Substring(l.Offset, l.Length));
 
+      user.CurrentWish.Links.Clear();
       foreach (var link in links)
       {
          user.CurrentWish.Links.Add(link);

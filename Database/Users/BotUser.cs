@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using WishlistBot.Database.Admin;
 
 namespace WishlistBot.Database.Users;
 
@@ -97,10 +98,16 @@ public class BotUser : BasePropertyChanged
    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
    public ObservableCollection<string> Subscriptions { get; } = [];
 
+   [JsonInclude]
+   [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
+   public ObservableCollection<ReceivedBroadcast> ReceivedBroadcasts { get; } = [];
+
    [JsonConstructor]
    public BotUser()
    {
       Wishes.CollectionChanged += OnWishesCollectionChanged;
+      Subscriptions.CollectionChanged += (_, _) => RaisePropertyChanged(nameof(Subscriptions));
+      ReceivedBroadcasts.CollectionChanged += (_, _) => RaisePropertyChanged(nameof(ReceivedBroadcasts));
    }
 
    public BotUser(long senderId, string firstName, string tag) : this()
@@ -113,11 +120,11 @@ public class BotUser : BasePropertyChanged
 
    private void OnWishesCollectionChanged(object sender, NotifyCollectionChangedEventArgs ea)
    {
-      var oldWish = ea.OldItems?.OfType<Wish>()?.Single();
+      var oldWish = ea.OldItems?.OfType<Wish>()?.SingleOrDefault();
       if (oldWish is not null)
          oldWish.PropertyChanged -= OnWishPropertyChanged;
 
-      var newWish = ea.NewItems?.OfType<Wish>()?.Single();
+      var newWish = ea.NewItems?.OfType<Wish>()?.SingleOrDefault();
       if (newWish is not null)
          newWish.PropertyChanged += OnWishPropertyChanged;
 

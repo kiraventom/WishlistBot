@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace WishlistBot.Queries.Parameters;
+namespace WishlistBot.QueryParameters;
 
 public readonly struct QueryParameter(QueryParameterType type, long? value = null)
 {
@@ -12,6 +12,8 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
    public static QueryParameter ReadOnly { get; } = new(QueryParameterType.ReadOnly);
    public static QueryParameter ReturnToSubscriber { get; } = new(QueryParameterType.ReturnToSubscriber);
    public static QueryParameter ClaimWish { get; } = new(QueryParameterType.ClaimWish);
+   public static QueryParameter ForceNewMessage { get; } = new(QueryParameterType.ForceNewMessage);
+   public static QueryParameter CancelJob { get; } = new(QueryParameterType.CancelJob);
 
    public QueryParameterType Type { get; } = type;
    public long? Value { get; } = value;

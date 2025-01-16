@@ -1,10 +1,18 @@
 ﻿using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using System.Reflection;
 using Telegram.Bot;
+using WishlistBot.Listeners;
 using WishlistBot.Database.Users;
 using WishlistBot.Database.MediaStorage;
 using WishlistBot.Notification;
+using WishlistBot.BotMessages;
+using WishlistBot.Actions;
+using WishlistBot.Actions.Commands;
+using WishlistBot.Queries;
+using WishlistBot.Database.Admin;
+using WishlistBot.Jobs;
 
 namespace WishlistBot;
 
@@ -39,13 +47,39 @@ public static class Program
          return;
       }
 
-      var client = new TelegramBotClient(config.Token);
-      MediaStorageManager.Instance.Init(logger, client, mediaStorageDb, config.StorageChannelId);
-      await MediaStorageManager.Instance.Cleanup(usersDb);
+      if (!TryLoadBroadcastsDb(logger, projectDirPath, out var broadcastsDb))
+      {
+         logger.Fatal("Couldn't parse broadcasts DB, exiting");
+         return;
+      }
+
+      if (!TryInitTelegramClient(logger, config.Token, out var client))
+      {
+         logger.Fatal("Couldn't init {TelegramBotClient}, exiting", nameof(TelegramBotClient));
+         return;
+      }
+
+      // TODO Ugly
+      var mediaStorageManagerInited = await TryInitMediaStorageManager(logger, client, usersDb, mediaStorageDb, config.StorageChannelId);
+      if (!mediaStorageManagerInited)
+      {
+         logger.Fatal("Couldn't init {MediaStorageManager}, exiting", nameof(MediaStorageManager));
+         return;
+      }
 
       NotificationService.Instance.Init(logger, client, usersDb);
 
-      var telegramController = new TelegramController(logger, client, usersDb);
+      JobManager.Instance.Init(logger, client, usersDb);
+
+      var messagesFactory = new MessageFactory(logger, usersDb, broadcastsDb);
+
+      var commands = BuildCommands(logger, client, usersDb, config.AdminId);
+      var queryActions = BuildQueryActions(logger, client, messagesFactory);
+      var actions = commands.Concat(queryActions);
+
+      var listeners = BuildListeners(logger, client, usersDb, broadcastsDb);
+
+      var telegramController = new TelegramController(logger, client, usersDb, actions.ToList(), listeners.ToList());
       telegramController.StartReceiving();
 
       while (true)
@@ -103,5 +137,69 @@ public static class Program
       var mediaStorageDbFilePath = Path.Combine(projectDirPath, "mediaStorage.json");
       mediaStorageDb = MediaStorageDb.Load(logger, mediaStorageDbFilePath);
       return mediaStorageDb is not null;
+   }
+
+   private static bool TryLoadBroadcastsDb(ILogger logger, string projectDirPath, out BroadcastsDb broadcastsDb)
+   {
+      var broadcastsDbFilePath = Path.Combine(projectDirPath, "broadcasts.json");
+      broadcastsDb = BroadcastsDb.Load(logger, broadcastsDbFilePath);
+      return broadcastsDb is not null;
+   }
+
+   private static bool TryInitTelegramClient(ILogger logger, string token, out TelegramBotClient client)
+   {
+      try
+      {
+         client = new TelegramBotClient(token);
+         return true;
+      }
+      catch (Exception e)
+      {
+         client = null;
+         logger.Error(e.ToString());
+         return false;
+      }
+   }
+
+   private static async Task<bool> TryInitMediaStorageManager(ILogger logger, TelegramBotClient client, UsersDb usersDb, MediaStorageDb mediaStorageDb, long storageChannelId)
+   {
+      try
+      {
+         MediaStorageManager.Instance.Init(logger, client, mediaStorageDb, storageChannelId);
+         await MediaStorageManager.Instance.Cleanup(usersDb);
+         return true;
+      }
+      catch (Exception e)
+      {
+         logger.Error(e.ToString());
+         return false;
+      }
+   }
+
+   private static IEnumerable<UserAction> BuildCommands(ILogger logger, TelegramBotClient client, UsersDb usersDb, long adminId)
+   {
+      yield return new StartCommand(logger, client, usersDb);
+      yield return new AdminCommand(logger, client, usersDb, adminId);
+      yield return new HelpCommand(logger, client);
+   }
+
+   private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, TelegramBotClient client, MessageFactory messagesFactory)
+   {
+      var queryTypes = Assembly.GetExecutingAssembly()
+         .GetTypes()
+         .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(IQuery).IsAssignableFrom(t));
+
+      foreach (var queryType in queryTypes)
+      {
+         var queryActionType = typeof(QueryAction<>).MakeGenericType(queryType);
+         var queryAction = (UserAction)Activator.CreateInstance(queryActionType, logger, client, messagesFactory);
+         yield return queryAction;
+      }
+   }
+
+   private static IEnumerable<IListener> BuildListeners(ILogger logger, TelegramBotClient client, UsersDb usersDb, BroadcastsDb broadcastsDb)
+   {
+      yield return new AdminMessagesListener(logger, client, broadcastsDb);
+      yield return new WishMessagesListener(logger, client, usersDb);
    }
 }

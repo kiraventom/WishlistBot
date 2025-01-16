@@ -16,13 +16,16 @@ public class MessageText
    }
 
    public MessageText LineBreak()
-   { 
+   {
       _sb.AppendLine();
       return this;
    }
 
    public MessageText Verbatim(string text)
    {
+      if (text is null)
+         return this;
+
       foreach (var ch in text)
       {
          var charCode = (int)ch;
@@ -100,10 +103,9 @@ public class MessageText
 
    public MessageText InlineMention(BotUser user)
    {
-      if (string.IsNullOrEmpty(user.Tag))
-         return InlineMention(user.FirstName, user.SenderId);
-
-      return InlineMention(user.FirstName, user.Tag);
+      return string.IsNullOrEmpty(user.Tag)
+         ? InlineMention(user.FirstName, user.SenderId)
+         : InlineMention(user.FirstName, user.Tag);
    }
 
    public MessageText InlineMention(string text, string tag)
@@ -146,7 +148,7 @@ public class MessageText
    public MessageText Quote(string text)
    {
       // Empty bold definition to separate from previous quote
-      _sb.Append("**"); 
+      _sb.Append("**");
       var lines = text.Split('\n');
 
       for (var i = 0; i < lines.Length; ++i)
@@ -170,13 +172,7 @@ public class MessageText
       return this;
    }
 
-   public override string ToString()
-   {
-      return _sb.ToString();
-   }
+   public override string ToString() => _sb.ToString();
 
-   private static string EscapeLink(string link)
-   {
-      return link.Replace("\\", @"\\").Replace(")", "\\)");
-   }
+   private static string EscapeLink(string link) => link.Replace("\\", @"\\").Replace(")", "\\)");
 }

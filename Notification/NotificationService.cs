@@ -27,9 +27,6 @@ public class NotificationService
       _inited = true;
    }
 
-   // Obsolete
-   public Task Send(BotMessage notification, BotUser notificationSource) => SendToSubscribers(notification, notificationSource);
-
    public async Task SendToSubscribers(BotMessage notification, BotUser notificationSource)
    {
       var recipients = _usersDb.Values.Values
@@ -39,8 +36,12 @@ public class NotificationService
          await _client.SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
    }
 
-   public async Task SendToUser(BotMessage notification, BotUser notificationSource, BotUser notificationRecepient)
-   {
+   public async Task SendToUser(BotMessage notification, BotUser notificationRecepient) =>
       await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
+
+   public async Task<int> BroadcastToUser(BotMessage notification, BotUser notificationRecepient)
+   {
+      var message = await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
+      return message.MessageId;
    }
 }

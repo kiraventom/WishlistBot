@@ -1,9 +1,9 @@
 using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages;
 
@@ -48,7 +48,7 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
       {
          var wish = user.Wishes[i];
          Text.LineBreak().Bold($"{i + 1}. ");
-         
+
          // If user isn't looking at its own wishes
          if (sender.SenderId != user.SenderId && wish.ClaimerId != 0)
          {
@@ -66,7 +66,10 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
             Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
 
          if (wish.Links.Any())
-            Text.Verbatim(" \U0001f310"); // globe
+         {
+            var firstLink = wish.Links.First();
+            Text.InlineUrl(" \U0001f310", firstLink); // globe
+         }
       }
 
       return Task.CompletedTask;

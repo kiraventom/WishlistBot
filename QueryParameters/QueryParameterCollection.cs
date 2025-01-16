@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Text;
 
-namespace WishlistBot.Queries.Parameters;
+namespace WishlistBot.QueryParameters;
 
 public class QueryParameterCollection : IEnumerable<QueryParameter>
 {

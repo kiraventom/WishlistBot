@@ -1,17 +1,19 @@
-using System;
-using System.Collections.Generic;
+namespace WishlistBot.Database;
 
 public static class DatabaseUtils
 {
    public static long GenerateId(IReadOnlyCollection<long> ids)
    {
-      if (ids == null || !ids.Any())
-         throw new ArgumentException("Ids collection is null or empty", nameof(ids));
+      if (ids is null)
+         throw new ArgumentException("Ids collection is null", nameof(ids));
 
-      var id = ids.First();
+      if (ids.Count == 0)
+         return Random.Shared.Next();
+
+      var id = ids.FirstOrDefault();
       while (ids.Contains(id))
       {
-         id = (long)Random.Shared.Next();
+         id = Random.Shared.Next();
       }
 
       return id;

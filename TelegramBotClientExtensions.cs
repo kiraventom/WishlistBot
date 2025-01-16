@@ -17,6 +17,9 @@ public static class TelegramBotClientExtensions
       try
       {
          await botMessage.Init(user);
+
+         if (botMessage.ForceNewMessage)
+            forceNewMessage = true;
       }
       catch (Exception e)
       {
@@ -48,7 +51,9 @@ public static class TelegramBotClientExtensions
             await MediaStorageManager.Instance.Store(photoFileId);
          }
 
-         if (user.LastBotMessageId < 0 || forceNewMessage)
+         var shouldSendNewMessage = user.LastBotMessageId < 0 || forceNewMessage || user.ReceivedBroadcasts.Any(b => b.MessageId == user.LastBotMessageId);
+
+         if (shouldSendNewMessage)
          {
             if (photoFileId is null)
             {

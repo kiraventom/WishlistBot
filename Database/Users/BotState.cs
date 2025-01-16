@@ -2,6 +2,14 @@ namespace WishlistBot.Database.Users;
 
 public enum BotState
 {
-   Default,
-   ListenForWishName, ListenForWishDescription, ListenForWishMedia, ListenForWishLinks
+   Default = 0x0,
+
+   // Wish editing
+   ListenForWishName = 0x1,
+   ListenForWishDescription = 0x2,
+   ListenForWishMedia = 0x3,
+   ListenForWishLinks = 0x4,
+
+   // Admin
+   ListenForBroadcast = -0x1
 }

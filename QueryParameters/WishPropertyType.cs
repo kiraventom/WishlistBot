@@ -1,6 +1,4 @@
-using System;
-
-namespace WishlistBot.Queries.Parameters;
+namespace WishlistBot.QueryParameters;
 
 [Flags]
 public enum WishPropertyType

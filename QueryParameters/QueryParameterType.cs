@@ -1,4 +1,4 @@
-namespace WishlistBot.Queries.Parameters;
+namespace WishlistBot.QueryParameters;
 
 public enum QueryParameterType
 {
@@ -11,4 +11,9 @@ public enum QueryParameterType
    SetUserTo = 0x9,
    ReturnToSubscriber = 0xA,
    ClaimWish = 0xB,
+   ForceNewMessage = 0xC,
+
+   // Admin
+   SetBroadcastTo = -0x1,
+   CancelJob = -0x2
 }

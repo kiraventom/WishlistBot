@@ -1,7 +1,7 @@
 using Serilog;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.EditWish;
 
@@ -27,9 +27,8 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
       {
          Text.Bold("Текущие ссылки: ");
 
-         for (var i = 0; i < user.CurrentWish.Links.Count; ++i)
+         foreach (var link in user.CurrentWish.Links)
          {
-            var link = user.CurrentWish.Links[i];
             Text.LineBreak().Monospace(link);
          }
 

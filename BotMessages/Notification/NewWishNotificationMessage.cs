@@ -1,11 +1,12 @@
 using Serilog;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
+using WishlistBot.Notification;
 using WishlistBot.Database.Users;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Notification;
 
-public class NewWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish newWish) : BotMessage(logger)
+public class NewWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish newWish) : BotMessage(logger), INotificationMessage
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {

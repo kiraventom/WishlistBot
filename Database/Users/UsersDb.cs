@@ -10,10 +10,6 @@ public class UsersDb : Database<long, BotUser>
    private UsersDb(ILogger logger, string filepath, IReadOnlyDictionary<long, BotUser> users)
       : base(logger, filepath, users)
    {
-      foreach (var user in users.Values)
-      {
-         user.PropertyChanged += OnUserPropertyChanged;
-      }
    }
 
    public BotUser GetOrAddUser(long senderId, string firstName, string tag)
@@ -34,7 +30,7 @@ public class UsersDb : Database<long, BotUser>
 
       Logger.Information("New user '{firstName}' [{senderId}] added to DB", firstName, senderId);
 
-      user.PropertyChanged += OnUserPropertyChanged;
+      user.PropertyChanged += OnItemPropertyChanged;
       Save();
 
       return user;
@@ -46,7 +42,7 @@ public class UsersDb : Database<long, BotUser>
       if (contains)
       {
          var user = Dict[senderId];
-         user.PropertyChanged -= OnUserPropertyChanged;
+         user.PropertyChanged -= OnItemPropertyChanged;
          Dict.Remove(senderId);
 
          Logger.Information("BotUser [{senderId}] removed from DB", senderId);
@@ -64,13 +60,5 @@ public class UsersDb : Database<long, BotUser>
    {
       var values = LoadValues(logger, filePath, UsersDatabaseName);
       return values is null ? null : new UsersDb(logger, filePath, values);
-   }
-
-   private void OnUserPropertyChanged(BasePropertyChanged item, string propertyName)
-   {
-      if (item is BotUser user)
-         Logger.Debug("Property {propertyName} of user [{senderId}] changed", propertyName, user.SenderId);
-
-      Save();
    }
 }

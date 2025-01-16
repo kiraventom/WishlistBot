@@ -1,9 +1,9 @@
 using Serilog;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.BotMessages.Notification;
 using WishlistBot.Database.Users;
 using WishlistBot.Notification;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.EditWish;
 
@@ -35,6 +35,6 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
       Text.Italic("Виш удалён!");
 
       var deleteWishNotification = new DeleteWishNotificationMessage(Logger, user, deletedWish);
-      await NotificationService.Instance.Send(deleteWishNotification, user);
+      await NotificationService.Instance.SendToSubscribers(deleteWishNotification, user);
    }
 }

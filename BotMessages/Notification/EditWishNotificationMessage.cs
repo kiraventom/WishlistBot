@@ -1,13 +1,13 @@
-using System.Text;
 using Serilog;
+using WishlistBot.Notification;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Parameters;
 using WishlistBot.Database.Users;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Notification;
 
 public class EditWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish editedWish, WishPropertyType wishPropertyType)
-   : BotMessage(logger)
+   : BotMessage(logger), INotificationMessage
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
@@ -36,8 +36,7 @@ public class EditWishNotificationMessage(ILogger logger, BotUser notificationSou
       if (wishPropertyType.HasFlag(WishPropertyType.Links))
          changedItemsNames.Add("ссылки");
 
-      string changedItemsText;
-      changedItemsText = changedItemsNames.Count switch
+      var changedItemsText = changedItemsNames.Count switch
       {
          0 => throw new NotSupportedException($"WishPropertyType value '{wishPropertyType}' is not supported"),
          1 => changedItemsNames.Single(),

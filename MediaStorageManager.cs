@@ -43,6 +43,8 @@ public class MediaStorageManager
 
    public async Task Cleanup(UsersDb usersDb)
    {
+      // TODO TEMP, support broadcasts
+      return;
       _logger.Debug("Media storage cleanup started");
 
       var storedFileIds = _database.Values.Keys;

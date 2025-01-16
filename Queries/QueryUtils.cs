@@ -1,5 +1,5 @@
 using System.Text;
-using WishlistBot.Queries.Parameters;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.Queries;
 
