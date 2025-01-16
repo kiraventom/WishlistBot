@@ -3,10 +3,11 @@ using Serilog;
 using WishlistBot.Database.Users;
 using WishlistBot.Queries;
 using WishlistBot.BotMessages;
+using WishlistBot.Queries.Admin;
 
 namespace WishlistBot.Actions;
 
-public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFactory messageFactory)
+public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFactory messageFactory, int adminId)
    : UserAction(logger, client) where T : IQuery, new()
 {
    private readonly IQuery _query = new T();
@@ -17,6 +18,12 @@ public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFa
 
    public sealed override async Task ExecuteAsync(BotUser user, string actionText)
    {
+      if (_query is IAdminQuery && user.SenderId != adminId)
+      {
+         Logger.Warning("{query} sent, but [{id}] is not admin", Name, user.SenderId);
+         return;
+      }
+
       QueryUtils.TryParseQueryStr(actionText, out _, out var parameters);
 
       await Client.AnswerCallbackQuery(user.LastQueryId);
