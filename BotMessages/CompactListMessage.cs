@@ -4,6 +4,7 @@ using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages;
 
@@ -57,6 +58,11 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
          else
          {
             Text.Monospace(wish.Name);
+         }
+
+         if (wish.PriceRange != Price.NotSet)
+         {
+            Text.Verbatim(" [").Bold(MessageTextUtils.PriceToShortString(wish.PriceRange)).Verbatim("] ");
          }
 
          if (!string.IsNullOrEmpty(wish.Description))

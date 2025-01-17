@@ -11,6 +11,7 @@ public class Wish : BasePropertyChanged
    private string _description;
    private string _fileId;
    private long _claimerId;
+   private Price _priceRange;
 
    public long Id
    {
@@ -42,6 +43,12 @@ public class Wish : BasePropertyChanged
       set => Set(ref _claimerId, value);
    }
 
+   public Price PriceRange
+   {
+      get => _priceRange;
+      set => Set(ref _priceRange, value);
+   }
+
    [JsonInclude]
    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
    public ObservableCollection<string> Links { get; } = [];
@@ -61,7 +68,8 @@ public class Wish : BasePropertyChanged
          Name = Name,
          Description = Description,
          FileId = FileId,
-         ClaimerId = ClaimerId
+         ClaimerId = ClaimerId,
+         PriceRange = PriceRange
       };
 
       foreach (var link in Links)

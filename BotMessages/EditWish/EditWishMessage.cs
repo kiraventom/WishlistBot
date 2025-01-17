@@ -2,10 +2,11 @@ using Serilog;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo, QueryParameterType.ClearWishProperty)]
+[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo)]
 [ChildMessage(typeof(FullListMessage))]
 // TODO Separate to NewWish and EditWish
 public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
@@ -18,6 +19,8 @@ public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
          .NewRow()
          .AddButton<SetWishMediaQuery>()
          .AddButton<SetWishLinksQuery>()
+         .NewRow()
+         .AddButton<SetWishPriceQuery>()
          .NewRow();
 
       if (parameters.Peek(QueryParameterType.ReturnToFullList))
@@ -48,11 +51,20 @@ public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
 
       var wish = user.CurrentWish;
 
+      if (parameters.Pop(QueryParameterType.SetPriceTo, out var priceValue))
+      {
+         var price = (Price)priceValue;
+         wish.PriceRange = price;
+      }
+
       if (parameters.Pop(QueryParameterType.ClearWishProperty, out var propertyTypeValue))
       {
          var propertyType = (WishPropertyType)propertyTypeValue;
          switch (propertyType)
          {
+            case WishPropertyType.Price:
+               wish.PriceRange = Price.NotSet;
+               break;
             case WishPropertyType.Description:
                wish.Description = null;
                break;
@@ -68,11 +80,12 @@ public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
       var name = wish.Name;
       var description = wish.Description;
       var links = wish.Links;
+      var priceRange = wish.PriceRange;
 
-      if (wish.ClaimerId != 0)
-      {
-         Text.ItalicBold("\u203c\ufe0f Будьте осторожны! Кто-то забронировал этот виш! \u203c\ufe0f").LineBreak().LineBreak();
-      }
+      //if (wish.ClaimerId != 0)
+      //{
+      //   Text.ItalicBold("\u203c\ufe0f Будьте осторожны! Кто-то забронировал этот виш! \u203c\ufe0f").LineBreak().LineBreak();
+      //}
 
       Text.Italic("Редактирование виша")
          .LineBreak()
@@ -91,6 +104,12 @@ public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
             if (i < links.Count - 1)
                Text.Verbatim(", ");
          }
+      }
+
+      if (priceRange != Price.NotSet)
+      {
+         var priceRangeString = MessageTextUtils.PriceToString(priceRange);
+         Text.LineBreak().Bold("Цена: ").Monospace(priceRangeString);
       }
 
       PhotoFileId = wish.FileId;

@@ -24,6 +24,7 @@ public class MessageFactory(ILogger logger, UsersDb usersDb, BroadcastsDb broadc
          SetWishDescriptionQuery => new SetWishDescriptionMessage(logger),
          SetWishMediaQuery => new SetWishMediaMessage(logger),
          SetWishLinksQuery => new SetWishLinksMessage(logger),
+         SetWishPriceQuery => new SetWishPriceMessage(logger),
          CancelEditWishQuery => new CancelEditWishMessage(logger),
          DeleteWishQuery => new DeleteWishMessage(logger),
          FinishEditWishQuery => new FinishEditWishMessage(logger),

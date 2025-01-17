@@ -12,6 +12,7 @@ public enum QueryParameterType
    ReturnToSubscriber = 0xA,
    ClaimWish = 0xB,
    ForceNewMessage = 0xC,
+   SetPriceTo = 0xD,
 
    // Admin
    SetBroadcastTo = -0x1,

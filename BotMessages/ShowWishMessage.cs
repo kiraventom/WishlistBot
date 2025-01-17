@@ -2,6 +2,7 @@ using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages;
 
@@ -26,6 +27,7 @@ public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
       var name = wish.Name;
       var description = wish.Description;
       var links = wish.Links;
+      var priceRange = wish.PriceRange;
 
       if (parameters.Pop(QueryParameterType.ClaimWish))
       {
@@ -90,6 +92,12 @@ public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
             if (i < links.Count - 1)
                Text.Verbatim(", ");
          }
+      }
+
+      if (priceRange != Price.NotSet)
+      {
+         var priceRangeString = MessageTextUtils.PriceToString(priceRange);
+         Text.LineBreak().Bold("Цена: ").Monospace(priceRangeString);
       }
 
       PhotoFileId = wish.FileId;
