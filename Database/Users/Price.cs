@@ -3,7 +3,7 @@ namespace WishlistBot.Database.Users;
 public enum Price
 {
    NotSet,
-   Under300,
+   Under500,
    Under1000,
    Under3000,
    Under5000,
