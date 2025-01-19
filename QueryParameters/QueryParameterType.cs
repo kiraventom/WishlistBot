@@ -13,6 +13,8 @@ public enum QueryParameterType
    ClaimWish = 0xB,
    ForceNewMessage = 0xC,
    SetPriceTo = 0xD,
+   SetSettingsTo = 0xE,
+   RegenerateLink = 0xF,
 
    // Admin
    SetBroadcastTo = -0x1,

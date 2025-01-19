@@ -57,7 +57,7 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
          }
          else
          {
-            Text.Monospace(wish.Name);
+            Text.Verbatim(wish.Name);
          }
 
          if (wish.PriceRange != Price.NotSet)

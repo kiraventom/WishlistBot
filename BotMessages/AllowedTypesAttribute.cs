@@ -6,5 +6,4 @@ namespace WishlistBot.BotMessages;
 public class AllowedTypesAttribute(params QueryParameterType[] allowedTypes) : Attribute
 {
    public IReadOnlyCollection<QueryParameterType> AllowedTypes { get; } = allowedTypes;
-
 }

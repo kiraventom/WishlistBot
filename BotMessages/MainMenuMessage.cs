@@ -2,6 +2,7 @@ using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
+using WishlistBot.Queries.Settings;
 using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages;
@@ -15,17 +16,26 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
          .NewRow()
          .AddButton<MySubscriptionsQuery>()
          .AddButton<MySubscribersQuery>()
-         /*.NewRow()
-         .AddButton("@settings", "Настройки")*/;
+         .NewRow()
+         .AddButton<SettingsQuery>();
 
-      Text.Italic("Добро пожаловать в главное меню, ")
+      Text.Verbatim("Добро пожаловать в главное меню, ")
          .InlineMention(user)
-         .Italic("!")
-         .LineBreak()
-         .LineBreak().Bold("Ссылка на ваш вишлист")
-         .Italic(" (нажмите, чтобы скопировать)")
-         .Bold(":")
-         .LineBreak().Monospace($"t.me/smartwishlistbot?start={user.SubscribeId}");
+         .Verbatim("!");
+
+      const string mutedSpeaker = "\U0001f507";
+      const string dot = "⋅ ";
+
+      if (!user.Settings.ReceiveNotifications || !user.Settings.SendNotifications)
+         Text.LineBreak();
+
+      if (!user.Settings.ReceiveNotifications)
+         Text.LineBreak().ItalicBold($"{dot}Получение уведомлений о вишах подписчиков: ").Verbatim(mutedSpeaker);
+
+      if (!user.Settings.SendNotifications)
+         Text.LineBreak().ItalicBold($"{dot}Отправка уведомлений о вишах подписчикам: ").Verbatim(mutedSpeaker);
+
+      Text.LineBreak().LineBreak().Italic("Ссылку на вишлист можно скопировать в настройках");
 
       return Task.CompletedTask;
    }

@@ -30,6 +30,9 @@ public class NotificationService
 
    public Task SendToSubscribers(BotMessage notification, BotUser notificationSource)
    {
+      if (!notificationSource.Settings.SendNotifications)
+         return Task.CompletedTask;
+
       var recipients = _usersDb.Values.Values
          .Where(u => u.Subscriptions.Contains(notificationSource.SubscribeId));
 
@@ -37,8 +40,11 @@ public class NotificationService
       return Task.CompletedTask;
    }
 
-   public async Task SendToUser(BotMessage notification, BotUser notificationRecepient) =>
-      await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
+   public async Task SendToUser(BotMessage notification, BotUser notificationRecepient)
+   {
+      if (notificationRecepient.Settings.ReceiveNotifications)
+         await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
+   }
 
    public async Task<int> BroadcastToUser(BotMessage notification, BotUser notificationRecepient)
    {
@@ -48,6 +54,7 @@ public class NotificationService
 
    private async Task SendToSubscriber(ILogger logger, ITelegramBotClient client, UsersDb usersDb, BotUser recipient, BotMessage notification)
    {
-      await _client.SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
+      if (recipient.Settings.ReceiveNotifications)
+         await _client.SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
    }
 }

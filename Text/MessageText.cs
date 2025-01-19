@@ -58,9 +58,9 @@ public class MessageText
 
    public MessageText ItalicBold(string text)
    {
-      _sb.Append("*_");
+      _sb.Append('*').Append('_');
       Verbatim(text);
-      _sb.Append("_*");
+      _sb.Append('_').Append('*');
 
       return this;
    }

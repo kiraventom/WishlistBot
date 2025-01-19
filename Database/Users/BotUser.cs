@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using WishlistBot.Database.Admin;
+using WishlistBot.Database.Settings;
 
 namespace WishlistBot.Database.Users;
 
@@ -15,6 +16,7 @@ public class BotUser : BasePropertyChanged
    private int _lastBotMessageId = -1;
    private string _queryParams;
    private Wish _currentWish;
+   private BotSettings _settings = new() { SendNotifications = true, ReceiveNotifications = true };
    private string _subscribeId;
 
    [JsonInclude]
@@ -87,6 +89,21 @@ public class BotUser : BasePropertyChanged
       }
    }
 
+   public BotSettings Settings
+   {
+      get => _settings;
+      set
+      {
+         if (_settings is not null)
+            _settings.PropertyChanged -= OnSettingsPropertyChanged;
+
+         if (value is not null)
+            value.PropertyChanged += OnSettingsPropertyChanged;
+
+         Set(ref _settings, value);
+      }
+   }
+
    [JsonInclude]
    public string SubscribeId
    {
@@ -132,4 +149,6 @@ public class BotUser : BasePropertyChanged
    }
 
    private void OnWishPropertyChanged(BasePropertyChanged sender, string propertyName) => RaisePropertyChanged(nameof(Wishes));
+
+   private void OnSettingsPropertyChanged(BasePropertyChanged sender, string propertyName) => RaisePropertyChanged(nameof(Settings));
 }

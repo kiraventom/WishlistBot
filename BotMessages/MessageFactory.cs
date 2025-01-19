@@ -10,6 +10,8 @@ using WishlistBot.BotMessages.EditWish;
 using WishlistBot.BotMessages.Subscription;
 using WishlistBot.BotMessages.Admin;
 using WishlistBot.BotMessages.Admin.Broadcasts;
+using WishlistBot.BotMessages.Settings;
+using WishlistBot.Queries.Settings;
 
 namespace WishlistBot.BotMessages;
 
@@ -49,6 +51,8 @@ public class MessageFactory(ILogger logger, UsersDb usersDb, BroadcastsDb broadc
          ConfirmDeleteBroadcastQuery => new ConfirmDeleteBroadcastMessage(logger, usersDb, broadcastsDb),
          DeleteBroadcastQuery => new DeleteBroadcastMessage(logger, usersDb, broadcastsDb),
          FinishBroadcastQuery => new FinishBroadcastMessage(logger, usersDb, broadcastsDb),
+         SettingsQuery => new SettingsMessage(logger, usersDb),
+         ConfirmRegenerateLinkQuery => new ConfirmRegenerateLinkMessage(logger),
          _ => new InvalidMessage(logger),
       };
 
