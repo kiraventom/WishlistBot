@@ -19,7 +19,13 @@ public class StartCommand(ILogger logger, ITelegramBotClient client, UsersDb use
       if (isSubscribe)
       {
          // TODO [SQL] Fix this
-         var userToSubscribeTo = usersDb.Values.Values.First(u => u.SubscribeId == subscribeId);
+         var userToSubscribeTo = usersDb.Values.Values.FirstOrDefault(u => u.SubscribeId == subscribeId);
+
+         if (userToSubscribeTo is null)
+         {
+            await Client.SendOrEditBotMessage(Logger, user, new FailSubscriptionMessage(Logger), forceNewMessage: true);
+            return;
+         }
 
          // TEMP
          if (userToSubscribeTo.SenderId == user.SenderId)
