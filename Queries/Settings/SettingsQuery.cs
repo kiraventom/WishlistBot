@@ -2,6 +2,7 @@ namespace WishlistBot.Queries.Settings;
 
 public class SettingsQuery : IQuery
 {
-   public string Caption => "Настройки";
+   private const string settingsEmoji = "\u2699\ufe0f";
+   public string Caption => $"{settingsEmoji} Настройки";
    public string Data => "@settings";
 }

@@ -11,8 +11,10 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 {
    protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
    {
+      const string giftEmoji = "\U0001f381";
+
       Keyboard
-         .AddButton<CompactListQuery>("Мои виши")
+         .AddButton<CompactListQuery>($"{giftEmoji} Мои виши")
          .NewRow()
          .AddButton<MySubscriptionsQuery>()
          .AddButton<MySubscribersQuery>()

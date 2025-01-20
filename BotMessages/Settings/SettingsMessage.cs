@@ -30,6 +30,8 @@ public class SettingsMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
          user.SubscribeId = newSubscribeId;
       }
 
+      const string regenerateEmoji = "\U0001f501";
+
       const string enabledSpeaker = "\U0001f50a";
       const string mutedSpeaker = "\U0001f507";
       const string enabledStr = "Вкл.";
@@ -59,7 +61,7 @@ public class SettingsMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
          $"Отправка уведомлений: {sendNotificationsEmoji}",
          new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.SendNotifications)));
 
-      Keyboard.NewRow().AddButton<ConfirmRegenerateLinkQuery>("Изменить ссылку на вишлист");
+      Keyboard.NewRow().AddButton<ConfirmRegenerateLinkQuery>($"{regenerateEmoji} Изменить ссылку на вишлист");
       Keyboard.NewRow().AddButton<MainMenuQuery>("В главное меню");
 
       return Task.CompletedTask;

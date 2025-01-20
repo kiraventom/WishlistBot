@@ -18,8 +18,10 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
 
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 
+      const string plusEmoji = "\u2795";
+
       if (!isReadOnly)
-         Keyboard.AddButton<SetWishNameQuery>("Добавить виш", QueryParameter.ForceNewWish);
+         Keyboard.AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
 
       if (user.Wishes.Count != 0)
          Keyboard.AddButton<FullListQuery>();
