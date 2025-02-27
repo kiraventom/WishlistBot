@@ -3,9 +3,11 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
+using Telegram.Bot.Types.ReplyMarkups;
 using WishlistBot.Database.Users;
 using WishlistBot.Actions;
 using WishlistBot.Listeners;
+using WishlistBot.Text;
 
 namespace WishlistBot;
 
@@ -40,7 +42,7 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
          await HandleMessageAsync(message);
 
       if (update.CallbackQuery is { } callbackQuery)
-         await HandleCallbackQueryAsync(callbackQuery);
+         await HandleCallbackQueryAsync(callbackQuery, client);
    }
 
    private async Task HandleMessageAsync(Message message)
@@ -64,13 +66,42 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
       }
    }
 
-   private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery)
+   private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, ITelegramBotClient client)
    {
       var sender = callbackQuery.From!;
 
-      logger.Information("Received callback query ([{callbackQueryId}]) with data '{data}' from '{first} {last}' (@{tag} [{id}])", callbackQuery.Id, callbackQuery.Data, sender.FirstName, sender.LastName, sender.Username, sender.Id);
+      logger.Information("Received callback query ([{callbackQueryId}]) with data '{data}' on message [{messageId}] from '{first} {last}' (@{tag} [{id}])", callbackQuery.Id, callbackQuery.Data, callbackQuery.Message?.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
 
       var user = usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
+
+      if (callbackQuery.Message is null || callbackQuery.Message.MessageId != user.LastBotMessageId)
+      {
+         logger.Warning("Query from old message [{oldMessageId}] (last message id [{lastMessageId}]. Editing to placeholder and returning", callbackQuery.Message?.MessageId, user.LastBotMessageId);
+
+         const string text = "Управление из старых сообщений не поддерживается. \nИспользуйте последнее сообщение или отправьте команду /start";
+         var messageText = new MessageText(text);
+         const string placeholderImageFileId = "AgACAgIAAxkBAAII32e_pW96dETJX11gzLRzXIJhyoDQAAKk8zEbHCn5SThcc9XkHwp6AQADAgADcwADNgQ";
+
+         var photo = new InputMediaPhoto(InputFile.FromFileId(placeholderImageFileId));
+
+         var keyboardMarkup = new InlineKeyboardMarkup() { InlineKeyboard = Enumerable.Empty<IEnumerable<InlineKeyboardButton>>() };
+         
+         if (callbackQuery.Message is not null)
+         {
+            await client.EditMessageMedia(chatId: user.SenderId, messageId: callbackQuery.Message.MessageId, media: photo, replyMarkup: keyboardMarkup);
+            await client.EditMessageCaption(chatId: user.SenderId, messageId: callbackQuery.Message.MessageId, caption: messageText.ToString(), replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+         }
+         else
+         {
+            logger.Warning("CallbackQuery.Message is null!");
+            var file = InputFile.FromFileId(placeholderImageFileId);
+            var message = await client.SendPhoto(chatId: user.SenderId, photo: file, caption: messageText.ToString(), replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+            user.LastBotMessageId = message.MessageId;
+         }
+
+         await client.AnswerCallbackQuery(callbackQuery.Id);
+         return;
+      }
 
       if (callbackQuery.Data is null)
       {
