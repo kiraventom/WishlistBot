@@ -29,12 +29,20 @@ public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
 
          if (user.CurrentWish is null)
          {
+            Logger.Debug("Parameter SetWishTo={setWishTo}", wishId);
+            Logger.Debug("Current user wish ids: [ {wishIds} ]", string.Join(", ", user.Wishes.Select(w => w.Id)));
             var wishToClone = user.Wishes.FirstOrDefault(w => w.Id == wishId);
             if (wishToClone is null)
             {
                throw new NotSupportedException($"Can't find wish {wishId} to clone");
             }
 
+            if (user.Wishes.Count(w => w.Id == wishId) > 1)
+            {
+               throw new NotSupportedException($"There are more than one wish with id {wishId}");
+            }
+
+            Logger.Debug("WishToClone ID={wishToClone}", wishToClone.Id);
             user.CurrentWish = wishToClone.Clone(GenerateWishId());
          }
 

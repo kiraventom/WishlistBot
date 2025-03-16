@@ -36,7 +36,7 @@ public class QueryParameterCollection : IEnumerable<QueryParameter>
          }
       }
 
-      value = int.MaxValue;
+      value = int.MinValue;
       return false;
    }
 
