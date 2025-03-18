@@ -1,6 +1,7 @@
 ﻿using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using TelegramSink;
 using System.Reflection;
 using Telegram.Bot;
 using WishlistBot.Listeners;
@@ -25,15 +26,16 @@ public static class Program
       var projectDirPath = GetProjectDirPath();
       Directory.CreateDirectory(projectDirPath);
 
-      var logger = InitLogger(projectDirPath);
-
-      logger.Information("===== ENTRY POINT =====");
-
-      if (!TryLoadConfig(logger, projectDirPath, out var config))
+      if (!TryLoadConfig(projectDirPath, out var config))
       {
-         logger.Fatal("Couldn't parse config, exiting");
+         Console.WriteLine("Couldn't parse config, exiting");
          return;
       }
+
+      // TODO Move to config
+      var logger = InitLogger(projectDirPath, config.Token, "5179711205");
+
+      logger.Information("===== ENTRY POINT =====");
 
       if (!TryLoadUsersDb(logger, projectDirPath, out var usersDb))
       {
@@ -103,7 +105,7 @@ public static class Program
       return Path.Combine(homeDirPath, $".{PROJECT_NAME}");
    }
 
-   private static Logger InitLogger(string projectDirPath)
+   private static Logger InitLogger(string projectDirPath, string botToken, string logChatId)
    {
       var logsDirPath = Path.Combine(projectDirPath, "logs");
       Directory.CreateDirectory(logsDirPath);
@@ -113,15 +115,18 @@ public static class Program
          .MinimumLevel.Debug()
          .WriteTo.File(logFilePath)
          .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information)
+         .WriteTo.TeleSink(
+               telegramApiKey: botToken,
+               telegramChatId: logChatId)
          .CreateLogger();
 
       return logger;
    }
 
-   private static bool TryLoadConfig(ILogger logger, string projectDirPath, out Config config)
+   private static bool TryLoadConfig(string projectDirPath, out Config config)
    {
       var configFilePath = Path.Combine(projectDirPath, "config.json");
-      config = Config.Load(logger, configFilePath);
+      config = Config.Load(configFilePath);
       return config is not null;
    }
 

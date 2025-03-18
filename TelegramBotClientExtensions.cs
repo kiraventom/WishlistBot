@@ -41,8 +41,6 @@ public static class TelegramBotClientExtensions
       {
          var text = botMessage.Text.ToString();
 
-         logger.Debug(text);
-
          var keyboardMarkup = botMessage.Keyboard.ToInlineKeyboardMarkup();
          var photoFileId = botMessage.PhotoFileId;
 

@@ -24,7 +24,7 @@ public class Config(string token, long storageChannelId, long adminId)
    /// </summary>
    public long AdminId { get; } = adminId;
 
-   public static Config Load(ILogger logger, string filepath)
+   public static Config Load(string filepath)
    {
       Config config = null;
 
@@ -35,7 +35,6 @@ public class Config(string token, long storageChannelId, long adminId)
       }
       catch (Exception e)
       {
-         logger.Error(e.ToString());
       }
 
       return config;
