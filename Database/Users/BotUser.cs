@@ -15,6 +15,7 @@ public class BotUser : BasePropertyChanged
    private string _lastQueryId;
    private int _lastBotMessageId = -1;
    private string _queryParams;
+   private string _allowedQueries;
    private Wish _currentWish;
    private BotSettings _settings = new() { SendNotifications = true, ReceiveNotifications = true };
    private string _subscribeId;
@@ -67,6 +68,14 @@ public class BotUser : BasePropertyChanged
    {
       get => _queryParams;
       set => Set(ref _queryParams, value);
+   }
+
+   // TODO: Replace with "Current message type"
+   [JsonInclude]
+   public string AllowedQueries 
+   {
+      get => _allowedQueries;
+      set => Set(ref _allowedQueries, value);
    }
 
    [JsonInclude]

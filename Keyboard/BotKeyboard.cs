@@ -9,6 +9,8 @@ public class BotKeyboard()
    private readonly List<List<BotButton>> _rows = [];
    private QueryParameterCollection _commonParameters = new();
 
+   public IEnumerable<BotButton> EnumerateButtons() => _rows.SelectMany(r => r);
+
    public void InitCommonParameters(QueryParameterCollection commonParameters) => _commonParameters = commonParameters;
 
    public BotKeyboard AddButton<T>(string customCaption = null) where T : IQuery, new() => AddButton<T>(customCaption, []);

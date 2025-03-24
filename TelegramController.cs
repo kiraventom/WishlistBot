@@ -109,6 +109,16 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
          return;
       }
 
+      if (!string.IsNullOrEmpty(user.AllowedQueries))
+      {
+          var allowedQueries = user.AllowedQueries.Split(';');
+          if (!allowedQueries.Contains(callbackQuery.Data))
+          {
+              logger.Warning("Unexpected query [{queryId}] '{query}', allowed queries: '{allowed}'", callbackQuery.Id, callbackQuery.Data, user.AllowedQueries);
+              return;
+          }
+      }
+
       user.LastQueryId = callbackQuery.Id;
       await HandleUserActionAsync(callbackQuery.Data, callbackQuery.Data, user);
    }

@@ -8,6 +8,8 @@ public class BotButton(string data, string caption, IEnumerable<QueryParameter> 
 {
    private QueryParameterCollection Parameters { get; } = new(parameters);
 
+   public string Data => data;
+
    public InlineKeyboardButton ToInlineKeyboardButton(QueryParameterCollection commonParameters)
    {
       var mergedParameters = QueryParameterCollection.Merge(commonParameters, Parameters);
