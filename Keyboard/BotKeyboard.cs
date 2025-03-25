@@ -9,7 +9,12 @@ public class BotKeyboard()
    private readonly List<List<BotButton>> _rows = [];
    private QueryParameterCollection _commonParameters = new();
 
-   public IEnumerable<BotButton> EnumerateButtons() => _rows.SelectMany(r => r);
+   public IEnumerable<string> EnumerateQueries()
+   {
+      return this.ToInlineKeyboardMarkup().InlineKeyboard
+         .SelectMany(b => b)
+         .Select(b => b.CallbackData);
+   }
 
    public void InitCommonParameters(QueryParameterCollection commonParameters) => _commonParameters = commonParameters;
 

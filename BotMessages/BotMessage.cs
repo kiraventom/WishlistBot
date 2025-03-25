@@ -46,7 +46,7 @@ public abstract class BotMessage(ILogger logger)
 
       // Parameters can change during message initialization
       user.QueryParams = parameters.ToString();
-      user.AllowedQueries = string.Join(';', Keyboard.EnumerateButtons().Select(b => b.Data));
+      user.AllowedQueries = string.Join(';', Keyboard.EnumerateQueries());
 
       _isInited = true;
    }
