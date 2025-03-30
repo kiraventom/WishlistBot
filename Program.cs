@@ -32,8 +32,7 @@ public static class Program
          return;
       }
 
-      // TODO Move to config
-      var logger = InitLogger(projectDirPath, config.Token, "5179711205");
+      var logger = InitLogger(projectDirPath, config.Token, config.TelesinkChatId);
 
       logger.Information("===== ENTRY POINT =====");
 
@@ -102,7 +101,7 @@ public static class Program
       }
 
       var homeDirPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-      return Path.Combine(homeDirPath, $".{PROJECT_NAME}");
+      return Path.Combine(homeDirPath, ".config", PROJECT_NAME);
    }
 
    private static Logger InitLogger(string projectDirPath, string botToken, string logChatId)

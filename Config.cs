@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace WishlistBot;
 
 [method: JsonConstructor]
-public class Config(string token, long storageChannelId, long adminId)
+public class Config(string token, long storageChannelId, long adminId, string telesinkChatId)
 {
    /// <summary>
    /// Telegram bot token. Received from <a href="https://t.me/BotFather">BotFather</a>
@@ -23,6 +23,12 @@ public class Config(string token, long storageChannelId, long adminId)
    /// Only user with this ID will have access to admin commands.
    /// </summary>
    public long AdminId { get; } = adminId;
+
+   /// <summary>
+   /// Chat ID where Telesink logs will get sent. If no ID is provided,
+   /// Telesink will not be enabled;
+   /// </summary>
+   public string TelesinkChatId { get; } = telesinkChatId;
 
    public static Config Load(string filepath)
    {
