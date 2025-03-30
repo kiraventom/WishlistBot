@@ -5,12 +5,22 @@ using System.Text.Json.Serialization;
 namespace WishlistBot;
 
 [method: JsonConstructor]
-public class Config(string token, long storageChannelId, long adminId, string telesinkChatId)
+public class Config(string token, string userConnectionString, string mediaStorageConnectionString, long storageChannelId, long adminId, string telesinkChatId)
 {
    /// <summary>
    /// Telegram bot token. Received from <a href="https://t.me/BotFather">BotFather</a>
    /// </summary>
    public string Token { get; } = token;
+
+   /// <summary>
+   /// SQlite connection string to User DB
+   /// </summary>
+   public string UserConnectionString { get; } = userConnectionString;
+
+   /// <summary>
+   /// SQlite connection string to Media Storage DB
+   /// </summary>
+   public string MediaStorageConnectionString { get; } = mediaStorageConnectionString;
 
    /// <summary>
    /// ID of a channel that will work as media storage. 
