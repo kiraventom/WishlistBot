@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Subscription;
 [AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ReadOnly)]
 public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var subscribers = Users
          .Where(u => u.Subscriptions.Contains(user.SubscribeId))

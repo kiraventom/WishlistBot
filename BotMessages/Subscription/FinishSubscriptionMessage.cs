@@ -11,7 +11,7 @@ namespace WishlistBot.BotMessages.Subscription;
 [AllowedTypes(QueryParameterType.SetUserTo)]
 public class FinishSubscriptionMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override async Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var sender = user;
       user = GetUser(user, parameters);

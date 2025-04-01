@@ -11,7 +11,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [ChildMessage(typeof(ConfirmDeleteWishMessage))]
 public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 {
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override async Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (parameters.Pop(QueryParameterType.ReturnToFullList))
          Keyboard.AddButton<FullListQuery>("Назад к списку");

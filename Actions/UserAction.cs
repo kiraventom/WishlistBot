@@ -1,6 +1,7 @@
 using Telegram.Bot;
 using Serilog;
 using WishlistBot.Database.Users;
+using WishlistBot.Model;
 
 namespace WishlistBot.Actions;
 
@@ -11,7 +12,8 @@ public abstract class UserAction(ILogger logger, ITelegramBotClient client)
 
    public abstract string Name { get; }
 
-   public abstract Task ExecuteAsync(BotUser user, string actionText);
+   public abstract Task ExecuteAsync(UserContext userContext, UserModel userModel, string actionText);
+   public abstract Task Legacy_ExecuteAsync(BotUser user, string actionText);
 
    public virtual bool IsMatch(string name) => name == Name;
 }

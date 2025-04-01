@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Subscription;
 [ChildMessage(typeof(MySubscribersMessage))]
 public class SubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var sender = user;
 

@@ -43,18 +43,18 @@ public class NotificationService
    public async Task SendToUser(BotMessage notification, BotUser notificationRecepient)
    {
       if (notificationRecepient.Settings.ReceiveNotifications)
-         await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
+         await _client.Legacy_SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
    }
 
    public async Task<int> BroadcastToUser(BotMessage notification, BotUser notificationRecepient)
    {
-      var message = await _client.SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
+      var message = await _client.Legacy_SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
       return message.MessageId;
    }
 
    private async Task SendToSubscriber(ILogger logger, ITelegramBotClient client, UsersDb usersDb, BotUser recipient, BotMessage notification)
    {
       if (recipient.Settings.ReceiveNotifications)
-         await _client.SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
+         await _client.Legacy_SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
    }
 }

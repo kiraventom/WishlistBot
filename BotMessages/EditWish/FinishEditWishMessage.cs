@@ -12,7 +12,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo)]
 public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
 {
-   protected override async Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override async Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<SetWishNameQuery>("Добавить ещё виш")

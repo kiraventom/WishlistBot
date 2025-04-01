@@ -46,7 +46,7 @@ public class AdminMessagesListener(ILogger logger, ITelegramBotClient client, Br
    private async Task SendFinishAddBroadcastMessage(BotUser user, Broadcast broadcast)
    {
       var message = new FinishAddBroadcastMessage(logger, broadcastsDb, broadcast);
-      await client.SendOrEditBotMessage(logger, user, message, forceNewMessage: true);
+      await client.Legacy_SendOrEditBotMessage(logger, user, message, forceNewMessage: true);
    }
 
    private long GenerateBroadcastId()

@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 [ChildMessage(typeof(BroadcastMessage))]
 public class ConfirmBroadcastMessage(ILogger logger, BroadcastsDb broadcastsDb) : BotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       parameters.Peek(QueryParameterType.SetBroadcastTo, out var broadcastId);
 

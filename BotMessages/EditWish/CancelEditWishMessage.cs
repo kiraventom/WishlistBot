@@ -10,7 +10,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [AllowedTypes(QueryParameterType.ReturnToFullList)]
 public class CancelEditWishMessage(ILogger logger) : BotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (parameters.Pop(QueryParameterType.ReturnToFullList))
       {

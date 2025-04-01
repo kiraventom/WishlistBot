@@ -7,7 +7,7 @@ namespace WishlistBot.BotMessages;
 
 public class HelpMessage(ILogger logger) : BotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<MainMenuQuery>("В главное меню");

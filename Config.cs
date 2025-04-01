@@ -1,4 +1,3 @@
-using Serilog;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -7,52 +6,55 @@ namespace WishlistBot;
 [method: JsonConstructor]
 public class Config(string token, string userConnectionString, string mediaStorageConnectionString, long storageChannelId, long adminId, string telesinkChatId)
 {
-   /// <summary>
-   /// Telegram bot token. Received from <a href="https://t.me/BotFather">BotFather</a>
-   /// </summary>
-   public string Token { get; } = token;
+    public static Config Instance { get; private set; }
 
-   /// <summary>
-   /// SQlite connection string to User DB
-   /// </summary>
-   public string UserConnectionString { get; } = userConnectionString;
+    /// <summary>
+    /// Telegram bot token. Received from <a href="https://t.me/BotFather">BotFather</a>
+    /// </summary>
+    public string Token { get; } = token;
 
-   /// <summary>
-   /// SQlite connection string to Media Storage DB
-   /// </summary>
-   public string MediaStorageConnectionString { get; } = mediaStorageConnectionString;
+    /// <summary>
+    /// SQlite connection string to User DB
+    /// </summary>
+    public string UserConnectionString { get; } = userConnectionString;
 
-   /// <summary>
-   /// ID of a channel that will work as media storage. 
-   /// Bot will copy all received media to this channel to cache them.
-   /// It is required because otherwise Telegram will delete them from servers if user deletes them from dialog.
-   /// </summary>
-   public long StorageChannelId { get; } = storageChannelId;
+    /// <summary>
+    /// SQlite connection string to Media Storage DB
+    /// </summary>
+    public string MediaStorageConnectionString { get; } = mediaStorageConnectionString;
 
-   /// <summary>
-   /// Only user with this ID will have access to admin commands.
-   /// </summary>
-   public long AdminId { get; } = adminId;
+    /// <summary>
+    /// ID of a channel that will work as media storage. 
+    /// Bot will copy all received media to this channel to cache them.
+    /// It is required because otherwise Telegram will delete them from servers if user deletes them from dialog.
+    /// </summary>
+    public long StorageChannelId { get; } = storageChannelId;
 
-   /// <summary>
-   /// Chat ID where Telesink logs will get sent. If no ID is provided,
-   /// Telesink will not be enabled;
-   /// </summary>
-   public string TelesinkChatId { get; } = telesinkChatId;
+    /// <summary>
+    /// Only user with this ID will have access to admin commands.
+    /// </summary>
+    public long AdminId { get; } = adminId;
 
-   public static Config Load(string filepath)
-   {
-      Config config = null;
+    /// <summary>
+    /// Chat ID where Telesink logs will get sent. If no ID is provided,
+    /// Telesink will not be enabled;
+    /// </summary>
+    public string TelesinkChatId { get; } = telesinkChatId;
 
-      try
-      {
-         using var configFile = File.OpenRead(filepath);
-         config = JsonSerializer.Deserialize<Config>(configFile, CommonOptions.Json);
-      }
-      catch (Exception e)
-      {
-      }
+    public static Config Load(string filepath)
+    {
+        if (Instance is not null)
+            return Instance;
 
-      return config;
-   }
+        try
+        {
+            using var configFile = File.OpenRead(filepath);
+            Instance = JsonSerializer.Deserialize<Config>(configFile, CommonOptions.Json);
+        }
+        catch (Exception)
+        {
+        }
+
+        return Instance;
+    }
 }

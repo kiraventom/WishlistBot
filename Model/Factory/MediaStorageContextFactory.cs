@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.Model.Factory;
 
-public class MediaStorageContextFactory : DesignTimeContextFactory<MediaStorageContext>
+public class MediaStorageDesignTimeContextFactory : DesignTimeContextFactory<MediaStorageContext>
 {
     public override MediaStorageContext CreateDbContext(string[] args)
     {
@@ -13,4 +13,3 @@ public class MediaStorageContextFactory : DesignTimeContextFactory<MediaStorageC
         return new MediaStorageContext(builder.Options);
     }
 }
-

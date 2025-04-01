@@ -20,6 +20,35 @@ public class UserContext : DbContext
     {
     }
 
+    public static UserContext Create()
+    {
+        var builder = new DbContextOptionsBuilder<UserContext>();
+        builder.UseSqlite(Config.Instance.UserConnectionString);
+
+        return new UserContext(builder.Options);
+    }
+
+    public UserModel GetOrAddUser(long telegramId, string firstName, string username)
+    {
+        var userModel = this.Users.FirstOrDefault(u => u.TelegramId == telegramId);
+        if (userModel is null)
+        {
+            userModel = new UserModel()
+            {
+                FirstName = firstName,
+                Tag = username
+            };
+        }
+
+        if (userModel.FirstName != firstName)
+            userModel.FirstName = firstName;
+
+        if (userModel.Tag != username)
+            userModel.Tag = username;
+
+        return userModel;
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseLazyLoadingProxies(false);

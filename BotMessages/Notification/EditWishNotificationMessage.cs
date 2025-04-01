@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Notification;
 public class EditWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish editedWish, WishPropertyType wishPropertyType)
    : BotMessage(logger), INotificationMessage
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var wishIndex = notificationSource.Wishes.IndexOf(editedWish);
       var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;

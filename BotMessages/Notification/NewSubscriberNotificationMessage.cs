@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Notification;
 
 public class NewSubscriberNotificationMessage(ILogger logger, BotUser notificationSource, IEnumerable<BotUser> users) : BotMessage(logger), INotificationMessage
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var subscribers = users
          .Where(u => u.Subscriptions.Contains(notificationSource.SubscribeId))

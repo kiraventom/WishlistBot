@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.Model.Factory;
 
-public class UserContextFactory : DesignTimeContextFactory<UserContext>
+public class UserDesignTimeContextFactory : DesignTimeContextFactory<UserContext>
 {
     public override UserContext CreateDbContext(string[] args)
     {

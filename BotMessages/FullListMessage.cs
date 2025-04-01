@@ -10,7 +10,7 @@ namespace WishlistBot.BotMessages;
 [ChildMessage(typeof(CompactListMessage))]
 public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
       user = GetUser(user, parameters);

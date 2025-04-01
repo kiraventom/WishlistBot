@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Settings;
 [AllowedTypes(QueryParameterType.SetSettingsTo, QueryParameterType.RegenerateLink)]
 public class SettingsMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (parameters.Pop(QueryParameterType.SetSettingsTo, out var newSettingsNum))
       {

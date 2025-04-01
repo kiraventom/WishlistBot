@@ -12,7 +12,7 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 [ChildMessage(typeof(ConfirmBroadcastMessage))]
 public class FinishBroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsDb broadcastsDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard.AddButton<BroadcastQuery>("Back to broadcast");
 

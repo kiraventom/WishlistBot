@@ -7,7 +7,7 @@ namespace WishlistBot.BotMessages.Admin;
 
 public class AdminMenuMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Text.Bold("Admin menu");
 

@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Notification;
 
 public class DeleteWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish oldWish) : BotMessage(logger), INotificationMessage
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<SubscriptionQuery>("Перейти к подписке",

@@ -11,7 +11,7 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 [ChildMessage(typeof(AdminMenuMessage))]
 public class BroadcastsMessage(ILogger logger, UsersDb usersDb, BroadcastsDb broadcastsDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var broadcasts = broadcastsDb.Values.Values.Reverse().ToList();
       var totalCount = broadcasts.Count;

@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
 public class BroadcastNotificationMessage(ILogger logger, Broadcast broadcast) : BotMessage(logger), INotificationMessage
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard.AddButton<MainMenuQuery>("В главное меню", QueryParameter.ForceNewMessage);
 

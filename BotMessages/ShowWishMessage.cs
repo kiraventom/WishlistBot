@@ -11,7 +11,7 @@ namespace WishlistBot.BotMessages;
 [ChildMessage(typeof(FullListMessage))]
 public class ShowWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var sender = user;
       user = GetUser(user, parameters);

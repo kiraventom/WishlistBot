@@ -8,7 +8,7 @@ namespace WishlistBot.BotMessages.Subscription;
 [ChildMessage(typeof(SubscriberMessage))]
 public class ConfirmDeleteSubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<DeleteSubscriberQuery>()

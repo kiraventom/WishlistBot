@@ -6,7 +6,7 @@ namespace WishlistBot.BotMessages;
 
 public class InvalidMessage(ILogger logger) : BotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Text.Bold("Что-то пошло не так :(")
          .LineBreak().LineBreak()

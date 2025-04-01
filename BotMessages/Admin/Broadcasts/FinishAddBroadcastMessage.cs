@@ -8,7 +8,7 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
 public class FinishAddBroadcastMessage(ILogger logger, BroadcastsDb broadcastsDb, Broadcast newBroadcast) : BotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       broadcastsDb.Add(newBroadcast);
       Logger.Information("Broadcast [{id}] '{text}' and fileId [{fileId}] is added to database", newBroadcast.Id, newBroadcast.Text, newBroadcast.FileId);

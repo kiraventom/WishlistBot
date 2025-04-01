@@ -7,7 +7,7 @@ namespace WishlistBot.BotMessages.Settings;
 
 public class ConfirmRegenerateLinkMessage(ILogger logger) : BotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       const string exclamations = "\u203c\ufe0f";
 

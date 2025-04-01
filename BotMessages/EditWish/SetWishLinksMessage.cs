@@ -8,7 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 [ChildMessage(typeof(EditWishMessage))]
 public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (user.CurrentWish.Links.Any())
          Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));

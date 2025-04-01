@@ -41,35 +41,35 @@ public class MediaStorageManager
       _logger.Debug("Stored media '{fileId}' as message id '{messageId}'", fileId, message.MessageId);
    }
 
-   public async Task Cleanup(UsersDb usersDb)
+   public Task Cleanup(UsersDb usersDb)
    {
       // TODO TEMP, support broadcasts
-      return;
-      _logger.Debug("Media storage cleanup started");
+      return Task.CompletedTask;
+      /* _logger.Debug("Media storage cleanup started"); */
 
-      var storedFileIds = _database.Values.Keys;
-      var wishesFileIds = usersDb.Values.Values
-         .SelectMany(u => u.Wishes)
-         .Select(w => w.FileId)
-         .Where(i => i != null);
+      /* var storedFileIds = _database.Values.Keys; */
+      /* var wishesFileIds = usersDb.Values.Values */
+      /*    .SelectMany(u => u.Wishes) */
+      /*    .Select(w => w.FileId) */
+      /*    .Where(i => i != null); */
 
-      var currentWishesFileIds = usersDb.Values.Values
-         .Select(u => u.CurrentWish)
-         .Where(w => w != null)
-         .Select(w => w.FileId)
-         .Where(i => i != null);
+      /* var currentWishesFileIds = usersDb.Values.Values */
+      /*    .Select(u => u.CurrentWish) */
+      /*    .Where(w => w != null) */
+      /*    .Select(w => w.FileId) */
+      /*    .Where(i => i != null); */
 
-      var usedFileIds = wishesFileIds.Concat(currentWishesFileIds);
-      var unusedFileIds = storedFileIds.Except(usedFileIds);
+      /* var usedFileIds = wishesFileIds.Concat(currentWishesFileIds); */
+      /* var unusedFileIds = storedFileIds.Except(usedFileIds); */
 
-      var count = 0;
-      foreach (var unusedFileId in unusedFileIds)
-      {
-         ++count;
-         await Remove(unusedFileId);
-      }
+      /* var count = 0; */
+      /* foreach (var unusedFileId in unusedFileIds) */
+      /* { */
+      /*    ++count; */
+      /*    await Remove(unusedFileId); */
+      /* } */
 
-      _logger.Debug("Media storage cleanup removed {count} obsolete entities", count);
+      /* _logger.Debug("Media storage cleanup removed {count} obsolete entities", count); */
    }
 
    private async Task Remove(string fileId)

@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages.Subscription;
 [AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ReadOnly)]
 public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       var totalCount = user.Subscriptions.Count;
 

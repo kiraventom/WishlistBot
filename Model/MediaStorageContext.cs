@@ -10,6 +10,14 @@ public class MediaStorageContext : DbContext
     public MediaStorageContext(DbContextOptions<MediaStorageContext> options) : base(options)
     {
     }
+
+    public static MediaStorageContext Create()
+    {
+        var builder = new DbContextOptionsBuilder<MediaStorageContext>();
+        builder.UseSqlite(Config.Instance.MediaStorageConnectionString);
+
+        return new MediaStorageContext(builder.Options);
+    }
 }
 
 public class MediaItemModel

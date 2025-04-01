@@ -11,7 +11,7 @@ namespace WishlistBot.BotMessages.EditWish;
 // TODO Separate to NewWish and EditWish
 public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       Keyboard
          .AddButton<SetWishNameQuery>()

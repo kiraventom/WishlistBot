@@ -11,7 +11,7 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 [ChildMessage(typeof(BroadcastsMessage))]
 public class BroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsDb broadcastsDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       if (parameters.Pop(QueryParameterType.SetBroadcastTo, out var broadcastId))
       {

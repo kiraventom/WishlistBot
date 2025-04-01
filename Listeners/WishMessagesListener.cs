@@ -108,6 +108,6 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client, Use
    private async Task SendEditWishMessageAsync(BotUser user)
    {
       var message = new EditWishMessage(logger, usersDb);
-      await client.SendOrEditBotMessage(logger, user, message, forceNewMessage: true);
+      await client.Legacy_SendOrEditBotMessage(logger, user, message, forceNewMessage: true);
    }
 }

@@ -9,7 +9,7 @@ namespace WishlistBot.BotMessages;
 
 public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
+   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
    {
       const string giftEmoji = "\U0001f381";
 

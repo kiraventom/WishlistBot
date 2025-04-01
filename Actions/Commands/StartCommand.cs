@@ -4,6 +4,7 @@ using WishlistBot.Database.Users;
 using WishlistBot.BotMessages;
 using WishlistBot.BotMessages.Subscription;
 using WishlistBot.QueryParameters;
+using WishlistBot.Model;
 
 namespace WishlistBot.Actions.Commands;
 
@@ -11,7 +12,38 @@ public class StartCommand(ILogger logger, ITelegramBotClient client, UsersDb use
 {
    public override string Name => "/start";
 
-   public override async Task ExecuteAsync(BotUser user, string actionText)
+   public override async Task ExecuteAsync(UserContext userContext, UserModel userModel, string actionText)
+   {
+      userModel.QueryParams = null;
+
+      var isSubscribe = TryParseSubscribeId(actionText, out var subscribeId);
+      if (isSubscribe)
+      {
+         var userToSubscribeTo = userContext.Users.FirstOrDefault(u => u.SubscribeId == subscribeId);
+
+         if (userToSubscribeTo is null)
+         {
+            await Client.SendOrEditBotMessage(Logger, userContext, userModel, new FailSubscriptionMessage(Logger), forceNewMessage: true);
+            return;
+         }
+
+         if (userToSubscribeTo == userModel)
+         {
+            await Client.SendOrEditBotMessage(Logger, userContext, userModel, new MainMenuMessage(Logger), forceNewMessage: true);
+            return;
+         }
+
+         var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.SetUserTo, userToSubscribeTo.TelegramId)]);
+         userModel.QueryParams = collection.ToString();
+         await Client.SendOrEditBotMessage(Logger, userContext, userModel, new FinishSubscriptionMessage(Logger, usersDb), forceNewMessage: true);
+      }
+      else
+      {
+         await Client.SendOrEditBotMessage(Logger, userContext, userModel, new MainMenuMessage(Logger), forceNewMessage: true);
+      }
+   }
+
+   public override async Task Legacy_ExecuteAsync(BotUser user, string actionText)
    {
       user.QueryParams = null;
 
@@ -23,24 +55,24 @@ public class StartCommand(ILogger logger, ITelegramBotClient client, UsersDb use
 
          if (userToSubscribeTo is null)
          {
-            await Client.SendOrEditBotMessage(Logger, user, new FailSubscriptionMessage(Logger), forceNewMessage: true);
+            await Client.Legacy_SendOrEditBotMessage(Logger, user, new FailSubscriptionMessage(Logger), forceNewMessage: true);
             return;
          }
 
          // TEMP
          if (userToSubscribeTo.SenderId == user.SenderId)
          {
-            await Client.SendOrEditBotMessage(Logger, user, new MainMenuMessage(Logger), forceNewMessage: true);
+            await Client.Legacy_SendOrEditBotMessage(Logger, user, new MainMenuMessage(Logger), forceNewMessage: true);
             return;
          }
 
          var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.SetUserTo, userToSubscribeTo.SenderId)]);
          user.QueryParams = collection.ToString();
-         await Client.SendOrEditBotMessage(Logger, user, new FinishSubscriptionMessage(Logger, usersDb), forceNewMessage: true);
+         await Client.Legacy_SendOrEditBotMessage(Logger, user, new FinishSubscriptionMessage(Logger, usersDb), forceNewMessage: true);
       }
       else
       {
-         await Client.SendOrEditBotMessage(Logger, user, new MainMenuMessage(Logger), forceNewMessage: true);
+         await Client.Legacy_SendOrEditBotMessage(Logger, user, new MainMenuMessage(Logger), forceNewMessage: true);
       }
    }
 
