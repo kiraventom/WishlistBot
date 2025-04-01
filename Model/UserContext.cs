@@ -1,52 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using WishlistBot.Database.Users;
 
 namespace WishlistBot.Model;
-
-public abstract class DesignTimeContextFactory<T> : IDesignTimeDbContextFactory<T> where T : DbContext
-{
-    public abstract T CreateDbContext(string[] args);
-
-    protected Config LoadConfig(string[] args)
-    {
-        if (args.Length < 1)
-            throw new NotSupportedException("Arg 0 should contain path to config.json");
-
-        var configFilePath = args[0];
-        var config = Config.Load(configFilePath);
-        if (config is null)
-            throw new NotSupportedException("config.json is invalid");
-
-        return config;
-    }
-}
-
-public class UserContextFactory : DesignTimeContextFactory<UserContext>
-{
-    public override UserContext CreateDbContext(string[] args)
-    {
-        var config = LoadConfig(args);
-        var builder = new DbContextOptionsBuilder<UserContext>();
-        builder.UseSqlite(config.UserConnectionString);
-
-        return new UserContext(builder.Options);
-    }
-}
-
-public class MediaStorageContextFactory : DesignTimeContextFactory<MediaStorageContext>
-{
-    public override MediaStorageContext CreateDbContext(string[] args)
-    {
-        var config = LoadConfig(args);
-        var builder = new DbContextOptionsBuilder<MediaStorageContext>();
-        builder.UseSqlite(config.MediaStorageConnectionString);
-
-        return new MediaStorageContext(builder.Options);
-    }
-}
 
 public class UserContext : DbContext
 {
@@ -115,15 +72,6 @@ public class UserContext : DbContext
         modelBuilder.Entity<SubscriptionModel>()
             .HasIndex(e => new { e.SubscriberId, e.TargetId })
             .IsUnique();
-    }
-}
-
-public class MediaStorageContext : DbContext
-{
-    public DbSet<MediaItemModel> StoredMedia { get; set; }
-
-    public MediaStorageContext(DbContextOptions<MediaStorageContext> options) : base(options)
-    {
     }
 }
 
@@ -249,13 +197,5 @@ public class ReceivedBroadcastModel
 
     [ForeignKey(nameof(BroadcastId))]
     public BroadcastModel Broadcast { get; set; }
-    public int MessageId { get; set; }
-}
-
-public class MediaItemModel
-{
-    [Key] public int MediaItemId { get; set; }
-
-    [Required] public string FileId { get; set; }
     public int MessageId { get; set; }
 }
