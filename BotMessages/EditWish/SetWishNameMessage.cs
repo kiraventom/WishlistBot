@@ -2,6 +2,8 @@ using Serilog;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.EditWish;
 
@@ -9,32 +11,63 @@ namespace WishlistBot.BotMessages.EditWish;
 [AllowedTypes(QueryParameterType.ForceNewWish)]
 public class SetWishNameMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
-   {
-      var forceNewWish = parameters.Pop(QueryParameterType.ForceNewWish);
+    protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
+    {
+        var user = userContext.Users.Include(u => u.CurrentWish).First(u => u.UserId == userId);
+        var forceNewWish = parameters.Pop(QueryParameterType.ForceNewWish);
 
-      if (forceNewWish || user.CurrentWish is null)
-      {
-         user.CurrentWish = new Wish()
-         {
-            Id = GenerateWishId()
-         };
-         Text.Verbatim("Укажите краткое название виша:");
-         Keyboard.AddButton<CancelEditWishQuery>();
-      }
-      else
-      {
-         Text
-            .Bold("Текущее название виша: ")
-            .Monospace(user.CurrentWish.Name)
-            .LineBreak()
-            .LineBreak().Verbatim("Укажите новое название виша:");
+        if (forceNewWish || user.CurrentWish is null)
+        {
+            var newWishDraft = new WishDraftModel();
+            userContext.WishDrafts.Add(newWishDraft);
 
-         Keyboard.AddButton<EditWishQuery>("Отмена");
-      }
+            user.CurrentWish = newWishDraft;
 
-      user.BotState = BotState.ListenForWishName;
+            Text.Verbatim("Укажите краткое название виша:");
+            Keyboard.AddButton<CancelEditWishQuery>();
+        }
+        else
+        {
+            Text
+               .Bold("Текущее название виша: ")
+               .Monospace(user.CurrentWish.Name)
+               .LineBreak()
+               .LineBreak().Verbatim("Укажите новое название виша:");
 
-      return Task.CompletedTask;
-   }
+            Keyboard.AddButton<EditWishQuery>("Отмена");
+        }
+
+        user.BotState = BotState.ListenForWishName;
+
+        return Task.CompletedTask;
+    }
+
+    protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
+    {
+        var forceNewWish = parameters.Pop(QueryParameterType.ForceNewWish);
+
+        if (forceNewWish || user.CurrentWish is null)
+        {
+            user.CurrentWish = new Wish()
+            {
+                Id = GenerateWishId()
+            };
+            Text.Verbatim("Укажите краткое название виша:");
+            Keyboard.AddButton<CancelEditWishQuery>();
+        }
+        else
+        {
+            Text
+               .Bold("Текущее название виша: ")
+               .Monospace(user.CurrentWish.Name)
+               .LineBreak()
+               .LineBreak().Verbatim("Укажите новое название виша:");
+
+            Keyboard.AddButton<EditWishQuery>("Отмена");
+        }
+
+        user.BotState = BotState.ListenForWishName;
+
+        return Task.CompletedTask;
+    }
 }

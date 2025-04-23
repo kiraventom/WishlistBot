@@ -1,5 +1,6 @@
 using System.Text;
 using WishlistBot.Database.Users;
+using WishlistBot.Model;
 
 namespace WishlistBot.Text;
 
@@ -99,6 +100,13 @@ public class MessageText
       var domainName = MessageTextUtils.GetDomainFromLink(link);
       domainName = char.ToUpper(domainName[0]) + domainName[1..];
       return InlineUrl(domainName, link);
+   }
+
+   public MessageText InlineMention(UserModel userModel)
+   {
+      return string.IsNullOrEmpty(userModel.Tag)
+         ? InlineMention(userModel.FirstName, userModel.TelegramId)
+         : InlineMention(userModel.FirstName, userModel.Tag);
    }
 
    public MessageText InlineMention(BotUser user)

@@ -4,32 +4,74 @@ using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Notification;
 
-public class NewSubscriberNotificationMessage(ILogger logger, BotUser notificationSource, IEnumerable<BotUser> users) : BotMessage(logger), INotificationMessage
+public class NewSubscriberNotificationMessage : BotMessage, INotificationMessage
 {
-   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
-   {
-      var subscribers = users
-         .Where(u => u.Subscriptions.Contains(notificationSource.SubscribeId))
-         .ToList();
+    private readonly BotUser _notificationSource;
+    private readonly IEnumerable<BotUser> _users;
 
-      var subscriberIndex = subscribers.IndexOf(notificationSource);
-      var pageIndex = subscriberIndex / ListMessageUtils.ItemsPerPage;
+    private readonly int _notificationSourceId;
 
-      Keyboard
-         .AddButton<SubscriberQuery>("Перейти к подписчику",
-                                   QueryParameter.ReadOnly,
-                                   new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId),
-                                   new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
-         .NewRow()
-         .AddButton<MainMenuQuery>("В главное меню");
+    public NewSubscriberNotificationMessage(ILogger logger, BotUser notificationSource, IEnumerable<BotUser> users) : base(logger)
+    {
+        _notificationSource = notificationSource;
+        _users = users;
+    }
 
-      Text
-         .InlineMention(notificationSource)
-         .Italic(" подписался на ваш вишлист!");
+    public NewSubscriberNotificationMessage(ILogger logger, int notificationSourceId) : base(logger)
+    {
+        _notificationSourceId = notificationSourceId;
+    }
 
-      return Task.CompletedTask;
-   }
+    protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
+    {
+        var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
+        var notificationTarget = userContext.Users.Include(u => u.Subscribers).First(u => u.UserId == userId);
+        var subscribers = notificationTarget.Subscribers.Select(s => s.Subscriber).ToList();
+
+        var subscriberIndex = subscribers.IndexOf(notificationSource);
+        var pageIndex = subscriberIndex / ListMessageUtils.ItemsPerPage;
+
+        Keyboard
+           .AddButton<SubscriberQuery>("Перейти к подписчику",
+                                     QueryParameter.ReadOnly,
+                                     new QueryParameter(QueryParameterType.SetUserTo, notificationSource.UserId),
+                                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
+           .NewRow()
+           .AddButton<MainMenuQuery>("В главное меню");
+
+        Text
+           .InlineMention(notificationSource)
+           .Italic(" подписался на ваш вишлист!");
+
+        return Task.CompletedTask;
+    }
+
+    protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
+    {
+        var subscribers = _users
+           .Where(u => u.Subscriptions.Contains(_notificationSource.SubscribeId))
+           .ToList();
+
+        var subscriberIndex = subscribers.IndexOf(_notificationSource);
+        var pageIndex = subscriberIndex / ListMessageUtils.ItemsPerPage;
+
+        Keyboard
+           .AddButton<SubscriberQuery>("Перейти к подписчику",
+                                     QueryParameter.ReadOnly,
+                                     new QueryParameter(QueryParameterType.SetUserTo, _notificationSource.SenderId),
+                                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
+           .NewRow()
+           .AddButton<MainMenuQuery>("В главное меню");
+
+        Text
+           .InlineMention(_notificationSource)
+           .Italic(" подписался на ваш вишлист!");
+
+        return Task.CompletedTask;
+    }
 }

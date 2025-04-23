@@ -83,7 +83,8 @@ public abstract class BotMessage(ILogger logger)
       _isInited = true;
    }
 
-   protected abstract Task InitInternal(UserContext userContext, UserModel userModel, QueryParameterCollection parameters);
+   /* protected abstract Task InitInternal(UserContext userContext, UserModel userModel, QueryParameterCollection parameters); */
+   protected abstract Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters);
    protected abstract Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters);
 
    private static void FilterParameters(QueryParameterCollection parameters, IReadOnlyCollection<QueryParameterType> allowedTypes)

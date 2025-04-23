@@ -5,81 +5,161 @@ using WishlistBot.Queries.Subscription;
 using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
+using WishlistBot.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
 [AllowedTypes(QueryParameterType.ReadOnly, QueryParameterType.ReturnToSubscriber)]
 public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
 {
-   protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
-   {
-      var sender = user;
-      user = GetUser(user, parameters);
+    protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
+    {
+        var sender = userContext.Users.AsNoTracking().First(u => u.UserId == userId);
 
-      var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
+        parameters.Peek(QueryParameterType.SetUserTo, out var targetUserId);
+        var targetUser = userContext.Users
+            .Include(u => u.Wishes)
+            .ThenInclude(w => w.Links)
+            .AsNoTracking()
+            .First(u => u.UserId == targetUserId);
 
-      const string plusEmoji = "\u2795";
+        var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 
-      if (!isReadOnly)
-         Keyboard.AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
+        const string plusEmoji = "\u2795";
 
-      if (user.Wishes.Count != 0)
-         Keyboard.AddButton<FullListQuery>();
+        if (!isReadOnly)
+            Keyboard.AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
 
-      Keyboard.NewRow();
+        if (targetUser.Wishes.Count != 0)
+            Keyboard.AddButton<FullListQuery>();
 
-      if (isReadOnly)
-      {
-         if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
-            Keyboard.AddButton<SubscriberQuery>("К подписчику");
-         else
-            Keyboard.AddButton<SubscriptionQuery>("К подписке");
-      }
-      else
-      {
-         Keyboard.AddButton<MainMenuQuery>("В главное меню");
-      }
+        Keyboard.NewRow();
 
-      if (isReadOnly)
-         Text.Bold("Краткий список вишей ")
-            .InlineMention(user)
-            .Bold(":");
-      else
-         Text.Bold("Краткий список ваших вишей:");
+        if (isReadOnly)
+        {
+            if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
+                Keyboard.AddButton<SubscriberQuery>("К подписчику");
+            else
+                Keyboard.AddButton<SubscriptionQuery>("К подписке");
+        }
+        else
+        {
+            Keyboard.AddButton<MainMenuQuery>("В главное меню");
+        }
 
-      for (var i = 0; i < user.Wishes.Count; ++i)
-      {
-         var wish = user.Wishes[i];
-         Text.LineBreak().Bold($"{i + 1}. ");
+        if (isReadOnly)
+            Text.Bold("Краткий список вишей ")
+               .InlineMention(targetUser)
+               .Bold(":");
+        else
+            Text.Bold("Краткий список ваших вишей:");
 
-         // If user isn't looking at its own wishes
-         if (sender.SenderId != user.SenderId && wish.ClaimerId != 0)
-         {
-            Text.Bold("[БРОНЬ] ").Strikethrough(wish.Name);
-         }
-         else
-         {
-            Text.Verbatim(wish.Name);
-         }
+        for (var i = 0; i < targetUser.Wishes.Count; ++i)
+        {
+            var wish = targetUser.Wishes[i];
+            Text.LineBreak().Bold($"{i + 1}. ");
 
-         if (wish.PriceRange != Price.NotSet)
-         {
-            Text.Verbatim(" [").Bold(MessageTextUtils.PriceToShortString(wish.PriceRange)).Verbatim("] ");
-         }
+            // If user isn't looking at its own wishes
+            if (sender.UserId != targetUser.UserId && wish.ClaimerId != 0)
+            {
+                Text.Bold("[БРОНЬ] ").Strikethrough(wish.Name);
+            }
+            else
+            {
+                Text.Verbatim(wish.Name);
+            }
 
-         if (!string.IsNullOrEmpty(wish.Description))
-            Text.Verbatim(" \U0001f4ac"); // speech bubble
+            if (wish.PriceRange != Price.NotSet)
+            {
+                Text.Verbatim(" [").Bold(MessageTextUtils.PriceToShortString(wish.PriceRange)).Verbatim("] ");
+            }
 
-         if (wish.FileId is not null)
-            Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
+            if (!string.IsNullOrEmpty(wish.Description))
+                Text.Verbatim(" \U0001f4ac"); // speech bubble
 
-         if (wish.Links.Any())
-         {
-            var firstLink = wish.Links.First();
-            Text.InlineUrl(" \U0001f310", firstLink); // globe
-         }
-      }
+            if (wish.FileId is not null)
+                Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
 
-      return Task.CompletedTask;
-   }
+            if (wish.Links.Any())
+            {
+                var firstLink = wish.Links.First().Url;
+                Text.InlineUrl(" \U0001f310", firstLink); // globe
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
+    {
+        var sender = user;
+        user = Legacy_GetUser(user, parameters);
+
+        var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
+
+        const string plusEmoji = "\u2795";
+
+        if (!isReadOnly)
+            Keyboard.AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
+
+        if (user.Wishes.Count != 0)
+            Keyboard.AddButton<FullListQuery>();
+
+        Keyboard.NewRow();
+
+        if (isReadOnly)
+        {
+            if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
+                Keyboard.AddButton<SubscriberQuery>("К подписчику");
+            else
+                Keyboard.AddButton<SubscriptionQuery>("К подписке");
+        }
+        else
+        {
+            Keyboard.AddButton<MainMenuQuery>("В главное меню");
+        }
+
+        if (isReadOnly)
+            Text.Bold("Краткий список вишей ")
+               .InlineMention(user)
+               .Bold(":");
+        else
+            Text.Bold("Краткий список ваших вишей:");
+
+        for (var i = 0; i < user.Wishes.Count; ++i)
+        {
+            var wish = user.Wishes[i];
+            Text.LineBreak().Bold($"{i + 1}. ");
+
+            // If user isn't looking at its own wishes
+            if (sender.SenderId != user.SenderId && wish.ClaimerId != 0)
+            {
+                Text.Bold("[БРОНЬ] ").Strikethrough(wish.Name);
+            }
+            else
+            {
+                Text.Verbatim(wish.Name);
+            }
+
+            if (wish.PriceRange != Price.NotSet)
+            {
+                Text.Verbatim(" [").Bold(MessageTextUtils.PriceToShortString(wish.PriceRange)).Verbatim("] ");
+            }
+
+            if (!string.IsNullOrEmpty(wish.Description))
+                Text.Verbatim(" \U0001f4ac"); // speech bubble
+
+            if (wish.FileId is not null)
+                Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
+
+            if (wish.Links.Any())
+            {
+                var firstLink = wish.Links.First();
+                Text.InlineUrl(" \U0001f310", firstLink); // globe
+            }
+        }
+
+        return Task.CompletedTask;
+    }
 }

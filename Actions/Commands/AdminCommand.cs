@@ -12,13 +12,13 @@ public class AdminCommand(ILogger logger, ITelegramBotClient client, UsersDb use
 
    public override async Task ExecuteAsync(UserContext userContext, UserModel userModel, string actionText)
    {
-      if (userModel.TelegramId == adminId)
+      if (userModel.UserId == adminId)
       {
          await Client.SendOrEditBotMessage(Logger, userContext, userModel, new AdminMenuMessage(Logger, usersDb), forceNewMessage: true);
       }
       else
       {
-         Logger.Warning("{command} called, but [{id}] is not admin", Name, userModel.TelegramId);
+         Logger.Warning("{command} called, but [{id}] is not admin", Name, userModel.UserId);
       }
    }
 

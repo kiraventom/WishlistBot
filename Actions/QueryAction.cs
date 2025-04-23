@@ -19,9 +19,9 @@ public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFa
 
    public sealed override async Task ExecuteAsync(UserContext userContext, UserModel userModel, string actionText)
    {
-      if (_query is IAdminQuery && userModel.TelegramId != adminId)
+      if (_query is IAdminQuery && userModel.UserId != adminId)
       {
-         Logger.Warning("{query} sent, but [{id}] is not admin", Name, userModel.TelegramId);
+         Logger.Warning("{query} sent, but [{id}] is not admin", Name, userModel.UserId);
          return;
       }
 

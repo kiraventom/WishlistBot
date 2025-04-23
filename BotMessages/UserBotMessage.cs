@@ -10,7 +10,7 @@ public abstract class UserBotMessage(ILogger logger, UsersDb usersDb) : BotMessa
 {
    protected IEnumerable<BotUser> Users => usersDb.Values.Values;
 
-   protected BotUser GetUser(BotUser sender, QueryParameterCollection parameters)
+   protected BotUser Legacy_GetUser(BotUser sender, QueryParameterCollection parameters)
    {
       parameters.Peek(QueryParameterType.SetUserTo, out var userId);
       return usersDb.Values.GetValueOrDefault(userId, sender);
@@ -22,3 +22,4 @@ public abstract class UserBotMessage(ILogger logger, UsersDb usersDb) : BotMessa
       return DatabaseUtils.GenerateId(ids);
    }
 }
+

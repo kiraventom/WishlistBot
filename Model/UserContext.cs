@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Database.Users;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.Model;
 
@@ -190,6 +191,25 @@ public class SettingsModel
 
     public bool SendNotifications { get; set; }
     public bool ReceiveNotifications { get; set; }
+
+   public void SetFromEnum(SettingsEnum settingsEnum)
+   {
+      SendNotifications = settingsEnum.HasFlag(SettingsEnum.SendNotifications);
+      ReceiveNotifications = settingsEnum.HasFlag(SettingsEnum.ReceiveNotifications);
+   }
+
+   public SettingsEnum ToEnum()
+   {
+      var settingsEnum = SettingsEnum.None;
+
+      if (SendNotifications)
+         settingsEnum |= SettingsEnum.SendNotifications;
+
+      if (ReceiveNotifications)
+         settingsEnum |= SettingsEnum.ReceiveNotifications;
+
+      return settingsEnum;
+   }
 }
 
 public class SubscriptionModel
@@ -213,6 +233,16 @@ public class BroadcastModel
     public string FileId { get; set; }
     public DateTime? DateTimeSent { get; set; }
     public bool Deleted { get; set; }
+
+   public string GetShortText()
+   {
+      if (Text is null)
+         return "<empty>";
+
+      return Text.Length <= 20
+         ? Text
+         : Text[..19] + "…";
+   }
 }
 
 public class ReceivedBroadcastModel
