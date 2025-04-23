@@ -23,23 +23,23 @@ public class StartCommand(ILogger logger, ITelegramBotClient client, UsersDb use
 
          if (userToSubscribeTo is null)
          {
-            await Client.SendOrEditBotMessage(Logger, userContext, user, new FailSubscriptionMessage(Logger), forceNewMessage: true);
+            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FailSubscriptionMessage(Logger), forceNewMessage: true);
             return;
          }
 
          if (userToSubscribeTo == user)
          {
-            await Client.SendOrEditBotMessage(Logger, userContext, user, new MainMenuMessage(Logger), forceNewMessage: true);
+            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
             return;
          }
 
          var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.SetUserTo, userToSubscribeTo.UserId)]);
          user.QueryParams = collection.ToString();
-         await Client.SendOrEditBotMessage(Logger, userContext, user, new FinishSubscriptionMessage(Logger, usersDb), forceNewMessage: true);
+         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FinishSubscriptionMessage(Logger, usersDb), forceNewMessage: true);
       }
       else
       {
-         await Client.SendOrEditBotMessage(Logger, userContext, user, new MainMenuMessage(Logger), forceNewMessage: true);
+         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
       }
    }
 

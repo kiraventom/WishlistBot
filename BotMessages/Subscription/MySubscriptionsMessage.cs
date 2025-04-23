@@ -13,7 +13,11 @@ public class MySubscriptionsMessage(ILogger logger, UsersDb usersDb) : UserBotMe
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        var user = userContext.Users.Include(u => u.Subscriptions).First(u => u.UserId == userId);
+        var user = userContext.Users
+            .Include(u => u.Subscriptions)
+            .ThenInclude(s => s.Target)
+            .First(u => u.UserId == userId);
+
         var totalCount = user.Subscriptions.Count;
 
         Text.Bold(totalCount == 0 ? "Вы ещё ни на кого не подписаны :(" : "Ваши подписки:");

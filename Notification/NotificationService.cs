@@ -5,6 +5,7 @@ using WishlistBot.BotMessages;
 using WishlistBot.Jobs;
 using WishlistBot.Model;
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.BotMessages.Notification;
 
 namespace WishlistBot.Notification;
 
@@ -30,19 +31,22 @@ public class NotificationService
         _inited = true;
     }
 
-    public Task SendToSubscribers(BotMessage notification, UserContext userContext, int notificationSourceId)
+    public Task SendToSubscribers(NotificationModel notification, UserContext userContext)
     {
         var notificationSource = userContext.Users
             .Include(c => c.Subscribers)
             .Include(c => c.Settings)
-            .First(u => u.UserId == notificationSourceId);
+            .First(u => u.UserId == notification.SourceId);
 
         if (!notificationSource.Settings.SendNotifications)
             return Task.CompletedTask;
 
         var recepients = notificationSource.Subscribers.Select(c => c.SubscriberId).ToList();
 
-        JobManager.Instance.StartJob($"Notification from {notificationSource.FirstName}", notification, recepients, TimeSpan.FromSeconds(1), SendToSubscriber);
+        userContext.Notifications.Add(notification);
+        userContext.SaveChanges();
+
+        JobManager.Instance.StartJob($"Notification from {notificationSource.FirstName}", notification.NotificationId, recepients, TimeSpan.FromSeconds(1), /* TODO Fix */ (NotificationJobActionDelegate)SendToSubscriber);
         return Task.CompletedTask;
     }
 
@@ -84,9 +88,18 @@ public class NotificationService
         return message.MessageId;
     }
 
-    private async Task SendToSubscriber(ILogger logger, ITelegramBotClient client, UserContext userContext, int userId, BotMessage botMessage)
+    private async Task SendToSubscriber(ILogger logger, ITelegramBotClient client, UserContext userContext, int userId, int notificationId)
     {
         var recepient = userContext.Users.Include(c => c.Settings).FirstOrDefault(u => u.UserId == userId);
+        var notification = userContext.Notifications.First(n => n.NotificationId == notificationId);
+        BotMessage botMessage = notification.Type switch
+        {
+            NotificationMessageType.NewSubscriber => new NewSubscriberNotificationMessage(logger, notification),
+            NotificationMessageType.NewWish => new NewWishNotificationMessage(logger, notification),
+            NotificationMessageType.WishEdit => new EditWishNotificationMessage(logger, notification),
+            NotificationMessageType.WishDelete => new DeleteWishNotificationMessage(logger, notification),
+            _ => throw new NotSupportedException($"Unexpected notification message type '{notification.Type}'")
+        };
 
         if (recepient.Settings.ReceiveNotifications)
             await _client.SendOrEditBotMessage(_logger, userContext, userId, botMessage, forceNewMessage: true);

@@ -22,6 +22,11 @@ public class NewSubscriberNotificationMessage : BotMessage, INotificationMessage
         _users = users;
     }
 
+    public NewSubscriberNotificationMessage(ILogger logger, NotificationModel notification) : base(logger)
+    {
+        _notificationSourceId = notification.SourceId;
+    }
+
     public NewSubscriberNotificationMessage(ILogger logger, int notificationSourceId) : base(logger)
     {
         _notificationSourceId = notificationSourceId;
@@ -33,6 +38,8 @@ public class NewSubscriberNotificationMessage : BotMessage, INotificationMessage
         var notificationTarget = userContext.Users.Include(u => u.Subscribers).First(u => u.UserId == userId);
         var subscribers = notificationTarget.Subscribers.Select(s => s.Subscriber).ToList();
 
+        // TODO Fix
+        subscribers.Sort((s0, s1) => s0.UserId.CompareTo(s1.UserId));
         var subscriberIndex = subscribers.IndexOf(notificationSource);
         var pageIndex = subscriberIndex / ListMessageUtils.ItemsPerPage;
 

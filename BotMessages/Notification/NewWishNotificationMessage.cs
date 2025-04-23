@@ -22,6 +22,12 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
         _newWishId = newWishId;
     }
 
+    public NewWishNotificationMessage(ILogger logger, NotificationModel notificationModel) : base(logger)
+    {
+        _notificationSourceId = notificationModel.SourceId;
+        _newWishId = notificationModel.SubjectId.Value;
+    }
+
     public NewWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish newWish) : base(logger)
     {
         _notificationSource = notificationSource;
@@ -33,7 +39,7 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
         var notificationSource = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == _notificationSourceId);
         var newWish = userContext.Wishes.First(w => w.WishId == _newWishId);
 
-        var wishIndex = notificationSource.Wishes.IndexOf(newWish);
+        var wishIndex = notificationSource.GetSortedWishes().IndexOf(newWish);
         var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
         Keyboard

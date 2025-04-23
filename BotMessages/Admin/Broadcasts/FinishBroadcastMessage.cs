@@ -26,7 +26,7 @@ public class FinishBroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsD
         Logger.Information("Started sending broadcast [{id}]", broadcastId);
 
         var recepientIds = userContext.Users.AsNoTracking().Select(c => c.UserId).ToList();
-        JobManager.Instance.StartJob("Send broadcast", broadcastToSend.BroadcastId, recepientIds, TimeSpan.FromSeconds(1), SendBroadcast);
+        JobManager.Instance.StartJob("Send broadcast", broadcastToSend.BroadcastId, recepientIds, TimeSpan.FromSeconds(1), (BroadcastJobActionDelegate)SendBroadcast);
 
         Text.Italic("Broadcast started");
 
@@ -54,17 +54,16 @@ public class FinishBroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsD
     private static async Task SendBroadcast(ILogger logger, ITelegramBotClient client, UserContext userContext, int recepientId, int broadcastId)
     {
         var broadcastToSend = userContext.Broadcasts.FirstOrDefault(b => b.BroadcastId == broadcastId);
-        var recepient = userContext.Users.Include(c => c.ReceivedBroadcasts.Where(b => b.ReceiverId == recepientId)).FirstOrDefault(u => u.UserId == recepientId);
+        var recepient = userContext.Users.Include(c => c.ReceivedBroadcasts).FirstOrDefault(u => u.UserId == recepientId);
 
-        var receivedBroadcast = recepient.ReceivedBroadcasts.FirstOrDefault(b => b.BroadcastId == broadcastToSend.BroadcastId);
-        var didReceiveBroadcast = receivedBroadcast is not null;
-        if (!didReceiveBroadcast)
+        var didReceiveBroadcast = recepient.ReceivedBroadcasts.Any(rb => rb.BroadcastId == broadcastToSend.BroadcastId);        
+        if (didReceiveBroadcast)
             return;
 
         try
         {
-            var broadcastNotification = new BroadcastNotificationMessage(logger, broadcastToSend);
-            var broadcastMessageId = await NotificationService.Instance.BroadcastToUser(broadcastNotification, userContext, recepient);
+            var broadcastNotification = new BroadcastNotificationMessage(logger, broadcastToSend.BroadcastId);
+            var broadcastMessageId = await NotificationService.Instance.BroadcastToUser(broadcastNotification, userContext, recepient.UserId);
 
             recepient.ReceivedBroadcasts.Add(new ReceivedBroadcastModel()
             {

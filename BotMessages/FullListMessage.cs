@@ -16,19 +16,29 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
     {
         var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 
+        var users = userContext.Users.Include(u => u.Wishes).AsNoTracking();
+
         parameters.Peek(QueryParameterType.SetUserTo, out var targetUserId);
         var targetUser = userContext.Users
             .Include(u => u.Wishes)
-            .First(u => u.UserId == targetUserId);
+            .AsNoTracking()
+            .FirstOrDefault(u => u.UserId == targetUserId);
+
+        if (targetUser is null)
+        {
+            var sender = users.First(u => u.UserId == userId);
+            targetUser = sender;
+        }
 
         var totalCount = targetUser.Wishes.Count;
+        var sortedWishes = targetUser.GetSortedWishes();
 
         ListMessageUtils.AddListControls<FullListQuery, CompactListQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
         {
             if (isReadOnly)
-                AddShowWishButton(userContext, targetUser.UserId, itemIndex, pageIndex);
+                AddShowWishButton(sortedWishes, itemIndex, pageIndex);
             else
-                AddEditWishButton(userContext, targetUser.UserId, itemIndex, pageIndex);
+                AddEditWishButton(sortedWishes, itemIndex, pageIndex);
         });
 
         if (totalCount == 0)
@@ -74,14 +84,13 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
         return Task.CompletedTask;
     }
 
-    private void AddShowWishButton(UserContext userContext, int userId, int itemIndex, int pageIndex)
+    private void AddShowWishButton(IReadOnlyList<WishModel> sortedWishes, int itemIndex, int pageIndex)
     {
-        var user = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == userId);
-        var wish = user.Wishes[itemIndex];
+        var wish = sortedWishes[itemIndex];
 
         const string eyeEmoji = "\U0001f441\ufe0f ";
 
-        var isClaimed = wish.ClaimerId != 0;
+        var isClaimed = wish.ClaimerId is not null;
         var claimedText = isClaimed ? "[БРОНЬ] " : string.Empty;
 
         Keyboard.AddButton<ShowWishQuery>(
@@ -107,10 +116,9 @@ public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
            QueryParameter.ReturnToFullList);
     }
 
-    private void AddEditWishButton(UserContext userContext, int userId, int itemIndex, int pageIndex)
+    private void AddEditWishButton(IReadOnlyList<WishModel> sortedWishes, int itemIndex, int pageIndex)
     {
-        var user = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == userId);
-        var wish = user.Wishes[itemIndex];
+        var wish = sortedWishes[itemIndex];
 
         const string pencilEmoji = "\u270f\ufe0f ";
 

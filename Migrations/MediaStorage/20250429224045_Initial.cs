@@ -16,7 +16,7 @@ namespace WishlistBot.Migrations.MediaStorage
                 {
                     MediaItemId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    FileId = table.Column<string>(type: "TEXT", nullable: true),
+                    FileId = table.Column<string>(type: "TEXT", nullable: false),
                     MessageId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>

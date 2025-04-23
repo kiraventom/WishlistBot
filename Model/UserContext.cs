@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using WishlistBot.Database.Users;
+using WishlistBot.Notification;
 using WishlistBot.QueryParameters;
 
 namespace WishlistBot.Model;
@@ -16,6 +19,7 @@ public class UserContext : DbContext
     public DbSet<SubscriptionModel> Subscriptions { get; set; }
     public DbSet<BroadcastModel> Broadcasts { get; set; }
     public DbSet<ReceivedBroadcastModel> ReceivedBroadcasts { get; set; }
+    public DbSet<NotificationModel> Notifications { get; set; }
 
     public UserContext(DbContextOptions<UserContext> options) : base(options)
     {
@@ -37,8 +41,14 @@ public class UserContext : DbContext
             userModel = new UserModel()
             {
                 FirstName = firstName,
-                Tag = username
+                Tag = username,
+                TelegramId = telegramId,
+                Settings = new SettingsModel() { ReceiveNotifications = true, SendNotifications = true },
+                SubscribeId = Guid.NewGuid().ToString("N")
             };
+
+            Users.Add(userModel);
+            this.SaveChanges();
         }
 
         if (userModel.FirstName != firstName)
@@ -53,55 +63,50 @@ public class UserContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseLazyLoadingProxies(false);
+        optionsBuilder.AddInterceptors(new OrderAssignmentInterceptor());
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UserModel>()
-            .HasMany(e => e.Subscriptions)
-            .WithOne(e => e.Subscriber);
+        modelBuilder.Entity<UserModel>().HasMany(e => e.Wishes).WithOne(w => w.Owner)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserModel>().HasMany(e => e.ClaimedWishes).WithOne(w => w.Claimer)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<UserModel>().HasMany(e => e.Subscriptions).WithOne(e => e.Subscriber)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserModel>().HasMany(e => e.Subscribers).WithOne(e => e.Target)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserModel>().HasOne(e => e.Settings).WithOne(e => e.User)
+            .HasForeignKey<SettingsModel>(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserModel>().HasMany(e => e.ReceivedBroadcasts).WithOne(e => e.Receiver)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<UserModel>()
-            .HasMany(e => e.Subscribers)
-            .WithOne(e => e.Target);
+            .HasOne(e => e.CurrentWish).WithOne(w => w.Owner)
+            .HasForeignKey<WishDraftModel>(w => w.OwnerId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<UserModel>()
-            .Property(e => e.BotState)
-            .HasConversion<int>();
+        modelBuilder.Entity<UserModel>().Property(e => e.BotState).HasConversion<int>();
+        modelBuilder.Entity<UserModel>().HasIndex(e => e.TelegramId).IsUnique();
 
-        modelBuilder.Entity<WishModel>()
-            .Property(e => e.PriceRange)
-            .HasConversion<int>();
+        modelBuilder.Entity<WishModel>().Property(e => e.PriceRange).HasConversion<int>();
+        modelBuilder.Entity<WishModel>().HasMany(e => e.Links).WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<WishModel>().HasIndex(e => e.Order).IsUnique();
 
-        modelBuilder.Entity<WishDraftModel>()
-            .Property(e => e.PriceRange)
-            .HasConversion<int>();
+        modelBuilder.Entity<WishDraftModel>().Property(e => e.PriceRange).HasConversion<int>();
+        modelBuilder.Entity<WishDraftModel>().HasMany(e => e.Links).WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<UserModel>()
-            .HasOne(e => e.Settings)
-            .WithOne(e => e.User)
-            .HasForeignKey<SettingsModel>(e => e.UserId);
+        modelBuilder.Entity<NotificationModel>().Property(e => e.Type).HasConversion<int>();
 
-        modelBuilder.Entity<UserModel>()
-            .HasIndex(e => e.TelegramId)
-            .IsUnique();
-
-        modelBuilder.Entity<WishModel>()
-            .HasOne(e => e.Owner)
-            .WithMany(e => e.Wishes);
-
-        modelBuilder.Entity<WishModel>()
-            .HasOne(e => e.Claimer)
-            .WithMany(e => e.ClaimedWishes);
-
-        modelBuilder.Entity<WishDraftModel>()
-            .HasOne(e => e.Owner)
-            .WithOne(e => e.CurrentWish)
-            .HasForeignKey<WishDraftModel>(e => e.OwnerId);
-
-        modelBuilder.Entity<SubscriptionModel>()
-            .HasIndex(e => new { e.SubscriberId, e.TargetId })
-            .IsUnique();
+        modelBuilder.Entity<SubscriptionModel>().HasIndex(e => new { e.SubscriberId, e.TargetId }).IsUnique();
     }
 }
 
@@ -113,6 +118,8 @@ public class UserModel
     [Required] public string FirstName { get; set; }
     [Required] public string SubscribeId { get; set; }
     public string Tag { get; set; }
+
+    public bool IsAdmin { get; set; }
 
     public BotState BotState { get; set; }
     public string LastQueryId { get; set; }
@@ -127,6 +134,12 @@ public class UserModel
     public List<SubscriptionModel> Subscribers { get; } = new();
     public List<WishModel> ClaimedWishes { get; } = new();
     public List<ReceivedBroadcastModel> ReceivedBroadcasts { get; } = new();
+
+    public List<WishModel> GetSortedWishes()
+    {
+        Wishes.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
+        return Wishes;
+    }
 }
 
 public class WishModel
@@ -146,6 +159,28 @@ public class WishModel
     public string FileId { get; set; }
     public Price PriceRange { get; set; }
     public List<LinkModel> Links { get; } = new();
+    [Required] public int Order { get; set; }
+
+    public static WishModel FromDraft(WishDraftModel draft)
+    {
+        var wish = new WishModel()
+        {
+            ClaimerId = draft.ClaimerId,
+            OwnerId = draft.OwnerId,
+            Name = draft.Name,
+            Description = draft.Description,
+            FileId = draft.FileId,
+            PriceRange = draft.PriceRange,
+        };
+
+        if (draft.Original is not null)
+            wish.Order = draft.Original.Order;
+
+        foreach (var draftLink in draft.Links)
+            wish.Links.Add(new LinkModel() { Url = draftLink.Url });
+
+        return wish;
+    }
 }
 
 public class WishDraftModel
@@ -169,16 +204,45 @@ public class WishDraftModel
     public string FileId { get; set; }
     public Price PriceRange { get; set; }
     public List<LinkModel> Links { get; } = new();
+
+    public static WishDraftModel FromWish(WishModel wish)
+    {
+        var draft = new WishDraftModel()
+        {
+            ClaimerId = wish.ClaimerId,
+            OwnerId = wish.OwnerId,
+            Name = wish.Name,
+            Description = wish.Description,
+            FileId = wish.FileId,
+            PriceRange = wish.PriceRange,
+            Original = wish,
+        };
+
+        foreach (var draftLink in wish.Links)
+            draft.Links.Add(new LinkModel() { Url = draftLink.Url });
+
+        return draft;
+    }
 }
 
 public class LinkModel
 {
     [Key] public int LinkId { get; set; }
-    public int WishId { get; set; }
+
+    public int? WishId { get; set; }
+    public int? WishDraftId { get; set; }
 
     [ForeignKey(nameof(WishId))]
     public WishModel Wish { get; set; }
+
+    [ForeignKey(nameof(WishDraftId))]
+    public WishDraftModel WishDraft { get; set; }
+
     [Required] public string Url { get; set; }
+
+    public override int GetHashCode() => Url.GetHashCode();
+
+    public override bool Equals(object obj) => obj is LinkModel linkModel && string.Equals(Url, linkModel.Url, StringComparison.OrdinalIgnoreCase);
 }
 
 public class SettingsModel
@@ -192,24 +256,24 @@ public class SettingsModel
     public bool SendNotifications { get; set; }
     public bool ReceiveNotifications { get; set; }
 
-   public void SetFromEnum(SettingsEnum settingsEnum)
-   {
-      SendNotifications = settingsEnum.HasFlag(SettingsEnum.SendNotifications);
-      ReceiveNotifications = settingsEnum.HasFlag(SettingsEnum.ReceiveNotifications);
-   }
+    public void SetFromEnum(SettingsEnum settingsEnum)
+    {
+        SendNotifications = settingsEnum.HasFlag(SettingsEnum.SendNotifications);
+        ReceiveNotifications = settingsEnum.HasFlag(SettingsEnum.ReceiveNotifications);
+    }
 
-   public SettingsEnum ToEnum()
-   {
-      var settingsEnum = SettingsEnum.None;
+    public SettingsEnum ToEnum()
+    {
+        var settingsEnum = SettingsEnum.None;
 
-      if (SendNotifications)
-         settingsEnum |= SettingsEnum.SendNotifications;
+        if (SendNotifications)
+            settingsEnum |= SettingsEnum.SendNotifications;
 
-      if (ReceiveNotifications)
-         settingsEnum |= SettingsEnum.ReceiveNotifications;
+        if (ReceiveNotifications)
+            settingsEnum |= SettingsEnum.ReceiveNotifications;
 
-      return settingsEnum;
-   }
+        return settingsEnum;
+    }
 }
 
 public class SubscriptionModel
@@ -234,15 +298,15 @@ public class BroadcastModel
     public DateTime? DateTimeSent { get; set; }
     public bool Deleted { get; set; }
 
-   public string GetShortText()
-   {
-      if (Text is null)
-         return "<empty>";
+    public string GetShortText()
+    {
+        if (Text is null)
+            return "<empty>";
 
-      return Text.Length <= 20
-         ? Text
-         : Text[..19] + "…";
-   }
+        return Text.Length <= 20
+           ? Text
+           : Text[..19] + "…";
+    }
 }
 
 public class ReceivedBroadcastModel
@@ -257,4 +321,101 @@ public class ReceivedBroadcastModel
     [ForeignKey(nameof(BroadcastId))]
     public BroadcastModel Broadcast { get; set; }
     public int MessageId { get; set; }
+}
+
+public class NotificationModel
+{
+    [Key] public int NotificationId { get; set; }
+    public int SourceId { get; set; }
+
+    public NotificationMessageType Type { get; set; }
+    public int? SubjectId { get; set; }
+    public string Extra { get; set; }
+
+    [ForeignKey(nameof(SourceId))]
+    public UserModel Source { get; set; }
+
+    public bool GetExtraBool()
+    {
+        if (Extra is null)
+            return false;
+
+        var byteArray = Convert.FromBase64String(Extra);
+        return BitConverter.ToBoolean(byteArray);
+    }
+
+    public void SetExtraBool(bool value)
+    {
+        var byteArray = BitConverter.GetBytes(value);
+        Extra = Convert.ToBase64String(byteArray);
+    }
+
+    public int GetExtraInt()
+    {
+        if (Extra is null)
+            return -1;
+
+        var byteArray = Convert.FromBase64String(Extra);
+        return BitConverter.ToInt32(byteArray);
+    }
+
+    public void SetExtraInt(int value)
+    {
+        var byteArray = BitConverter.GetBytes(value);
+        Extra = Convert.ToBase64String(byteArray);
+    }
+
+    public double GetExtraDouble()
+    {
+        if (Extra is null)
+            return double.NaN;
+
+        var byteArray = Convert.FromBase64String(Extra);
+        return BitConverter.ToDouble(byteArray);
+    }
+
+    public void SetExtraDouble(double value)
+    {
+        var byteArray = BitConverter.GetBytes(value);
+        Extra = Convert.ToBase64String(byteArray);
+    }
+
+    public string GetExtraString()
+    {
+        if (Extra is null)
+            return null;
+
+        var byteArray = Convert.FromBase64String(Extra);
+        return Encoding.UTF8.GetString(byteArray);
+    }
+
+    public void SetExtraString(string value)
+    {
+        var byteArray = Encoding.UTF8.GetBytes(value);
+        Extra = Convert.ToBase64String(byteArray);
+    }
+}
+    
+public class OrderAssignmentInterceptor : SaveChangesInterceptor
+{
+    public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
+    {
+        if (eventData.Context is null)
+            return result;
+
+        var addedEntries = eventData.Context.ChangeTracker.Entries<WishModel>().Where(e => e.State == EntityState.Added);
+        var wishes = eventData.Context.Set<WishModel>().Local;
+        foreach (var entry in addedEntries)
+        {
+            if (entry.Entity.Order > 0)
+                continue;
+
+            if (wishes.Any())
+                entry.Entity.Order = wishes.Max(w => w.Order) + 1;
+            else
+                entry.Entity.Order = 0;
+        }
+
+        return result;
+    }
 }

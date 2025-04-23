@@ -10,9 +10,9 @@ public class HelpCommand(ILogger logger, ITelegramBotClient client) : Command(lo
 {
    public override string Name => "/help";
 
-   public override async Task ExecuteAsync(UserContext userContext, UserModel userModel, string actionText)
+   public override async Task ExecuteAsync(UserContext userContext, UserModel user, string actionText)
    {
-      await Client.SendOrEditBotMessage(Logger, userContext, userModel, new HelpMessage(Logger), forceNewMessage: true);
+      await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new HelpMessage(Logger), forceNewMessage: true);
    }
 
    public override async Task Legacy_ExecuteAsync(BotUser user, string actionText)

@@ -23,7 +23,7 @@ public class DeleteBroadcastMessage(ILogger logger, UsersDb usersDb, BroadcastsD
         broadcastToDelete.Deleted = true;
 
         var recepientIds = userContext.Users.AsNoTracking().Select(c => c.UserId).ToList();
-        JobManager.Instance.StartJob("Delete broadcast", broadcastToDelete.BroadcastId, recepientIds, TimeSpan.FromSeconds(1), DeleteBroadcast);
+        JobManager.Instance.StartJob("Delete broadcast", broadcastToDelete.BroadcastId, recepientIds, TimeSpan.FromSeconds(1), (BroadcastJobActionDelegate)DeleteBroadcast);
 
         Text.Italic("Broadcast deletion started");
         return Task.CompletedTask;

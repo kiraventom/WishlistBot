@@ -18,7 +18,7 @@ public class ConfirmDeleteWishMessage(ILogger logger) : BotMessage(logger)
            .AddButton<EditWishQuery>("Отмена \u274c");
 
         var user = userContext.Users.Include(u => u.CurrentWish).AsNoTracking().First(u => u.UserId == userId);
-        if (user.CurrentWish.ClaimerId != 0)
+        if (user.CurrentWish.ClaimerId is not null)
         {
             Text.ItalicBold("\u203c\ufe0f Будьте осторожны! Кто-то забронировал этот виш! \u203c\ufe0f").LineBreak().LineBreak();
         }

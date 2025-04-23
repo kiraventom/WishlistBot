@@ -24,6 +24,13 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
         _wishPropertyType = wishPropertyType;
     }
 
+    public EditWishNotificationMessage(ILogger logger, NotificationModel notificationModel) : base(logger)
+    {
+        _notificationSourceId = notificationModel.SourceId;
+        _editedWishId = notificationModel.SubjectId.Value;
+        _wishPropertyType = (WishPropertyType)notificationModel.GetExtraInt();
+    }
+
     public EditWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish editedWish, WishPropertyType wishPropertyType) : base(logger)
     {
         _notificationSource = notificationSource;
@@ -36,7 +43,7 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
         var editedWish = userContext.Wishes.First(w => w.WishId == _editedWishId);
 
-        var wishIndex = notificationSource.Wishes.IndexOf(editedWish);
+        var wishIndex = notificationSource.GetSortedWishes().IndexOf(editedWish);
         var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
         Keyboard

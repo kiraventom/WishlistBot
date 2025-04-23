@@ -15,7 +15,7 @@ public class BroadcastsMessage(ILogger logger, UsersDb usersDb, BroadcastsDb bro
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        var broadcasts = userContext.Broadcasts.AsNoTracking().Reverse().ToList();
+        var broadcasts = userContext.Broadcasts.AsNoTracking().AsEnumerable().Reverse().ToList();
         var totalCount = broadcasts.Count;
 
         if (broadcasts.Count != 0)

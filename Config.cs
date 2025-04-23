@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace WishlistBot;
 
 [method: JsonConstructor]
-public class Config(string token, string userConnectionString, string mediaStorageConnectionString, long storageChannelId, long adminId, string telesinkChatId)
+public class Config(string token, string username, string userConnectionString, string mediaStorageConnectionString, long storageChannelId)
 {
     public static Config Instance { get; private set; }
 
@@ -12,6 +12,11 @@ public class Config(string token, string userConnectionString, string mediaStora
     /// Telegram bot token. Received from <a href="https://t.me/BotFather">BotFather</a>
     /// </summary>
     public string Token { get; } = token;
+    ///
+    /// <summary>
+    /// Telegram username
+    /// </summary>
+    public string Username { get; } = username;
 
     /// <summary>
     /// SQlite connection string to User DB
@@ -29,17 +34,6 @@ public class Config(string token, string userConnectionString, string mediaStora
     /// It is required because otherwise Telegram will delete them from servers if user deletes them from dialog.
     /// </summary>
     public long StorageChannelId { get; } = storageChannelId;
-
-    /// <summary>
-    /// Only user with this ID will have access to admin commands.
-    /// </summary>
-    public long AdminId { get; } = adminId;
-
-    /// <summary>
-    /// Chat ID where Telesink logs will get sent. If no ID is provided,
-    /// Telesink will not be enabled;
-    /// </summary>
-    public string TelesinkChatId { get; } = telesinkChatId;
 
     public static Config Load(string filepath)
     {

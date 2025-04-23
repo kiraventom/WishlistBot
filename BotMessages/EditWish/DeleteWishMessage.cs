@@ -28,6 +28,7 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
             .First(u => u.UserId == userId);
 
         var deletedWish = user.Wishes.FirstOrDefault(w => w.WishId == wishId);
+        var deletedWishName = deletedWish.Name;
         if (deletedWish is null)
         {
             Logger.Error("Can't delete wish {id} from user {userId}, not found", wishId, user.UserId);
@@ -37,13 +38,19 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
             user.Wishes.Remove(deletedWish);
         }
 
-        userContext.WishDrafts.Remove(user.CurrentWish);
         user.CurrentWish = null;
 
         Text.Italic("Виш удалён!");
 
-        var deleteWishNotification = new DeleteWishNotificationMessage(Logger, user.UserId, deletedWish.WishId);
-        await NotificationService.Instance.SendToSubscribers(deleteWishNotification, userContext, user.UserId);
+        var deleteWishNotification = new NotificationModel()
+        {
+            SourceId = user.UserId,
+            Type = NotificationMessageType.WishDelete,
+        };
+
+        deleteWishNotification.SetExtraString(deletedWishName);
+
+        await NotificationService.Instance.SendToSubscribers(deleteWishNotification, userContext);
     }
 
     protected override async Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
@@ -70,6 +77,6 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
         Text.Italic("Виш удалён!");
 
         var deleteWishNotification = new DeleteWishNotificationMessage(Logger, user, deletedWish);
-        await NotificationService.Instance.SendToSubscribers(deleteWishNotification, user);
+        await NotificationService.Instance.Legacy_SendToSubscribers(deleteWishNotification, user);
     }
 }

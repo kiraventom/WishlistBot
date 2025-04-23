@@ -1,12 +1,9 @@
 using Serilog;
 using Telegram.Bot;
-using WishlistBot.BotMessages;
 using WishlistBot.Database.Users;
-using WishlistBot.Model;
 
 namespace WishlistBot.Jobs;
 
-// TODO Replace broadcastId with jobId, add Jobs table to Context
 public class JobManager
 {
    private bool _inited;
@@ -17,7 +14,9 @@ public class JobManager
 
    public static JobManager Instance { get; } = new();
 
-   private Dictionary<int, IJob> ActiveJobs { get; } = new();
+   private Dictionary<int, BroadcastJob> BroadcastJobs { get; } = new();
+   private Dictionary<int, NotificationJob> NotificationJobs { get; } = new();
+
    private Dictionary<int, Legacy_IJob> Legacy_ActiveJobs { get; } = new();
 
    public void Init(ILogger logger, ITelegramBotClient client, UsersDb usersDb)
@@ -31,30 +30,30 @@ public class JobManager
       _inited = true;
    }
 
-   public bool IsJobActive(int broadcastId) => ActiveJobs.ContainsKey(broadcastId);
-   public bool Legacy_IsJobActive(object linkedObject) => ActiveJobs.ContainsKey(linkedObject.GetHashCode());
+   // TODO: Fix this mess
+   public bool IsJobActive(int broadcastId) => BroadcastJobs.ContainsKey(broadcastId);
+   public bool Legacy_IsJobActive(object linkedObject) => BroadcastJobs.ContainsKey(linkedObject.GetHashCode());
 
-   public string GetActiveJobName(int broadcastId) => ActiveJobs[broadcastId].Name;
-   public string Legacy_GetActiveJobName(object linkedObject) => ActiveJobs[linkedObject.GetHashCode()].Name;
+   public string GetActiveJobName(int broadcastId) => BroadcastJobs[broadcastId].Name;
+   public string Legacy_GetActiveJobName(object linkedObject) => BroadcastJobs[linkedObject.GetHashCode()].Name;
 
-   public void StartJob(string name, BotMessage botMessage, IReadOnlyCollection<int> itemIds, TimeSpan interval, MessageJobActionDelegate action)
+   public void StartJob(string name, int notificationId, IReadOnlyCollection<int> itemIds, TimeSpan interval, NotificationJobActionDelegate action)
    {
       ArgumentNullException.ThrowIfNull(name);
       ArgumentNullException.ThrowIfNull(action);
 
-      // TODO
-      /* if (ActiveJobs.ContainsKey(broadcastId)) */
-      /* { */
-      /*    throw new NotSupportedException($"Can't start two jobs on the same broadcast [{broadcastId}]"); */
-      /* } */
+      if (NotificationJobs.ContainsKey(notificationId))
+      {
+         throw new NotSupportedException($"Can't start two jobs on the same notification [{notificationId}]");
+      }
 
-      var job = new Job(botMessage, name, itemIds, interval, action);
-      ActiveJobs.Add(broadcastId, job);
+      var job = new NotificationJob(notificationId, name, itemIds, interval, action);
+      NotificationJobs.Add(notificationId, job);
 
-      job.Finished += OnJobFinished;
+      job.Finished += OnNotificationJobFinished;
       job.Start(_logger, _client);
 
-      _logger.Information("Started job on broadcast [{broadcastId}]", broadcastId);
+      _logger.Information("Started job on notification [{notificationId}]", notificationId);
    }
 
    public void StartJob(string name, int broadcastId, IReadOnlyCollection<int> itemIds, TimeSpan interval, BroadcastJobActionDelegate action)
@@ -62,15 +61,15 @@ public class JobManager
       ArgumentNullException.ThrowIfNull(name);
       ArgumentNullException.ThrowIfNull(action);
 
-      if (ActiveJobs.ContainsKey(broadcastId))
+      if (BroadcastJobs.ContainsKey(broadcastId))
       {
          throw new NotSupportedException($"Can't start two jobs on the same broadcast [{broadcastId}]");
       }
 
-      var job = new Job(broadcastId, name, itemIds, interval, action);
-      ActiveJobs.Add(broadcastId, job);
+      var job = new BroadcastJob(broadcastId, name, itemIds, interval, action);
+      BroadcastJobs.Add(broadcastId, job);
 
-      job.Finished += OnJobFinished;
+      job.Finished += OnBroadcastJobFinished;
       job.Start(_logger, _client);
 
       _logger.Information("Started job on broadcast [{broadcastId}]", broadcastId);
@@ -83,7 +82,7 @@ public class JobManager
       ArgumentNullException.ThrowIfNull(collection);
       ArgumentNullException.ThrowIfNull(action);
 
-      if (ActiveJobs.ContainsKey(linkedObject.GetHashCode()))
+      if (BroadcastJobs.ContainsKey(linkedObject.GetHashCode()))
       {
          throw new NotSupportedException($"Can't start two jobs on the same object [{linkedObject.GetHashCode()}]");
       }
@@ -99,7 +98,7 @@ public class JobManager
 
    public void StopJob(int broadcastId)
    {
-      if (ActiveJobs.TryGetValue(broadcastId, out var job))
+      if (BroadcastJobs.TryGetValue(broadcastId, out var job))
       {
          job.Cancel();
       }
@@ -123,19 +122,35 @@ public class JobManager
       }
    }
 
-   private void OnJobFinished(IJob job, TaskStatus status)
+   private void OnBroadcastJobFinished(Job job, TaskStatus status)
    {
       if (status != TaskStatus.RanToCompletion)
       {
-         _logger.Error("Job linked to broadcast [{broadcastId}] has finished with status '{status}'", job.BroadcastId, status.ToString());
+         _logger.Error("Job linked to broadcast [{broadcastId}] has finished with status '{status}'", job.SubjectId, status.ToString());
       }
       else
       {
-         _logger.Information("Job linked to broadcast [{broadcastId}] has finished with status '{status}'", job.BroadcastId, status.ToString());
+         _logger.Information("Job linked to broadcast [{broadcastId}] has finished with status '{status}'", job.SubjectId, status.ToString());
       }
 
-      job.Finished -= OnJobFinished;
-      ActiveJobs.Remove(job.BroadcastId);
+      job.Finished -= OnBroadcastJobFinished;
+      BroadcastJobs.Remove(job.SubjectId);
+      job.Dispose();
+   }
+
+   private void OnNotificationJobFinished(Job job, TaskStatus status)
+   {
+      if (status != TaskStatus.RanToCompletion)
+      {
+         _logger.Error("Job linked to notification [{notificationId}] has finished with status '{status}'", job.SubjectId, status.ToString());
+      }
+      else
+      {
+         _logger.Information("Job linked to notification [{notificationId}] has finished with status '{status}'", job.SubjectId, status.ToString());
+      }
+
+      job.Finished -= OnNotificationJobFinished;
+      NotificationJobs.Remove(job.SubjectId);
       job.Dispose();
    }
 

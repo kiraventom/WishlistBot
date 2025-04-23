@@ -15,14 +15,18 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        var sender = userContext.Users.AsNoTracking().First(u => u.UserId == userId);
-
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetUserId);
-        var targetUser = userContext.Users
+        var users = userContext.Users
             .Include(u => u.Wishes)
             .ThenInclude(w => w.Links)
-            .AsNoTracking()
-            .First(u => u.UserId == targetUserId);
+            .AsNoTracking();
+
+        var sender = users.First(u => u.UserId == userId);
+
+        parameters.Peek(QueryParameterType.SetUserTo, out var targetUserId);
+        var targetUser = users.FirstOrDefault(u => u.UserId == targetUserId);
+
+        if (targetUser is null)
+            targetUser = sender;
 
         var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 
@@ -55,13 +59,14 @@ public class CompactListMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
         else
             Text.Bold("Краткий список ваших вишей:");
 
-        for (var i = 0; i < targetUser.Wishes.Count; ++i)
+        var sortedWishes = targetUser.GetSortedWishes();
+        for (var i = 0; i < sortedWishes.Count; ++i)
         {
-            var wish = targetUser.Wishes[i];
+            var wish = sortedWishes[i];
             Text.LineBreak().Bold($"{i + 1}. ");
 
             // If user isn't looking at its own wishes
-            if (sender.UserId != targetUser.UserId && wish.ClaimerId != 0)
+            if (wish.ClaimerId != null && sender != targetUser)
             {
                 Text.Bold("[БРОНЬ] ").Strikethrough(wish.Name);
             }

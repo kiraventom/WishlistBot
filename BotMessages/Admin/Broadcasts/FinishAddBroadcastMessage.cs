@@ -27,6 +27,7 @@ public class FinishAddBroadcastMessage : BotMessage
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         userContext.Broadcasts.Add(_newBroadcastModel);
+        userContext.SaveChanges();
 
         Logger.Information("Broadcast [{id}] '{text}' and fileId [{fileId}] is added to database", _newBroadcastModel.BroadcastId, _newBroadcastModel.Text, _newBroadcastModel.FileId);
 

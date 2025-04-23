@@ -21,15 +21,15 @@ public abstract class BotMessage(ILogger logger)
 
    public bool ForceNewMessage { get; private set; }
 
-   public async Task Init(UserContext userContext, UserModel userModel)
+   public async Task Init(UserContext userContext, UserModel user)
    {
       if (_isInited)
          return;
 
-      if (!QueryParameterCollection.TryParse(userModel.QueryParams, out var parameters))
+      if (!QueryParameterCollection.TryParse(user.QueryParams, out var parameters))
          parameters = new QueryParameterCollection();
 
-      userModel.BotState = BotState.Default;
+      user.BotState = BotState.Default;
 
       var allowedTypes = GetAllowedTypes();
 
@@ -43,11 +43,11 @@ public abstract class BotMessage(ILogger logger)
 
       Keyboard.InitCommonParameters(parameters);
 
-      await InitInternal(userContext, userModel, parameters);
+      await InitInternal(userContext, user.UserId, parameters);
 
       // Parameters can change during message initialization
-      userModel.QueryParams = parameters.ToString();
-      userModel.AllowedQueries = string.Join(';', Keyboard.EnumerateQueries());
+      user.QueryParams = parameters.ToString();
+      user.AllowedQueries = string.Join(';', Keyboard.EnumerateQueries());
 
       _isInited = true;
    }

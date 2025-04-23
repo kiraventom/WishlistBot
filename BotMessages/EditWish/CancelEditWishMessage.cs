@@ -28,8 +28,11 @@ public class CancelEditWishMessage(ILogger logger) : BotMessage(logger)
         }
 
         var user = userContext.Users.Include(u => u.CurrentWish).First(u => u.UserId == userId);
-        userContext.WishDrafts.Remove(user.CurrentWish);
-        user.CurrentWish = null;
+        if (user.CurrentWish is not null)
+        {
+            userContext.WishDrafts.Remove(user.CurrentWish);
+            user.CurrentWish = null;
+        }
 
         return Task.CompletedTask;
     }

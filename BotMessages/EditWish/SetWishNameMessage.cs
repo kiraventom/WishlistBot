@@ -18,10 +18,8 @@ public class SetWishNameMessage(ILogger logger, UsersDb usersDb) : UserBotMessag
 
         if (forceNewWish || user.CurrentWish is null)
         {
-            var newWishDraft = new WishDraftModel();
-            userContext.WishDrafts.Add(newWishDraft);
-
-            user.CurrentWish = newWishDraft;
+            if (user.CurrentWish is not null)
+                user.CurrentWish = null;
 
             Text.Verbatim("Укажите краткое название виша:");
             Keyboard.AddButton<CancelEditWishQuery>();

@@ -18,7 +18,7 @@ namespace WishlistBot.BotMessages;
 
 public class MessageFactory(ILogger logger, UsersDb usersDb, BroadcastsDb broadcastsDb)
 {
-   public BotMessage Build(IQuery query, UserContext userContext, UserModel userModel)
+   public BotMessage Build(IQuery query, UserContext userContext, string queryId)
    {
       BotMessage botMessage = query switch
       {
@@ -58,7 +58,7 @@ public class MessageFactory(ILogger logger, UsersDb usersDb, BroadcastsDb broadc
       };
 
       if (botMessage is InvalidMessage)
-         logger.Error("Failed to find message for query [{queryId}]", userModel.LastQueryId);
+         logger.Error("Failed to find message for query [{queryId}]", queryId);
 
       return botMessage;
    }

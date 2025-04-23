@@ -1,7 +1,6 @@
 ﻿using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using TelegramSink;
 using System.Reflection;
 using Telegram.Bot;
 using WishlistBot.Listeners;
@@ -32,7 +31,7 @@ public static class Program
          return;
       }
 
-      var logger = InitLogger(projectDirPath, config.Token, config.TelesinkChatId);
+      var logger = InitLogger(projectDirPath, config.Token);
 
       logger.Information("===== ENTRY POINT =====");
 
@@ -74,8 +73,8 @@ public static class Program
 
       var messagesFactory = new MessageFactory(logger, usersDb, broadcastsDb);
 
-      var commands = BuildCommands(logger, client, usersDb, config.AdminId);
-      var queryActions = BuildQueryActions(logger, client, messagesFactory, config.AdminId);
+      var commands = BuildCommands(logger, client, usersDb);
+      var queryActions = BuildQueryActions(logger, client, messagesFactory);
       var actions = commands.Concat(queryActions);
 
       var listeners = BuildListeners(logger, client, usersDb, broadcastsDb);
@@ -104,7 +103,7 @@ public static class Program
       return Path.Combine(homeDirPath, ".config", PROJECT_NAME);
    }
 
-   private static Logger InitLogger(string projectDirPath, string botToken, string logChatId)
+   private static Logger InitLogger(string projectDirPath, string botToken)
    {
       var logsDirPath = Path.Combine(projectDirPath, "logs");
       Directory.CreateDirectory(logsDirPath);
@@ -114,9 +113,6 @@ public static class Program
          .MinimumLevel.Debug()
          .WriteTo.File(logFilePath)
          .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information)
-         .WriteTo.TeleSink(
-               telegramApiKey: botToken,
-               telegramChatId: logChatId)
          .CreateLogger();
 
       return logger;
@@ -180,14 +176,14 @@ public static class Program
       }
    }
 
-   private static IEnumerable<UserAction> BuildCommands(ILogger logger, TelegramBotClient client, UsersDb usersDb, long adminId)
+   private static IEnumerable<UserAction> BuildCommands(ILogger logger, TelegramBotClient client, UsersDb usersDb)
    {
       yield return new StartCommand(logger, client, usersDb);
-      yield return new AdminCommand(logger, client, usersDb, adminId);
+      yield return new AdminCommand(logger, client, usersDb);
       yield return new HelpCommand(logger, client);
    }
 
-   private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, TelegramBotClient client, MessageFactory messagesFactory, long adminId)
+   private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, TelegramBotClient client, MessageFactory messagesFactory)
    {
       var queryTypes = Assembly.GetExecutingAssembly()
          .GetTypes()
@@ -196,7 +192,7 @@ public static class Program
       foreach (var queryType in queryTypes)
       {
          var queryActionType = typeof(QueryAction<>).MakeGenericType(queryType);
-         var queryAction = (UserAction)Activator.CreateInstance(queryActionType, logger, client, messagesFactory, adminId);
+         var queryAction = (UserAction)Activator.CreateInstance(queryActionType, logger, client, messagesFactory);
          yield return queryAction;
       }
    }

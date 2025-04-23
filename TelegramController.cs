@@ -39,15 +39,40 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
     {
         logger.Information("Received update: {updateType}", update.Type);
 
-        using (var userContext = UserContext.Create())
+        const bool legacy = false;
+        if (legacy)
         {
             if (update.Message is { } message)
-                await HandleMessageAsync(message, userContext);
+                await Legacy_HandleMessageAsync(message);
 
             if (update.CallbackQuery is { } callbackQuery)
-                await HandleCallbackQueryAsync(callbackQuery, client, userContext);
+                await Legacy_HandleCallbackQueryAsync(callbackQuery, client);
+        }
+        else
+        {
+            using (var userContext = UserContext.Create())
+            {
+                // TODO 
+                /* using (var transaction = userContext.Database.BeginTransaction()) */
+                {
+                    try
+                    {
+                        if (update.Message is { } message)
+                            await HandleMessageAsync(message, userContext);
 
-            userContext.SaveChanges();
+                        if (update.CallbackQuery is { } callbackQuery)
+                            await HandleCallbackQueryAsync(callbackQuery, client, userContext);
+
+                        userContext.SaveChanges();
+                        /* transaction.Commit(); */
+                    }
+                    catch (Exception e)
+                    {
+                        /* transaction.Rollback(); */
+                        logger.Error(e.ToString());
+                    }
+                }
+            }
         }
     }
 
@@ -57,12 +82,32 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
 
         logger.Information("Received '{text}' ([{messageId}]) from '{first} {last}' (@{tag} [{id}])", message.Text, message.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
 
-        var user = usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
-        var userModel = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
+        var user = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
 
         foreach (var listener in listeners)
         {
-            if (await listener.HandleMessageAsync(message, user))
+            if (await listener.HandleMessageAsync(message, userContext, user.UserId))
+                return;
+        }
+
+        var botCommand = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);
+        if (botCommand is not null)
+        {
+            await HandleBotCommandAsync(userContext, user, botCommand, message.Text);
+        }
+    }
+
+    private async Task Legacy_HandleMessageAsync(Message message)
+    {
+        var sender = message.From!;
+
+        logger.Information("Received '{text}' ([{messageId}]) from '{first} {last}' (@{tag} [{id}])", message.Text, message.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
+
+        var user = usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
+
+        foreach (var listener in listeners)
+        {
+            if (await listener.Legacy_HandleMessageAsync(message, user))
                 return;
         }
 
@@ -73,14 +118,13 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
         }
     }
 
-    private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, ITelegramBotClient client, UserContext userContext)
+    private async Task Legacy_HandleCallbackQueryAsync(CallbackQuery callbackQuery, ITelegramBotClient client)
     {
         var sender = callbackQuery.From!;
 
         logger.Information("Received callback query ([{callbackQueryId}]) with data '{data}' on message [{messageId}] from '{first} {last}' (@{tag} [{id}])", callbackQuery.Id, callbackQuery.Data, callbackQuery.Message?.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
 
         var user = usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
-        var userModel = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
 
         if (callbackQuery.Message is null || callbackQuery.Message.MessageId != user.LastBotMessageId)
         {
@@ -106,6 +150,40 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
 
         user.LastQueryId = callbackQuery.Id;
         await Legacy_HandleUserActionAsync(callbackQuery.Data, callbackQuery.Data, user);
+    }
+
+    private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, ITelegramBotClient client, UserContext userContext)
+    {
+        var sender = callbackQuery.From!;
+
+        logger.Information("Received callback query ([{callbackQueryId}]) with data '{data}' on message [{messageId}] from '{first} {last}' (@{tag} [{id}])", callbackQuery.Id, callbackQuery.Data, callbackQuery.Message?.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
+
+        var userModel = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
+
+        if (callbackQuery.Message is null || callbackQuery.Message.MessageId < userModel.LastBotMessageId)
+        {
+            await HandleOldMessageQuery(callbackQuery, client, userModel);
+            return;
+        }
+
+        if (callbackQuery.Data is null)
+        {
+            logger.Warning("Callback query [{callbackQueryId}] does not contain data", callbackQuery.Id);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(userModel.AllowedQueries))
+        {
+            var allowedQueries = userModel.AllowedQueries.Split(';');
+            if (!allowedQueries.Contains(callbackQuery.Data))
+            {
+                logger.Warning("Unexpected query [{queryId}] '{query}', allowed queries: '{allowed}'", callbackQuery.Id, callbackQuery.Data, userModel.AllowedQueries);
+                return;
+            }
+        }
+
+        userModel.LastQueryId = callbackQuery.Id;
+        await HandleUserActionAsync(userContext, userModel, callbackQuery.Data, callbackQuery.Data);
     }
 
     private async Task HandleOldMessageQuery(CallbackQuery callbackQuery, ITelegramBotClient client, UserModel user)

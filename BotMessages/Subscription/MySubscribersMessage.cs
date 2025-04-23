@@ -13,7 +13,10 @@ public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMess
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        var user = userContext.Users.Include(u => u.Subscribers).First(u => u.UserId == userId);
+        var user = userContext.Users
+            .Include(u => u.Subscribers)
+            .ThenInclude(s => s.Subscriber)
+            .First(u => u.UserId == userId);
 
         var totalCount = user.Subscribers.Count;
 

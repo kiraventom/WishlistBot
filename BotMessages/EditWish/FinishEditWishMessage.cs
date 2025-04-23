@@ -20,18 +20,26 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
            .AddButton<SetWishNameQuery>("Добавить ещё виш")
            .NewRow();
 
-        if (parameters.Pop(QueryParameterType.SetWishTo, out var wishId))
-            await EditWish(userContext, userId, wishId);
+        var user = userContext.Users
+            .Include(u => u.CurrentWish)
+            .ThenInclude(d => d.Original)
+            .ThenInclude(u => u.Links)
+            .Include(u => u.Wishes)
+            .ThenInclude(u => u.Links)
+            .First(u => u.UserId == userId);
+
+        var draft = user.CurrentWish;
+
+        if (draft.Original is not null)
+            await EditWish(userContext, user, draft);
         else
-            await AddWish(userContext, userId);
+            await AddWish(userContext, user, draft);
 
         if (parameters.Pop(QueryParameterType.ReturnToFullList))
             Keyboard.NewRow().AddButton<FullListQuery>("Назад к списку");
         else
             Keyboard.NewRow().AddButton<CompactListQuery>("Назад к моим вишам");
 
-        var user = userContext.Users.Include(u => u.CurrentWish).First(u => u.UserId == userId);
-        userContext.WishDrafts.Remove(user.CurrentWish);
         user.CurrentWish = null;
     }
 
@@ -54,66 +62,38 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
         user.CurrentWish = null;
     }
 
-    private async Task AddWish(UserContext userContext, int userId)
+    private async Task AddWish(UserContext userContext, UserModel user, WishDraftModel draft)
     {
-        var user = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == userId);
-        var newWishDraft = user.CurrentWish;
-
-        if (newWishDraft is null)
+        if (draft is null)
         {
             Logger.Error("[{uId}]: New wish is null", user.UserId);
             throw new NotSupportedException("Current wish is null");
         }
 
-        // TODO: Combine code of creating wish from draft
-        var newWish = new WishModel()
-        {
-            ClaimerId = newWishDraft.ClaimerId,
-            OwnerId = newWishDraft.OwnerId,
-            Name = newWishDraft.Name,
-            Description = newWishDraft.Description,
-            FileId = newWishDraft.FileId,
-            PriceRange = newWishDraft.PriceRange,
-        };
+        var newWish = WishModel.FromDraft(draft);
 
-        foreach (var draftLink in newWishDraft.Links)
-        {
-            var link = new LinkModel()
-            {
-                Url = draftLink.Url
-            };
-
-            newWish.Links.Add(link);
-        }
-
-        using (var transaction = userContext.Database.BeginTransaction())
-        {
-            try
-            {
-                user.Wishes.Add(newWish);
-                userContext.SaveChanges();
-                transaction.Commit();
-            }
-            catch
-            {
-                transaction.Rollback();
-                throw;
-            }
-        }
+        user.Wishes.Add(newWish);
+        userContext.SaveChanges();
 
         Text.Italic("Виш добавлен!");
 
-        var wishIndex = user.Wishes.IndexOf(newWish);
+        var wishIndex = user.GetSortedWishes().IndexOf(newWish);
         var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
         Keyboard
            .AddButton<EditWishQuery>("Изменить виш",
-                                     new QueryParameter(QueryParameterType.SetWishTo, newWish.WishId),
-                                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
-                                     QueryParameter.ReturnToFullList);
+                new QueryParameter(QueryParameterType.SetWishTo, newWish.WishId),
+                new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
+                QueryParameter.ReturnToFullList);
 
-        var newWishNotification = new NewWishNotificationMessage(Logger, user.UserId, newWish.WishId);
-        await NotificationService.Instance.SendToSubscribers(newWishNotification, userContext, user.UserId);
+        var newWishNotification = new NotificationModel()
+        {
+            SourceId = user.UserId,
+            SubjectId = newWish.WishId,
+            Type = NotificationMessageType.NewWish
+        };
+
+        await NotificationService.Instance.SendToSubscribers(newWishNotification, userContext);
     }
 
     private async Task Legacy_AddWish(BotUser user)
@@ -134,114 +114,76 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
 
         Keyboard
            .AddButton<EditWishQuery>("Изменить виш",
-                                     new QueryParameter(QueryParameterType.SetWishTo, newWish.Id),
-                                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
-                                     QueryParameter.ReturnToFullList);
+                new QueryParameter(QueryParameterType.SetWishTo, newWish.Id),
+                new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
+                QueryParameter.ReturnToFullList);
 
         var newWishNotification = new NewWishNotificationMessage(Logger, user, newWish);
         await NotificationService.Instance.Legacy_SendToSubscribers(newWishNotification, user);
     }
 
-    private async Task EditWish(UserContext userContext, int userId, long wishId)
+    private async Task EditWish(UserContext userContext, UserModel user, WishDraftModel draft)
     {
-        var user = userContext.Users
-            .Include(u => u.CurrentWish)
-            .ThenInclude(u => u.Links)
-            .Include(u => u.Wishes)
-            .ThenInclude(u => u.Links)
-            .First(u => u.UserId == userId);
+        var editedWish = WishModel.FromDraft(draft);
 
-        var editedWishDraft = user.CurrentWish;
-
-        var editedWish = new WishModel()
+        if (draft.Original is null)
         {
-            ClaimerId = editedWishDraft.ClaimerId,
-            OwnerId = editedWishDraft.OwnerId,
-            Name = editedWishDraft.Name,
-            Description = editedWishDraft.Description,
-            FileId = editedWishDraft.FileId,
-            PriceRange = editedWishDraft.PriceRange,
-        };
+            Logger.Error("Draft {draftId} is not connected to original", draft.WishDraftId);
 
-        foreach (var draftLink in editedWishDraft.Links)
-        {
-            var link = new LinkModel()
-            {
-                Url = draftLink.Url
-            };
-
-            editedWish.Links.Add(link);
-        }
-
-        var wishBeforeEditing = user.Wishes.FirstOrDefault(w => w.WishId == wishId);
-        if (wishBeforeEditing is null)
-        {
-            Logger.Error("Can't find wish {id} to remove after editing", wishId);
-
-            if (editedWishDraft is null)
+            if (draft is null)
             {
                 Logger.Error("[{uId}]: Edited wish is null", user.UserId);
                 throw new NotSupportedException("Edited wish is null");
             }
 
-            using (var transaction = userContext.Database.BeginTransaction())
-            {
-                try
-                {
-                    userContext.Wishes.Add(editedWish);
-                    userContext.SaveChanges();
-                    transaction.Commit();
-                }
-                catch
-                {
-                    transaction.Rollback();
-                    throw;
-                }
-            }
+            userContext.Wishes.Add(editedWish);
+            userContext.SaveChanges();
 
             Text.Italic("Ваши изменения сохранены, но произошла ошибка. Сообщите разработчику об этом");
+            return;
         }
-        else
+
+        Text.Italic("Виш изменён!");
+
+        var wishPropertyType = WishPropertyType.None;
+
+        if (draft.Original.Name != draft.Name)
+            wishPropertyType |= WishPropertyType.Name;
+
+        if (draft.Original.Description != draft.Description)
+            wishPropertyType |= WishPropertyType.Description;
+
+        if (!draft.Original.Links.SequenceEqual(draft.Links))
+            wishPropertyType |= WishPropertyType.Links;
+
+        if (draft.Original.FileId != draft.FileId)
+            wishPropertyType |= WishPropertyType.Media;
+
+        user.Wishes.Remove(draft.Original);
+        user.Wishes.Add(editedWish);
+        userContext.SaveChanges();
+
+        var wishIndex = user.GetSortedWishes().IndexOf(editedWish);
+        var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
+
+        Keyboard
+           .AddButton<EditWishQuery>("Изменить виш",
+                new QueryParameter(QueryParameterType.SetWishTo, editedWish.WishId),
+                new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
+                QueryParameter.ReturnToFullList);
+
+        if (wishPropertyType != WishPropertyType.None)
         {
-            Text.Italic("Виш изменён!");
-
-            using (var transaction = userContext.Database.BeginTransaction())
+            var editWishNotification = new NotificationModel()
             {
-                try
-                {
-                    var wishIndex = user.Wishes.IndexOf(wishBeforeEditing);
-                    user.Wishes.Remove(wishBeforeEditing);
-                    user.Wishes.Insert(wishIndex, editedWish);
+                SourceId = user.UserId,
+                SubjectId = editedWish.WishId,
+                Type = NotificationMessageType.WishEdit,
+            };
 
-                    userContext.SaveChanges();
-                    transaction.Commit();
-                }
-                catch
-                {
-                    transaction.Rollback();
-                    throw;
-                }
-            }
+            editWishNotification.SetExtraInt((int)wishPropertyType);
 
-            var wishPropertyType = WishPropertyType.None;
-
-            if (wishBeforeEditing.Name != editedWishDraft.Name)
-                wishPropertyType |= WishPropertyType.Name;
-
-            if (wishBeforeEditing.Description != editedWishDraft.Description)
-                wishPropertyType |= WishPropertyType.Description;
-
-            if (!wishBeforeEditing.Links.SequenceEqual(editedWishDraft.Links))
-                wishPropertyType |= WishPropertyType.Links;
-
-            if (wishBeforeEditing.FileId != editedWishDraft.FileId)
-                wishPropertyType |= WishPropertyType.Media;
-
-            if (wishPropertyType != WishPropertyType.None)
-            {
-                var editWishNotification = new EditWishNotificationMessage(Logger, user.UserId, editedWish.WishId, wishPropertyType);
-                await NotificationService.Instance.SendToSubscribers(editWishNotification, userContext, user.UserId);
-            }
+            await NotificationService.Instance.SendToSubscribers(editWishNotification, userContext);
         }
     }
 

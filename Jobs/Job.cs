@@ -1,48 +1,76 @@
 using Serilog;
 using Telegram.Bot;
-using WishlistBot.BotMessages;
 using WishlistBot.Database.Users;
 using WishlistBot.Model;
 
 namespace WishlistBot.Jobs;
 
-public class Job : IJob
+public class BroadcastJob : Job
 {
-    private readonly CancellationTokenSource _cts = new();
-
     private readonly int _broadcastId;
-    private readonly BotMessage _botMessage;
-    private readonly string _name;
-    private readonly IReadOnlyCollection<int> _itemIds;
-    private readonly TimeSpan _interval;
-    private readonly MessageJobActionDelegate _messageAction;
     private readonly BroadcastJobActionDelegate _broadcastAction;
 
-    private bool _started;
+    public override int SubjectId => _broadcastId;
 
-    public Job(BotMessage message, string name, IReadOnlyCollection<int> itemIds, TimeSpan interval, MessageJobActionDelegate action) : this(name, itemIds, interval)
-    {
-        _botMessage = message;
-        _messageAction = action;
-    }
-
-    public Job(int broadcastId, string name, IReadOnlyCollection<int> itemIds, TimeSpan interval, BroadcastJobActionDelegate action) : this(name, itemIds, interval)
+    public BroadcastJob(int broadcastId, string name, IReadOnlyCollection<int> itemIds, TimeSpan interval, BroadcastJobActionDelegate action) : base(name, itemIds, interval)
     {
         _broadcastId = broadcastId;
         _broadcastAction = action;
     }
 
-    private Job(string name, IReadOnlyCollection<int> itemIds, TimeSpan interval)
+    protected override Task StartInternal(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId)
     {
-        _name = name;
+        return _broadcastAction.Invoke(logger, client, userContext, itemId, _broadcastId);
+    }
+}
+
+public class NotificationJob : Job
+{
+    private readonly int _notificationId;
+    private readonly NotificationJobActionDelegate _notificationAction;
+
+    public override int SubjectId => _notificationId;
+
+    public NotificationJob(int notificationId, string name, IReadOnlyCollection<int> itemIds, TimeSpan interval, NotificationJobActionDelegate action) : base(name, itemIds, interval)
+    {
+        _notificationId = notificationId;
+        _notificationAction = action;
+    }
+
+    protected override async Task StartInternal(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId)
+    {
+        try
+        {
+            await _notificationAction.Invoke(logger, client, userContext, itemId, _notificationId);
+        }
+        finally
+        {
+            var notification = userContext.Notifications.First(n => n.NotificationId == _notificationId);
+            userContext.Notifications.Remove(notification);
+        }
+    }
+}
+
+public abstract class Job
+{
+    private readonly CancellationTokenSource _cts = new();
+
+    private readonly IReadOnlyCollection<int> _itemIds;
+    private readonly TimeSpan _interval;
+
+    private bool _started;
+
+    public abstract int SubjectId { get; }
+    public string Name { get; private set; }
+
+    protected Job(string name, IReadOnlyCollection<int> itemIds, TimeSpan interval)
+    {
+        Name = name;
         _itemIds = itemIds;
         _interval = interval;
     }
 
-    int IJob.BroadcastId => _broadcastId;
-    string IJob.Name => _name;
-
-    public event Action<IJob, TaskStatus> Finished;
+    public event Action<Job, TaskStatus> Finished;
 
     public void Start(ILogger logger, ITelegramBotClient client)
     {
@@ -52,28 +80,28 @@ public class Job : IJob
         _started = true;
 
         Task.Run(async () =>
-           {
-               foreach (var itemId in _itemIds)
-               {
-                   _cts.Token.ThrowIfCancellationRequested();
-                   await Task.Delay(_interval);
-                   using (var userContext = UserContext.Create())
-                   {
-                       if (_botMessage is not null)
-                       {
-                            await _messageAction.Invoke(logger, client, userContext, itemId, _botMessage);
-                       }
-                       else
-                       {
-                            await _broadcastAction.Invoke(logger, client, userContext, itemId, _broadcastId);
-                       }
+        {
+            foreach (var itemId in _itemIds)
+            {
+                _cts.Token.ThrowIfCancellationRequested();
+                await Task.Delay(_interval);
+                using (var userContext = UserContext.Create())
+                {
+                    await StartInternal(logger, client, userContext, itemId);
+                    userContext.SaveChanges();
+                }
+            }
+        }, _cts.Token)
+        .ContinueWith(t =>
+        {
+            if (t.Exception is not null)
+                logger.Error("Job with SubjectId={subjectId} has faulted with exception {ex}", this.SubjectId, t.Exception.ToString());
 
-                       userContext.SaveChanges();
-                   }
-               }
-           }, _cts.Token)
-           .ContinueWith(t => Finished?.Invoke(this, t.Status));
+            Finished?.Invoke(this, t.Status);
+        });
     }
+
+    protected abstract Task StartInternal(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId);
 
     public void Cancel() => _cts.Cancel();
 

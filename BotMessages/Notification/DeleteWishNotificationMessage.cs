@@ -14,7 +14,7 @@ public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
     private readonly Wish _oldWish;
 
     private readonly int _notificationSourceId;
-    private readonly int _oldWishId;
+    private readonly string _oldWishName;
 
     public DeleteWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish oldWish) : base(logger)
     {
@@ -22,16 +22,21 @@ public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
         _oldWish = oldWish;
     }
 
-    public DeleteWishNotificationMessage(ILogger logger, int notificationSourceId, int wishId) : base(logger)
+    public DeleteWishNotificationMessage(ILogger logger, int notificationSourceId, string oldWishName) : base(logger)
     {
         _notificationSourceId = notificationSourceId;
-        _oldWishId = wishId;
+        _oldWishName = oldWishName;
+    }
+
+    public DeleteWishNotificationMessage(ILogger logger, NotificationModel notificationModel) : base(logger)
+    {
+        _notificationSourceId = notificationModel.SourceId;
+        _oldWishName = notificationModel.GetExtraString();
     }
 
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
-        var oldWish = userContext.Wishes.First(w => w.WishId == _oldWishId);
 
         Keyboard
             .AddButton<SubscriptionQuery>("Перейти к подписке",
@@ -43,7 +48,7 @@ public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
         Text
             .InlineMention(notificationSource)
             .Italic(" удалил виш '")
-            .ItalicBold(oldWish.Name)
+            .ItalicBold(_oldWishName)
             .Italic("'!");
 
         return Task.CompletedTask;

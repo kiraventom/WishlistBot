@@ -10,7 +10,7 @@ using WishlistBot.Model;
 namespace WishlistBot.Migrations.MediaStorage
 {
     [DbContext(typeof(MediaStorageContext))]
-    [Migration("20250330171916_Initial")]
+    [Migration("20250429224045_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -26,6 +26,7 @@ namespace WishlistBot.Migrations.MediaStorage
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("FileId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("MessageId")

@@ -51,19 +51,54 @@ namespace WishlistBot.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("WishDraftId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("WishDraftModelWishDraftId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("WishId")
+                    b.Property<int?>("WishId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("WishModelWishId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("LinkId");
+
+                    b.HasIndex("WishDraftId");
 
                     b.HasIndex("WishDraftModelWishDraftId");
 
                     b.HasIndex("WishId");
 
+                    b.HasIndex("WishModelWishId");
+
                     b.ToTable("Links");
+                });
+
+            modelBuilder.Entity("WishlistBot.Model.NotificationModel", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Extra")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SubjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("SourceId");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("WishlistBot.Model.ReceivedBroadcastModel", b =>
@@ -151,6 +186,9 @@ namespace WishlistBot.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("LastBotMessageId")
                         .HasColumnType("INTEGER");
 
@@ -237,6 +275,9 @@ namespace WishlistBot.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("OwnerId")
                         .HasColumnType("INTEGER");
 
@@ -247,6 +288,9 @@ namespace WishlistBot.Migrations
 
                     b.HasIndex("ClaimerId");
 
+                    b.HasIndex("Order")
+                        .IsUnique();
+
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Wishes");
@@ -254,17 +298,38 @@ namespace WishlistBot.Migrations
 
             modelBuilder.Entity("WishlistBot.Model.LinkModel", b =>
                 {
+                    b.HasOne("WishlistBot.Model.WishDraftModel", "WishDraft")
+                        .WithMany()
+                        .HasForeignKey("WishDraftId");
+
                     b.HasOne("WishlistBot.Model.WishDraftModel", null)
                         .WithMany("Links")
-                        .HasForeignKey("WishDraftModelWishDraftId");
+                        .HasForeignKey("WishDraftModelWishDraftId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("WishlistBot.Model.WishModel", "Wish")
+                        .WithMany()
+                        .HasForeignKey("WishId");
+
+                    b.HasOne("WishlistBot.Model.WishModel", null)
                         .WithMany("Links")
-                        .HasForeignKey("WishId")
+                        .HasForeignKey("WishModelWishId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Wish");
+
+                    b.Navigation("WishDraft");
+                });
+
+            modelBuilder.Entity("WishlistBot.Model.NotificationModel", b =>
+                {
+                    b.HasOne("WishlistBot.Model.UserModel", "Source")
+                        .WithMany()
+                        .HasForeignKey("SourceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Wish");
+                    b.Navigation("Source");
                 });
 
             modelBuilder.Entity("WishlistBot.Model.ReceivedBroadcastModel", b =>
@@ -343,7 +408,8 @@ namespace WishlistBot.Migrations
                 {
                     b.HasOne("WishlistBot.Model.UserModel", "Claimer")
                         .WithMany("ClaimedWishes")
-                        .HasForeignKey("ClaimerId");
+                        .HasForeignKey("ClaimerId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("WishlistBot.Model.UserModel", "Owner")
                         .WithMany("Wishes")

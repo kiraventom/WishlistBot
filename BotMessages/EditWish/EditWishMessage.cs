@@ -41,10 +41,10 @@ public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
                 Logger.Debug("Parameter SetWishTo={setWishTo}", wishId);
                 Logger.Debug("Current user wish ids: [ {wishIds} ]", string.Join(", ", user.Wishes.Select(w => w.WishId)));
 
-                var wishToClone = user.Wishes.FirstOrDefault(w => w.WishId == wishId);
-                if (wishToClone is null)
+                var wishToEdit = user.Wishes.FirstOrDefault(w => w.WishId == wishId);
+                if (wishToEdit is null)
                 {
-                    throw new NotSupportedException($"Can't find wish {wishId} to clone");
+                    throw new NotSupportedException($"Can't find wish {wishId} to edit");
                 }
 
                 if (user.Wishes.Count(w => w.WishId == wishId) > 1)
@@ -52,43 +52,12 @@ public class EditWishMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(l
                     throw new NotSupportedException($"There are more than one wish with id {wishId}");
                 }
 
-                Logger.Debug("WishToClone ID={wishToClone}", wishToClone.WishId);
+                Logger.Debug("WishToEdit ID={wishToEdit}", wishToEdit.WishId);
 
-                using (var transaction = userContext.Database.BeginTransaction())
-                {
-                    try
-                    {
-                        var wishClone = new WishDraftModel()
-                        {
-                            OriginalId = wishToClone.WishId,
-                            ClaimerId = wishToClone.ClaimerId,
-                            OwnerId = wishToClone.OwnerId,
-                            Name = wishToClone.Name,
-                            Description = wishToClone.Description,
-                            FileId = wishToClone.FileId,
-                            PriceRange = wishToClone.PriceRange,
-                        };
+                var draft = WishDraftModel.FromWish(wishToEdit);
 
-                        foreach (var link in wishToClone.Links)
-                        {
-                            var linkClone = new LinkModel()
-                            {
-                                Url = link.Url,
-                            };
-
-                            wishClone.Links.Add(linkClone);
-                        }
-
-                        userContext.WishDrafts.Add(wishClone);
-                        userContext.SaveChanges();
-                        transaction.Commit();
-                    }
-                    catch
-                    {
-                        transaction.Rollback();
-                        throw;
-                    }
-                }
+                userContext.WishDrafts.Add(draft);
+                userContext.SaveChanges();
             }
 
             Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.SetWishTo, wishId));
