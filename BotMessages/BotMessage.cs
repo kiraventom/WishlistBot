@@ -1,7 +1,6 @@
 using Serilog;
 using System.Reflection;
 using WishlistBot.Keyboard;
-using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 using WishlistBot.Model;
@@ -33,10 +32,7 @@ public abstract class BotMessage(ILogger logger)
 
       var allowedTypes = GetAllowedTypes();
 
-      Logger.Debug($"unfiltered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
-      Logger.Debug($"allowed types for {GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
       FilterParameters(parameters, allowedTypes);
-      Logger.Debug($"filtered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
 
       if (parameters.Pop(QueryParameterType.ForceNewMessage))
          ForceNewMessage = true;
@@ -52,40 +48,7 @@ public abstract class BotMessage(ILogger logger)
       _isInited = true;
    }
 
-   public async Task Legacy_Init(BotUser user)
-   {
-      if (_isInited)
-         return;
-
-      if (!QueryParameterCollection.TryParse(user.QueryParams, out var parameters))
-         parameters = new QueryParameterCollection();
-
-      user.BotState = BotState.Default;
-
-      var allowedTypes = GetAllowedTypes();
-
-      Logger.Debug($"unfiltered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
-      Logger.Debug($"allowed types for {GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
-      FilterParameters(parameters, allowedTypes);
-      Logger.Debug($"filtered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
-
-      if (parameters.Pop(QueryParameterType.ForceNewMessage))
-         ForceNewMessage = true;
-
-      Keyboard.InitCommonParameters(parameters);
-
-      await Legacy_InitInternal(user, parameters);
-
-      // Parameters can change during message initialization
-      user.QueryParams = parameters.ToString();
-      user.AllowedQueries = string.Join(';', Keyboard.EnumerateQueries());
-
-      _isInited = true;
-   }
-
-   /* protected abstract Task InitInternal(UserContext userContext, UserModel userModel, QueryParameterCollection parameters); */
    protected abstract Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters);
-   protected abstract Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters);
 
    private static void FilterParameters(QueryParameterCollection parameters, IReadOnlyCollection<QueryParameterType> allowedTypes)
    {

@@ -1,7 +1,6 @@
 using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Notification;
-using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +9,6 @@ namespace WishlistBot.BotMessages.Notification;
 
 public class NewWishNotificationMessage : BotMessage, INotificationMessage
 {
-    private readonly BotUser _notificationSource;
-    private readonly Wish _newWish;
-
     private readonly int _notificationSourceId;
     private readonly int _newWishId;
 
@@ -26,12 +22,6 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
     {
         _notificationSourceId = notificationModel.SourceId;
         _newWishId = notificationModel.SubjectId.Value;
-    }
-
-    public NewWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish newWish) : base(logger)
-    {
-        _notificationSource = notificationSource;
-        _newWish = newWish;
     }
 
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -54,28 +44,6 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
            .InlineMention(notificationSource)
            .Italic(" добавил новый виш '")
            .ItalicBold(newWish.Name)
-           .Italic("'!");
-
-        return Task.CompletedTask;
-    }
-
-    protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
-    {
-        var wishIndex = _notificationSource.Wishes.IndexOf(_newWish);
-        var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
-
-        Keyboard
-           .AddButton<ShowWishQuery>("Перейти к вишу",
-                                     new QueryParameter(QueryParameterType.SetUserTo, _notificationSource.SenderId),
-                                     new QueryParameter(QueryParameterType.SetWishTo, _newWish.Id),
-                                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
-           .NewRow()
-           .AddButton<MainMenuQuery>("В главное меню");
-
-        Text
-           .InlineMention(_notificationSource)
-           .Italic(" добавил новый виш '")
-           .ItalicBold(_newWish.Name)
            .Italic("'!");
 
         return Task.CompletedTask;

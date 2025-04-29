@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using WishlistBot.Database.Users;
+using WishlistBot.Model;
 
 namespace WishlistBot.Text;
 

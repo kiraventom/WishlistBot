@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace WishlistBot.Migrations.MediaStorage
+namespace WishlistBot.Migrations
 {
     /// <inheritdoc />
     public partial class Initial : Migration
@@ -23,6 +23,12 @@ namespace WishlistBot.Migrations.MediaStorage
                 {
                     table.PrimaryKey("PK_StoredMedia", x => x.MediaItemId);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoredMedia_FileId_MessageId",
+                table: "StoredMedia",
+                columns: new[] { "FileId", "MessageId" },
+                unique: true);
         }
 
         /// <inheritdoc />

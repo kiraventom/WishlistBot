@@ -1,7 +1,6 @@
 using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
-using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace WishlistBot.BotMessages.Subscription;
 
 [AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ReadOnly)]
-public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
+public class MySubscribersMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
@@ -31,30 +30,6 @@ public class MySubscribersMessage(ILogger logger, UsersDb usersDb) : UserBotMess
                     QueryParameter.ReadOnly,
                     new QueryParameter(QueryParameterType.SetUserTo, subscriber.UserId),
                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
-        });
-
-        return Task.CompletedTask;
-    }
-
-    protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
-    {
-        var subscribers = Users
-           .Where(u => u.Subscriptions.Contains(user.SubscribeId))
-           .ToList();
-
-        var totalCount = subscribers.Count;
-
-        Text.Bold(totalCount == 0 ? "У вас пока нет подписчиков :(" : "Ваши подписчики:");
-
-        ListMessageUtils.AddListControls<MySubscribersQuery, MainMenuQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
-        {
-            var subscriber = subscribers[itemIndex];
-
-            Keyboard.AddButton<SubscriberQuery>(
-             subscriber.FirstName,
-             QueryParameter.ReadOnly,
-             new QueryParameter(QueryParameterType.SetUserTo, subscriber.SenderId),
-             new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
         });
 
         return Task.CompletedTask;

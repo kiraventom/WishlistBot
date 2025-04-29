@@ -1,6 +1,5 @@
 using Serilog;
 using Telegram.Bot;
-using WishlistBot.Database.Users;
 using WishlistBot.BotMessages;
 using WishlistBot.Jobs;
 using WishlistBot.Model;
@@ -15,18 +14,16 @@ public class NotificationService
 
     private ILogger _logger;
     private ITelegramBotClient _client;
-    private UsersDb _usersDb;
 
     public static NotificationService Instance { get; } = new();
 
-    public void Init(ILogger logger, ITelegramBotClient client, UsersDb usersDb)
+    public void Init(ILogger logger, ITelegramBotClient client)
     {
         if (_inited)
             return;
 
         _logger = logger;
         _client = client;
-        _usersDb = usersDb;
 
         _inited = true;
     }
@@ -50,29 +47,11 @@ public class NotificationService
         return Task.CompletedTask;
     }
 
-    public Task Legacy_SendToSubscribers(BotMessage notification, BotUser notificationSource)
-    {
-        if (!notificationSource.Settings.SendNotifications)
-            return Task.CompletedTask;
-
-        var recipients = _usersDb.Values.Values
-           .Where(u => u.Subscriptions.Contains(notificationSource.SubscribeId));
-
-        JobManager.Instance.Legacy_StartJob($"Notification from {notificationSource.FirstName}", notification, recipients, TimeSpan.FromSeconds(1), Legacy_SendToSubscriber);
-        return Task.CompletedTask;
-    }
-
     public async Task SendToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
     {
         var notificationRecepient = userContext.Users.Include(u => u.Settings).First(u => u.UserId == notificationRecepientId);
         if (notificationRecepient.Settings.ReceiveNotifications)
             await _client.SendOrEditBotMessage(_logger, userContext, notificationRecepientId, notification, forceNewMessage: true);
-    }
-
-    public async Task Legacy_SendToUser(BotMessage notification, BotUser notificationRecepient)
-    {
-        if (notificationRecepient.Settings.ReceiveNotifications)
-            await _client.Legacy_SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
     }
 
     public async Task<int> BroadcastToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
@@ -82,16 +61,12 @@ public class NotificationService
         return message.MessageId;
     }
 
-    public async Task<int> Legacy_BroadcastToUser(BotMessage notification, BotUser notificationRecepient)
-    {
-        var message = await _client.Legacy_SendOrEditBotMessage(_logger, notificationRecepient, notification, forceNewMessage: true);
-        return message.MessageId;
-    }
-
     private async Task SendToSubscriber(ILogger logger, ITelegramBotClient client, UserContext userContext, int userId, int notificationId)
     {
         var recepient = userContext.Users.Include(c => c.Settings).FirstOrDefault(u => u.UserId == userId);
         var notification = userContext.Notifications.First(n => n.NotificationId == notificationId);
+
+        // TODO: NotificationFactory.cs?
         BotMessage botMessage = notification.Type switch
         {
             NotificationMessageType.NewSubscriber => new NewSubscriberNotificationMessage(logger, notification),
@@ -103,11 +78,5 @@ public class NotificationService
 
         if (recepient.Settings.ReceiveNotifications)
             await _client.SendOrEditBotMessage(_logger, userContext, userId, botMessage, forceNewMessage: true);
-    }
-
-    private async Task Legacy_SendToSubscriber(ILogger logger, ITelegramBotClient client, UsersDb usersDb, BotUser recipient, BotMessage notification)
-    {
-        if (recipient.Settings.ReceiveNotifications)
-            await _client.Legacy_SendOrEditBotMessage(_logger, recipient, notification, forceNewMessage: true);
     }
 }

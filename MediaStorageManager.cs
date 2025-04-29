@@ -1,91 +1,98 @@
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using WishlistBot.Database.MediaStorage;
-using WishlistBot.Database.Users;
+using WishlistBot.Model;
 
 namespace WishlistBot;
 
 public class MediaStorageManager
 {
-   private bool _inited;
+    private bool _inited;
 
-   private ILogger _logger;
-   private long _storageChannelId;
-   private ITelegramBotClient _client;
-   private MediaStorageDb _database;
+    private ILogger _logger;
+    private long _storageChannelId;
+    private ITelegramBotClient _client;
 
-   public static MediaStorageManager Instance { get; } = new();
+    public static MediaStorageManager Instance { get; } = new();
 
-   public void Init(ILogger logger, ITelegramBotClient client, MediaStorageDb mediaStorageDb, long storageChannelId)
-   {
-      if (_inited)
-         return;
+    public void Init(ILogger logger, ITelegramBotClient client, long storageChannelId)
+    {
+        if (_inited)
+            return;
 
-      _logger = logger;
+        _logger = logger;
 
-      _storageChannelId = storageChannelId;
-      _client = client;
-      _database = mediaStorageDb;
-      _inited = true;
-   }
+        _storageChannelId = storageChannelId;
+        _client = client;
+        _inited = true;
+    }
 
-   public async Task Store(string fileId)
-   {
-      if (_database.Values.ContainsKey(fileId))
-         return;
+    public async Task Store(string fileId)
+    {
+        using (var storageContext = MediaStorageContext.Create())
+        {
+            if (storageContext.StoredMedia.Any(m => m.FileId == fileId))
+                return;
 
-      var photo = InputFile.FromFileId(fileId);
-      var message = await _client.SendPhoto(chatId: _storageChannelId, photo: photo);
-      _database.Add(fileId, message.MessageId);
-      _logger.Debug("Stored media '{fileId}' as message id '{messageId}'", fileId, message.MessageId);
-   }
+            var photo = InputFile.FromFileId(fileId);
+            var message = await _client.SendPhoto(chatId: _storageChannelId, photo: photo);
+            storageContext.StoredMedia.Add(new MediaItemModel() { FileId = fileId, MessageId = message.MessageId });
+            _logger.Debug("Stored media '{fileId}' as message id '{messageId}'", fileId, message.MessageId);
 
-   public Task Cleanup(UsersDb usersDb)
-   {
-      // TODO TEMP, support broadcasts
-      return Task.CompletedTask;
-      /* _logger.Debug("Media storage cleanup started"); */
+            storageContext.SaveChanges();
+        }
+    }
 
-      /* var storedFileIds = _database.Values.Keys; */
-      /* var wishesFileIds = usersDb.Values.Values */
-      /*    .SelectMany(u => u.Wishes) */
-      /*    .Select(w => w.FileId) */
-      /*    .Where(i => i != null); */
+    public Task Cleanup()
+    {
+        // TODO TEMP, support broadcasts
+        return Task.CompletedTask;
+        /* _logger.Debug("Media storage cleanup started"); */
 
-      /* var currentWishesFileIds = usersDb.Values.Values */
-      /*    .Select(u => u.CurrentWish) */
-      /*    .Where(w => w != null) */
-      /*    .Select(w => w.FileId) */
-      /*    .Where(i => i != null); */
+        /* var storedFileIds = _database.Values.Keys; */
+        /* var wishesFileIds = usersDb.Values.Values */
+        /*    .SelectMany(u => u.Wishes) */
+        /*    .Select(w => w.FileId) */
+        /*    .Where(i => i != null); */
 
-      /* var usedFileIds = wishesFileIds.Concat(currentWishesFileIds); */
-      /* var unusedFileIds = storedFileIds.Except(usedFileIds); */
+        /* var currentWishesFileIds = usersDb.Values.Values */
+        /*    .Select(u => u.CurrentWish) */
+        /*    .Where(w => w != null) */
+        /*    .Select(w => w.FileId) */
+        /*    .Where(i => i != null); */
 
-      /* var count = 0; */
-      /* foreach (var unusedFileId in unusedFileIds) */
-      /* { */
-      /*    ++count; */
-      /*    await Remove(unusedFileId); */
-      /* } */
+        /* var usedFileIds = wishesFileIds.Concat(currentWishesFileIds); */
+        /* var unusedFileIds = storedFileIds.Except(usedFileIds); */
 
-      /* _logger.Debug("Media storage cleanup removed {count} obsolete entities", count); */
-   }
+        /* var count = 0; */
+        /* foreach (var unusedFileId in unusedFileIds) */
+        /* { */
+        /*    ++count; */
+        /*    await Remove(unusedFileId); */
+        /* } */
 
-   private async Task Remove(string fileId)
-   {
-      if (!_database.Values.TryGetValue(fileId, out var messageId))
-         return;
+        /* _logger.Debug("Media storage cleanup removed {count} obsolete entities", count); */
+    }
 
-      try
-      {
-         await _client.DeleteMessage(chatId: _storageChannelId, messageId: messageId);
-      }
-      catch (Exception e)
-      {
-         _logger.Error("Failed to delete media storage message [{messageId}], exception: {exception}", messageId, e.ToString());
-      }
+    private async Task Remove(string fileId)
+    {
+        using (var storageContext = MediaStorageContext.Create())
+        {
+            var mediaItem = storageContext.StoredMedia.FirstOrDefault(i => i.FileId == fileId);
+            if (mediaItem is null)
+                return;
 
-      _database.Remove(fileId);
-   }
+            try
+            {
+                await _client.DeleteMessage(chatId: _storageChannelId, messageId: mediaItem.MessageId);
+            }
+            catch (Exception e)
+            {
+                _logger.Error("Failed to delete media storage message [{messageId}], exception: {exception}", mediaItem.MessageId, e.ToString());
+            }
+
+            storageContext.StoredMedia.Remove(mediaItem);
+            storageContext.SaveChanges();
+        }
+    }
 }

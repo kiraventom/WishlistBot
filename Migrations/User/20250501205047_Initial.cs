@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace WishlistBot.Migrations
+namespace WishlistBot.Migrations.User
 {
     /// <inheritdoc />
     public partial class Initial : Migration

@@ -1,6 +1,5 @@
 using Serilog;
 using Telegram.Bot;
-using WishlistBot.Database.Users;
 using WishlistBot.Model;
 
 namespace WishlistBot.Jobs;
@@ -102,40 +101,6 @@ public abstract class Job
     }
 
     protected abstract Task StartInternal(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId);
-
-    public void Cancel() => _cts.Cancel();
-
-    public void Dispose() => _cts.Dispose();
-}
-
-public class Legacy_Job<TItem, TObject>(TObject linkedObject, string name, IEnumerable<TItem> items, TimeSpan interval, Legacy_JobActionDelegate<TItem, TObject> action) : Legacy_IJob
-{
-    private readonly CancellationTokenSource _cts = new();
-    private bool _started;
-
-    object Legacy_IJob.LinkedObject => linkedObject;
-    string Legacy_IJob.Name => name;
-
-    public event Action<Legacy_IJob, TaskStatus> Finished;
-
-    public void Start(ILogger logger, ITelegramBotClient client, UsersDb usersDb)
-    {
-        if (_started)
-            throw new NotSupportedException("Attemt to start job twice");
-
-        _started = true;
-
-        Task.Run(async () =>
-           {
-               foreach (var item in items)
-               {
-                   _cts.Token.ThrowIfCancellationRequested();
-                   await Task.Delay(interval);
-                   await action.Invoke(logger, client, usersDb, item, linkedObject);
-               }
-           }, _cts.Token)
-           .ContinueWith(t => Finished?.Invoke(this, t.Status));
-    }
 
     public void Cancel() => _cts.Cancel();
 

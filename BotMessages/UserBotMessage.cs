@@ -1,25 +1,10 @@
 using Serilog;
-using WishlistBot.Database;
-using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages;
 
 [AllowedTypes(QueryParameterType.SetUserTo)]
-public abstract class UserBotMessage(ILogger logger, UsersDb usersDb) : BotMessage(logger)
+public abstract class UserBotMessage(ILogger logger) : BotMessage(logger)
 {
-   protected IEnumerable<BotUser> Users => usersDb.Values.Values;
-
-   protected BotUser Legacy_GetUser(BotUser sender, QueryParameterCollection parameters)
-   {
-      parameters.Peek(QueryParameterType.SetUserTo, out var userId);
-      return usersDb.Values.GetValueOrDefault(userId, sender);
-   }
-
-   protected long GenerateWishId()
-   {
-      var ids = Users.SelectMany(u => u.Wishes).Select(w => w.Id).ToList();
-      return DatabaseUtils.GenerateId(ids);
-   }
 }
 

@@ -8,10 +8,10 @@ using WishlistBot.Model;
 
 #nullable disable
 
-namespace WishlistBot.Migrations
+namespace WishlistBot.Migrations.User
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20250429224028_Initial")]
+    [Migration("20250501205047_Initial")]
     partial class Initial
     {
         /// <inheritdoc />

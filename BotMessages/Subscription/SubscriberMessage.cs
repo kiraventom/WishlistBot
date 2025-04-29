@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using WishlistBot.Database.Users;
 using WishlistBot.Model;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
@@ -9,7 +8,7 @@ using WishlistBot.QueryParameters;
 namespace WishlistBot.BotMessages.Subscription;
 
 [ChildMessage(typeof(MySubscribersMessage))]
-public class SubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
+public class SubscriberMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
@@ -48,46 +47,6 @@ public class SubscriberMessage(ILogger logger, UsersDb usersDb) : UserBotMessage
            .LineBreak()
            .Bold("Вишей в вишлисте: ")
            .Monospace(target.Wishes.Count.ToString());
-
-        return Task.CompletedTask;
-    }
-
-    protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
-    {
-        var sender = user;
-
-        user = Legacy_GetUser(user, parameters);
-
-        var isSenderSubscribed = sender.Subscriptions.Contains(user.SubscribeId);
-
-        if (isSenderSubscribed)
-        {
-            Keyboard.AddButton<ConfirmUnsubscribeQuery>("Отписаться");
-        }
-        else
-        {
-            Keyboard.AddButton<FinishSubscriptionQuery>("Подписаться");
-        }
-
-        Keyboard.AddButton<ConfirmDeleteSubscriberQuery>();
-
-        if (user.Wishes.Count != 0)
-        {
-            Keyboard
-               .NewRow()
-               .AddButton<CompactListQuery>("Открыть вишлист", QueryParameter.ReturnToSubscriber);
-        }
-
-        Keyboard
-           .NewRow()
-           .AddButton<MySubscribersQuery>("К моим подписчикам");
-
-        Text.Bold("Подписчик ")
-           .InlineMention(user)
-           .Bold(":")
-           .LineBreak()
-           .Bold("Вишей в вишлисте: ")
-           .Monospace(user.Wishes.Count.ToString());
 
         return Task.CompletedTask;
     }

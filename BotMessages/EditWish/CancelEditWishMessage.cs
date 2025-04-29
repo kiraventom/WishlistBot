@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using WishlistBot.Database.Users;
 using WishlistBot.Model;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
@@ -33,26 +32,6 @@ public class CancelEditWishMessage(ILogger logger) : BotMessage(logger)
             userContext.WishDrafts.Remove(user.CurrentWish);
             user.CurrentWish = null;
         }
-
-        return Task.CompletedTask;
-    }
-
-    protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
-    {
-        if (parameters.Pop(QueryParameterType.ReturnToFullList))
-        {
-            Text.Italic("Редактирование виша отменено");
-            Keyboard.AddButton<FullListQuery>("Назад к списку");
-        }
-        else
-        {
-            Text.Italic("Создание виша отменено");
-            Keyboard.AddButton<SetWishNameQuery>("Добавить другой виш")
-               .NewRow()
-               .AddButton<CompactListQuery>("Назад к моим вишам");
-        }
-
-        user.CurrentWish = null;
 
         return Task.CompletedTask;
     }

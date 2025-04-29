@@ -2,7 +2,6 @@ using Serilog;
 using WishlistBot.Notification;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
-using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
 
@@ -10,17 +9,8 @@ namespace WishlistBot.BotMessages.Notification;
 
 public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
 {
-    private readonly BotUser _notificationSource;
-    private readonly Wish _oldWish;
-
     private readonly int _notificationSourceId;
     private readonly string _oldWishName;
-
-    public DeleteWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish oldWish) : base(logger)
-    {
-        _notificationSource = notificationSource;
-        _oldWish = oldWish;
-    }
 
     public DeleteWishNotificationMessage(ILogger logger, int notificationSourceId, string oldWishName) : base(logger)
     {
@@ -50,24 +40,6 @@ public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
             .Italic(" удалил виш '")
             .ItalicBold(_oldWishName)
             .Italic("'!");
-
-        return Task.CompletedTask;
-    }
-
-    protected override Task Legacy_InitInternal(BotUser user, QueryParameterCollection parameters)
-    {
-        Keyboard
-           .AddButton<SubscriptionQuery>("Перейти к подписке",
-                                         QueryParameter.ReadOnly,
-                                         new QueryParameter(QueryParameterType.SetUserTo, _notificationSource.SenderId))
-           .NewRow()
-           .AddButton<MainMenuQuery>("В главное меню");
-
-        Text
-           .InlineMention(_notificationSource)
-           .Italic(" удалил виш '")
-           .ItalicBold(_oldWish.Name)
-           .Italic("'!");
 
         return Task.CompletedTask;
     }

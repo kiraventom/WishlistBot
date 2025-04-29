@@ -1,5 +1,4 @@
 using System.Text;
-using WishlistBot.Database.Users;
 using WishlistBot.Model;
 
 namespace WishlistBot.Text;
@@ -107,13 +106,6 @@ public class MessageText
       return string.IsNullOrEmpty(userModel.Tag)
          ? InlineMention(userModel.FirstName, userModel.TelegramId)
          : InlineMention(userModel.FirstName, userModel.Tag);
-   }
-
-   public MessageText InlineMention(BotUser user)
-   {
-      return string.IsNullOrEmpty(user.Tag)
-         ? InlineMention(user.FirstName, user.SenderId)
-         : InlineMention(user.FirstName, user.Tag);
    }
 
    public MessageText InlineMention(string text, string tag)

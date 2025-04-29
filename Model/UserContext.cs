@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using WishlistBot.Database.Users;
+
 using WishlistBot.Notification;
 using WishlistBot.QueryParameters;
 

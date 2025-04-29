@@ -4,7 +4,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.ReplyMarkups;
-using WishlistBot.Database.Users;
 using WishlistBot.Actions;
 using WishlistBot.Listeners;
 using WishlistBot.Text;
@@ -12,7 +11,7 @@ using WishlistBot.Model;
 
 namespace WishlistBot;
 
-public class TelegramController(ILogger logger, ITelegramBotClient client, UsersDb usersDb, IReadOnlyCollection<UserAction> actions, IReadOnlyCollection<IListener> listeners)
+public class TelegramController(ILogger logger, ITelegramBotClient client, IReadOnlyCollection<UserAction> actions, IReadOnlyCollection<IListener> listeners)
 {
     private bool _started;
 
@@ -39,38 +38,25 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
     {
         logger.Information("Received update: {updateType}", update.Type);
 
-        const bool legacy = false;
-        if (legacy)
+        using (var userContext = UserContext.Create())
         {
-            if (update.Message is { } message)
-                await Legacy_HandleMessageAsync(message);
-
-            if (update.CallbackQuery is { } callbackQuery)
-                await Legacy_HandleCallbackQueryAsync(callbackQuery, client);
-        }
-        else
-        {
-            using (var userContext = UserContext.Create())
+            using (var transaction = userContext.Database.BeginTransaction())
             {
-                // TODO 
-                /* using (var transaction = userContext.Database.BeginTransaction()) */
+                try
                 {
-                    try
-                    {
-                        if (update.Message is { } message)
-                            await HandleMessageAsync(message, userContext);
+                    if (update.Message is { } message)
+                        await HandleMessageAsync(message, userContext);
 
-                        if (update.CallbackQuery is { } callbackQuery)
-                            await HandleCallbackQueryAsync(callbackQuery, client, userContext);
+                    if (update.CallbackQuery is { } callbackQuery)
+                        await HandleCallbackQueryAsync(callbackQuery, client, userContext);
 
-                        userContext.SaveChanges();
-                        /* transaction.Commit(); */
-                    }
-                    catch (Exception e)
-                    {
-                        /* transaction.Rollback(); */
-                        logger.Error(e.ToString());
-                    }
+                    userContext.SaveChanges();
+                    transaction.Commit();
+                }
+                catch (Exception e)
+                {
+                    transaction.Rollback();
+                    logger.Error(e.ToString());
                 }
             }
         }
@@ -95,61 +81,6 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
         {
             await HandleBotCommandAsync(userContext, user, botCommand, message.Text);
         }
-    }
-
-    private async Task Legacy_HandleMessageAsync(Message message)
-    {
-        var sender = message.From!;
-
-        logger.Information("Received '{text}' ([{messageId}]) from '{first} {last}' (@{tag} [{id}])", message.Text, message.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
-
-        var user = usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
-
-        foreach (var listener in listeners)
-        {
-            if (await listener.Legacy_HandleMessageAsync(message, user))
-                return;
-        }
-
-        var botCommand = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);
-        if (botCommand is not null)
-        {
-            await Legacy_HandleBotCommandAsync(botCommand, message.Text, user);
-        }
-    }
-
-    private async Task Legacy_HandleCallbackQueryAsync(CallbackQuery callbackQuery, ITelegramBotClient client)
-    {
-        var sender = callbackQuery.From!;
-
-        logger.Information("Received callback query ([{callbackQueryId}]) with data '{data}' on message [{messageId}] from '{first} {last}' (@{tag} [{id}])", callbackQuery.Id, callbackQuery.Data, callbackQuery.Message?.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
-
-        var user = usersDb.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
-
-        if (callbackQuery.Message is null || callbackQuery.Message.MessageId != user.LastBotMessageId)
-        {
-            await Legacy_HandleOldMessageQuery(callbackQuery, client, user);
-            return;
-        }
-
-        if (callbackQuery.Data is null)
-        {
-            logger.Warning("Callback query [{callbackQueryId}] does not contain data", callbackQuery.Id);
-            return;
-        }
-
-        if (!string.IsNullOrEmpty(user.AllowedQueries))
-        {
-            var allowedQueries = user.AllowedQueries.Split(';');
-            if (!allowedQueries.Contains(callbackQuery.Data))
-            {
-                logger.Warning("Unexpected query [{queryId}] '{query}', allowed queries: '{allowed}'", callbackQuery.Id, callbackQuery.Data, user.AllowedQueries);
-                return;
-            }
-        }
-
-        user.LastQueryId = callbackQuery.Id;
-        await Legacy_HandleUserActionAsync(callbackQuery.Data, callbackQuery.Data, user);
     }
 
     private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, ITelegramBotClient client, UserContext userContext)
@@ -214,44 +145,10 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
         await client.AnswerCallbackQuery(callbackQuery.Id);
     }
 
-    private async Task Legacy_HandleOldMessageQuery(CallbackQuery callbackQuery, ITelegramBotClient client, BotUser user)
-    {
-        logger.Warning("Query from old message [{oldMessageId}] (last message id [{lastMessageId}]. Editing to placeholder and returning", callbackQuery.Message?.MessageId, user.LastBotMessageId);
-
-        const string text = "Управление из старых сообщений не поддерживается. \nИспользуйте последнее сообщение или отправьте команду /start";
-        var messageText = new MessageText(text);
-        const string placeholderImageFileId = "AgACAgIAAxkBAAII32e_pW96dETJX11gzLRzXIJhyoDQAAKk8zEbHCn5SThcc9XkHwp6AQADAgADcwADNgQ";
-
-        var photo = new InputMediaPhoto(InputFile.FromFileId(placeholderImageFileId));
-
-        var keyboardMarkup = new InlineKeyboardMarkup() { InlineKeyboard = Enumerable.Empty<IEnumerable<InlineKeyboardButton>>() };
-
-        if (callbackQuery.Message is not null)
-        {
-            await client.EditMessageMedia(chatId: user.SenderId, messageId: callbackQuery.Message.MessageId, media: photo, replyMarkup: keyboardMarkup);
-            await client.EditMessageCaption(chatId: user.SenderId, messageId: callbackQuery.Message.MessageId, caption: messageText.ToString(), replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
-        }
-        else
-        {
-            logger.Warning("CallbackQuery.Message is null!");
-            var file = InputFile.FromFileId(placeholderImageFileId);
-            var message = await client.SendPhoto(chatId: user.SenderId, photo: file, caption: messageText.ToString(), replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
-            user.LastBotMessageId = message.MessageId;
-        }
-
-        await client.AnswerCallbackQuery(callbackQuery.Id);
-    }
-
     private async Task HandleBotCommandAsync(UserContext userContext, UserModel userModel, MessageEntity botCommand, string messageText)
     {
         var commandText = messageText.Substring(botCommand.Offset, botCommand.Length);
         await HandleUserActionAsync(userContext, userModel, commandText, messageText);
-    }
-
-    private async Task Legacy_HandleBotCommandAsync(MessageEntity botCommand, string messageText, BotUser user)
-    {
-        var commandText = messageText.Substring(botCommand.Offset, botCommand.Length);
-        await Legacy_HandleUserActionAsync(commandText, messageText, user);
     }
 
     private async Task HandleUserActionAsync(UserContext userContext, UserModel userModel, string actionText, string fullText)
@@ -264,18 +161,6 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, Users
         }
 
         await action.ExecuteAsync(userContext, userModel, fullText);
-    }
-
-    private async Task Legacy_HandleUserActionAsync(string actionText, string fullText, BotUser user)
-    {
-        var action = actions.FirstOrDefault(c => c.IsMatch(actionText));
-        if (action is null)
-        {
-            logger.Warning("Action '{actionText}' does not match any of actions: [ {actions} ]", actionText, string.Join(", ", actions.Select(c => c.Name)));
-            return;
-        }
-
-        await action.Legacy_ExecuteAsync(user, fullText);
     }
 
     private static Task OnError(ITelegramBotClient client, Exception exception, CancellationToken ct) => Task.CompletedTask;

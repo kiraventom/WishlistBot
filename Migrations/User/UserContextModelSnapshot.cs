@@ -7,7 +7,7 @@ using WishlistBot.Model;
 
 #nullable disable
 
-namespace WishlistBot.Migrations
+namespace WishlistBot.Migrations.User
 {
     [DbContext(typeof(UserContext))]
     partial class UserContextModelSnapshot : ModelSnapshot

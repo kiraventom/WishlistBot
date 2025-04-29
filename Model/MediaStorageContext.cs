@@ -18,6 +18,11 @@ public class MediaStorageContext : DbContext
 
         return new MediaStorageContext(builder.Options);
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MediaItemModel>().HasIndex(e => new { e.FileId, e.MessageId }).IsUnique();
+    }
 }
 
 public class MediaItemModel
