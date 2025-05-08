@@ -1,4 +1,4 @@
-namespace WishlistBot.Database.Users;
+namespace WishlistBot.Model;
 
 public enum BotState
 {

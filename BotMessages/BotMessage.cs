@@ -1,9 +1,9 @@
 using Serilog;
 using System.Reflection;
 using WishlistBot.Keyboard;
-using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
+using WishlistBot.Model;
 
 namespace WishlistBot.BotMessages;
 
@@ -20,7 +20,7 @@ public abstract class BotMessage(ILogger logger)
 
    public bool ForceNewMessage { get; private set; }
 
-   public async Task Init(BotUser user)
+   public async Task Init(UserContext userContext, UserModel user)
    {
       if (_isInited)
          return;
@@ -32,17 +32,14 @@ public abstract class BotMessage(ILogger logger)
 
       var allowedTypes = GetAllowedTypes();
 
-      Logger.Debug($"unfiltered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
-      Logger.Debug($"allowed types for {GetType().Name}: {string.Join(", ", allowedTypes.Select(t => t.ToString()))}");
       FilterParameters(parameters, allowedTypes);
-      Logger.Debug($"filtered parameters: {string.Join(", ", parameters.Select(p => p.Type.ToString()))}");
 
       if (parameters.Pop(QueryParameterType.ForceNewMessage))
          ForceNewMessage = true;
 
       Keyboard.InitCommonParameters(parameters);
 
-      await InitInternal(user, parameters);
+      await InitInternal(userContext, user.UserId, parameters);
 
       // Parameters can change during message initialization
       user.QueryParams = parameters.ToString();
@@ -51,7 +48,7 @@ public abstract class BotMessage(ILogger logger)
       _isInited = true;
    }
 
-   protected abstract Task InitInternal(BotUser user, QueryParameterCollection parameters);
+   protected abstract Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters);
 
    private static void FilterParameters(QueryParameterCollection parameters, IReadOnlyCollection<QueryParameterType> allowedTypes)
    {

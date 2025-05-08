@@ -1,70 +1,85 @@
 using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
-using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
 [AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.ReadOnly, QueryParameterType.SetListPageTo)]
 [ChildMessage(typeof(CompactListMessage))]
-public class FullListMessage(ILogger logger, UsersDb usersDb) : UserBotMessage(logger, usersDb)
+public class FullListMessage(ILogger logger) : UserBotMessage(logger)
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
-   {
-      var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
-      user = GetUser(user, parameters);
+    protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
+    {
+        var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 
-      var totalCount = user.Wishes.Count;
+        var users = userContext.Users.Include(u => u.Wishes).AsNoTracking();
 
-      ListMessageUtils.AddListControls<FullListQuery, CompactListQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
-      {
-         if (isReadOnly)
-            AddShowWishButton(user, itemIndex, pageIndex);
-         else
-            AddEditWishButton(user, itemIndex, pageIndex);
-      });
+        parameters.Peek(QueryParameterType.SetUserTo, out var targetUserId);
+        var targetUser = userContext.Users
+            .Include(u => u.Wishes)
+            .AsNoTracking()
+            .FirstOrDefault(u => u.UserId == targetUserId);
 
-      if (totalCount == 0)
-      {
-         Text.Bold("Список пуст");
-         return Task.CompletedTask;
-      }
+        if (targetUser is null)
+        {
+            var sender = users.First(u => u.UserId == userId);
+            targetUser = sender;
+        }
 
-      if (isReadOnly)
-         Text.Bold("Виши ").InlineMention(user).Bold(":");
-      else
-         Text.Bold("Ваши виши:");
+        var totalCount = targetUser.Wishes.Count;
+        var sortedWishes = targetUser.GetSortedWishes();
 
-      return Task.CompletedTask;
-   }
+        ListMessageUtils.AddListControls<FullListQuery, CompactListQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+        {
+            if (isReadOnly)
+                AddShowWishButton(sortedWishes, itemIndex, pageIndex);
+            else
+                AddEditWishButton(sortedWishes, itemIndex, pageIndex);
+        });
 
-   private void AddShowWishButton(BotUser user, int itemIndex, int pageIndex)
-   {
-      var wish = user.Wishes[itemIndex];
+        if (totalCount == 0)
+        {
+            Text.Bold("Список пуст");
+            return Task.CompletedTask;
+        }
 
-      const string eyeEmoji = "\U0001f441\ufe0f ";
+        if (isReadOnly)
+            Text.Bold("Виши ").InlineMention(targetUser).Bold(":");
+        else
+            Text.Bold("Ваши виши:");
 
-      var isClaimed = wish.ClaimerId != 0;
-      var claimedText = isClaimed ? "[БРОНЬ] " : string.Empty;
+        return Task.CompletedTask;
+    }
 
-      Keyboard.AddButton<ShowWishQuery>(
-         claimedText + eyeEmoji + wish.Name,
-         new QueryParameter(QueryParameterType.SetWishTo, wish.Id),
-         new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
-         QueryParameter.ReturnToFullList);
-   }
+    private void AddShowWishButton(IReadOnlyList<WishModel> sortedWishes, int itemIndex, int pageIndex)
+    {
+        var wish = sortedWishes[itemIndex];
 
-   private void AddEditWishButton(BotUser user, int itemIndex, int pageIndex)
-   {
-      var wish = user.Wishes[itemIndex];
+        const string eyeEmoji = "\U0001f441\ufe0f ";
 
-      const string pencilEmoji = "\u270f\ufe0f ";
+        var isClaimed = wish.ClaimerId is not null;
+        var claimedText = isClaimed ? "[БРОНЬ] " : string.Empty;
 
-      Keyboard.AddButton<EditWishQuery>(
-         pencilEmoji + wish.Name,
-         new QueryParameter(QueryParameterType.SetWishTo, wish.Id),
-         new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
-         QueryParameter.ReturnToFullList);
-   }
+        Keyboard.AddButton<ShowWishQuery>(
+           claimedText + eyeEmoji + wish.Name,
+           new QueryParameter(QueryParameterType.SetWishTo, wish.WishId),
+           new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
+           QueryParameter.ReturnToFullList);
+    }
+
+    private void AddEditWishButton(IReadOnlyList<WishModel> sortedWishes, int itemIndex, int pageIndex)
+    {
+        var wish = sortedWishes[itemIndex];
+
+        const string pencilEmoji = "\u270f\ufe0f ";
+
+        Keyboard.AddButton<EditWishQuery>(
+           pencilEmoji + wish.Name,
+           new QueryParameter(QueryParameterType.SetWishTo, wish.WishId),
+           new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
+           QueryParameter.ReturnToFullList);
+    }
 }

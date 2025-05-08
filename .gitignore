@@ -1,6 +1,7 @@
 bin
 obj
 *.swp
+*.swo
 .idea
 *.user
 *~

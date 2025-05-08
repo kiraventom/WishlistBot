@@ -1,24 +1,32 @@
 using Serilog;
 using WishlistBot.Notification;
 using WishlistBot.Queries;
-using WishlistBot.Database.Users;
-using WishlistBot.Database.Admin;
 using WishlistBot.QueryParameters;
+using WishlistBot.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
-public class BroadcastNotificationMessage(ILogger logger, Broadcast broadcast) : BotMessage(logger), INotificationMessage
+public class BroadcastNotificationMessage : BotMessage, INotificationMessage
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
-   {
-      Keyboard.AddButton<MainMenuQuery>("В главное меню", QueryParameter.ForceNewMessage);
+    private readonly int _broadcastId;
 
-      Text.Bold("Рассылка от разработчика:")
-         .LineBreak()
-         .Italic(broadcast.Text);
+    public BroadcastNotificationMessage(ILogger logger, int broadcastId) : base(logger)
+    {
+        _broadcastId = broadcastId;
+    }
 
-      PhotoFileId = broadcast.FileId;
+    protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
+    {
+        Keyboard.AddButton<MainMenuQuery>("В главное меню", QueryParameter.ForceNewMessage);
 
-      return Task.CompletedTask;
-   }
+        var broadcast = userContext.Broadcasts.AsNoTracking().First(b => b.BroadcastId == _broadcastId);
+        Text.Bold("Рассылка от разработчика:")
+           .LineBreak()
+           .Italic(broadcast.Text);
+
+        PhotoFileId = broadcast.FileId;
+
+        return Task.CompletedTask;
+    }
 }

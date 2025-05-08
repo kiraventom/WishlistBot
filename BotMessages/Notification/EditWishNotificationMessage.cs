@@ -1,56 +1,77 @@
 using Serilog;
 using WishlistBot.Notification;
 using WishlistBot.Queries;
-using WishlistBot.Database.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Model;
 
 namespace WishlistBot.BotMessages.Notification;
 
-public class EditWishNotificationMessage(ILogger logger, BotUser notificationSource, Wish editedWish, WishPropertyType wishPropertyType)
-   : BotMessage(logger), INotificationMessage
+public class EditWishNotificationMessage : BotMessage, INotificationMessage
 {
-   protected override Task InitInternal(BotUser user, QueryParameterCollection parameters)
-   {
-      var wishIndex = notificationSource.Wishes.IndexOf(editedWish);
-      var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
+    private readonly int _notificationSourceId;
+    private readonly int _editedWishId;
 
-      Keyboard
-         .AddButton<ShowWishQuery>("Перейти к вишу",
-                                   new QueryParameter(QueryParameterType.SetUserTo, notificationSource.SenderId),
-                                   new QueryParameter(QueryParameterType.SetWishTo, editedWish.Id),
-                                   new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
-         .NewRow()
-         .AddButton<MainMenuQuery>("В главное меню");
+    private readonly WishPropertyType _wishPropertyType;
 
-      var changedItemsNames = new List<string>();
+    public EditWishNotificationMessage(ILogger logger, int notificationSourceId, int editedWishId, WishPropertyType wishPropertyType) : base(logger)
+    {
+        _notificationSourceId = notificationSourceId;
+        _editedWishId = editedWishId;
+        _wishPropertyType = wishPropertyType;
+    }
 
-      if (wishPropertyType.HasFlag(WishPropertyType.Name))
-         changedItemsNames.Add("название");
+    public EditWishNotificationMessage(ILogger logger, NotificationModel notificationModel) : base(logger)
+    {
+        _notificationSourceId = notificationModel.SourceId;
+        _editedWishId = notificationModel.SubjectId.Value;
+        _wishPropertyType = (WishPropertyType)notificationModel.GetExtraInt();
+    }
 
-      if (wishPropertyType.HasFlag(WishPropertyType.Description))
-         changedItemsNames.Add("описание");
+    protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
+    {
+        var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
+        var editedWish = userContext.Wishes.First(w => w.WishId == _editedWishId);
 
-      if (wishPropertyType.HasFlag(WishPropertyType.Media))
-         changedItemsNames.Add("фото");
+        var wishIndex = notificationSource.GetSortedWishes().IndexOf(editedWish);
+        var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
-      if (wishPropertyType.HasFlag(WishPropertyType.Links))
-         changedItemsNames.Add("ссылки");
+        Keyboard
+           .AddButton<ShowWishQuery>("Перейти к вишу",
+                                     new QueryParameter(QueryParameterType.SetUserTo, notificationSource.UserId),
+                                     new QueryParameter(QueryParameterType.SetWishTo, editedWish.WishId),
+                                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
+           .NewRow()
+           .AddButton<MainMenuQuery>("В главное меню");
 
-      var changedItemsText = changedItemsNames.Count switch
-      {
-         0 => throw new NotSupportedException($"WishPropertyType value '{wishPropertyType}' is not supported"),
-         1 => changedItemsNames.Single(),
-         _ => string.Join(", ", changedItemsNames.SkipLast(1)) + $" и {changedItemsNames.Last()}",
-      };
+        var changedItemsNames = new List<string>();
 
-      Text
-         .InlineMention(notificationSource)
-         .Italic(" изменил ")
-         .ItalicBold(changedItemsText)
-         .Italic(" у виша '")
-         .ItalicBold(editedWish.Name)
-         .Italic("'!");
+        if (_wishPropertyType.HasFlag(WishPropertyType.Name))
+            changedItemsNames.Add("название");
 
-      return Task.CompletedTask;
-   }
+        if (_wishPropertyType.HasFlag(WishPropertyType.Description))
+            changedItemsNames.Add("описание");
+
+        if (_wishPropertyType.HasFlag(WishPropertyType.Media))
+            changedItemsNames.Add("фото");
+
+        if (_wishPropertyType.HasFlag(WishPropertyType.Links))
+            changedItemsNames.Add("ссылки");
+
+        var changedItemsText = changedItemsNames.Count switch
+        {
+            0 => throw new NotSupportedException($"WishPropertyType value '{_wishPropertyType}' is not supported"),
+            1 => changedItemsNames.Single(),
+            _ => string.Join(", ", changedItemsNames.SkipLast(1)) + $" и {changedItemsNames.Last()}",
+        };
+
+        Text
+           .InlineMention(notificationSource)
+           .Italic(" изменил ")
+           .ItalicBold(changedItemsText)
+           .Italic(" у виша '")
+           .ItalicBold(editedWish.Name)
+           .Italic("'!");
+
+        return Task.CompletedTask;
+    }
 }
