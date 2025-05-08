@@ -98,7 +98,6 @@ public class UserContext : DbContext
         modelBuilder.Entity<WishModel>().Property(e => e.PriceRange).HasConversion<int>();
         modelBuilder.Entity<WishModel>().HasMany(e => e.Links).WithOne()
             .OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<WishModel>().HasIndex(e => e.Order).IsUnique();
 
         modelBuilder.Entity<WishDraftModel>().Property(e => e.PriceRange).HasConversion<int>();
         modelBuilder.Entity<WishDraftModel>().HasMany(e => e.Links).WithOne()
@@ -410,8 +409,10 @@ public class OrderAssignmentInterceptor : SaveChangesInterceptor
             if (entry.Entity.Order > 0)
                 continue;
 
+            var sameUserWishes = wishes.Where(w => w.OwnerId == entry.Entity.OwnerId);
+
             if (wishes.Any())
-                entry.Entity.Order = wishes.Max(w => w.Order) + 1;
+                entry.Entity.Order = sameUserWishes.Max(w => w.Order) + 1;
             else
                 entry.Entity.Order = 0;
         }

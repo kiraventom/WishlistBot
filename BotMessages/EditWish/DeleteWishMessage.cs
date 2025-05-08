@@ -26,10 +26,12 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
             .First(u => u.UserId == userId);
 
         var deletedWish = user.Wishes.FirstOrDefault(w => w.WishId == wishId);
-        var deletedWishName = deletedWish.Name;
+        var deletedWishName = deletedWish?.Name;
         if (deletedWish is null)
         {
             Logger.Error("Can't delete wish {id} from user {userId}, not found", wishId, user.UserId);
+            user.CurrentWish = null;
+            return;
         }
         else
         {
