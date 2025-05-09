@@ -17,7 +17,7 @@ public class BroadcastJob : Job
         _broadcastAction = action;
     }
 
-    protected override Task StartInternal(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId)
+    protected override Task Iterate(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId)
     {
         return _broadcastAction.Invoke(logger, client, userContext, itemId, _broadcastId);
     }
@@ -36,16 +36,18 @@ public class NotificationJob : Job
         _notificationAction = action;
     }
 
-    protected override async Task StartInternal(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId)
+    protected override async Task Iterate(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId)
     {
-        try
-        {
-            await _notificationAction.Invoke(logger, client, userContext, itemId, _notificationId);
-        }
-        finally
+        await _notificationAction.Invoke(logger, client, userContext, itemId, _notificationId);
+    }
+
+    public override void OnFinish()
+    {
+        using (var userContext = UserContext.Create())
         {
             var notification = userContext.Notifications.First(n => n.NotificationId == _notificationId);
             userContext.Notifications.Remove(notification);
+            userContext.SaveChanges();
         }
     }
 }
@@ -86,7 +88,7 @@ public abstract class Job
                 await Task.Delay(_interval);
                 using (var userContext = UserContext.Create())
                 {
-                    await StartInternal(logger, client, userContext, itemId);
+                    await Iterate(logger, client, userContext, itemId);
                     userContext.SaveChanges();
                 }
             }
@@ -96,11 +98,16 @@ public abstract class Job
             if (t.Exception is not null)
                 logger.Error("Job with SubjectId={subjectId} has faulted with exception {ex}", this.SubjectId, t.Exception.ToString());
 
+            OnFinish();
             Finished?.Invoke(this, t.Status);
         });
     }
 
-    protected abstract Task StartInternal(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId);
+    public virtual void OnFinish()
+    {
+    }
+
+    protected abstract Task Iterate(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId);
 
     public void Cancel() => _cts.Cancel();
 
