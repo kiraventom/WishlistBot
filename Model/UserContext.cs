@@ -68,47 +68,19 @@ public class UserContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UserModel>().HasMany(e => e.Wishes).WithOne(w => w.Owner)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<UserModel>().HasMany(e => e.ClaimedWishes).WithOne(w => w.Claimer)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        modelBuilder.Entity<UserModel>().HasMany(e => e.Subscriptions).WithOne(e => e.Subscriber)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<UserModel>().HasMany(e => e.Subscribers).WithOne(e => e.Target)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<UserModel>().HasOne(e => e.Settings).WithOne(e => e.User)
-            .HasForeignKey<SettingsModel>(e => e.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<UserModel>().HasMany(e => e.ReceivedBroadcasts).WithOne(e => e.Receiver)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<UserModel>()
-            .HasOne(e => e.CurrentWish).WithOne(w => w.Owner)
-            .HasForeignKey<WishDraftModel>(w => w.OwnerId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<UserModel>().Property(e => e.BotState).HasConversion<int>();
-        modelBuilder.Entity<UserModel>().HasIndex(e => e.TelegramId).IsUnique();
-
         modelBuilder.Entity<WishModel>().Property(e => e.PriceRange).HasConversion<int>();
-        modelBuilder.Entity<WishModel>().HasMany(e => e.Links).WithOne()
-            .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<WishDraftModel>().Property(e => e.PriceRange).HasConversion<int>();
-        modelBuilder.Entity<WishDraftModel>().HasMany(e => e.Links).WithOne()
-            .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<NotificationModel>().Property(e => e.Type).HasConversion<int>();
 
-        modelBuilder.Entity<SubscriptionModel>().HasIndex(e => new { e.SubscriberId, e.TargetId }).IsUnique();
+        modelBuilder.Entity<UserModel>()
+            .HasOne(e => e.Settings)
+            .WithOne(e => e.User)
+            .HasForeignKey<SettingsModel>(e => e.UserId);
     }
 }
 
+[Index(nameof(TelegramId), IsUnique=true)]
 public class UserModel
 {
     [Key] public int UserId { get; set; }
@@ -126,12 +98,23 @@ public class UserModel
     public string QueryParams { get; set; }
     public string AllowedQueries { get; set; }
 
+    [InverseProperty(nameof(WishDraftModel.Owner))]
     public WishDraftModel CurrentWish { get; set; }
+
     [Required] public SettingsModel Settings { get; set; }
+
+    [InverseProperty(nameof(WishModel.Owner))]
     public List<WishModel> Wishes { get; } = new();
+
+    [InverseProperty(nameof(SubscriptionModel.Subscriber))]
     public List<SubscriptionModel> Subscriptions { get; } = new();
+
+    [InverseProperty(nameof(SubscriptionModel.Target))]
     public List<SubscriptionModel> Subscribers { get; } = new();
+
+    [InverseProperty(nameof(WishModel.Claimer))]
     public List<WishModel> ClaimedWishes { get; } = new();
+
     public List<ReceivedBroadcastModel> ReceivedBroadcasts { get; } = new();
 
     public List<WishModel> GetSortedWishes()
@@ -148,15 +131,19 @@ public class WishModel
     public int? ClaimerId { get; set; }
 
     [ForeignKey(nameof(OwnerId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public UserModel Owner { get; set; }
 
     [ForeignKey(nameof(ClaimerId))]
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public UserModel Claimer { get; set; }
 
     [Required] public string Name { get; set; }
     public string Description { get; set; }
     public string FileId { get; set; }
     public Price PriceRange { get; set; }
+
+    [InverseProperty(nameof(LinkModel.Wish))]
     public List<LinkModel> Links { get; } = new();
     [Required] public int Order { get; set; }
 
@@ -190,18 +177,23 @@ public class WishDraftModel
     public int? ClaimerId { get; set; }
 
     [ForeignKey(nameof(OriginalId))]
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public WishModel Original { get; set; }
 
     [ForeignKey(nameof(OwnerId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public UserModel Owner { get; set; }
 
     [ForeignKey(nameof(ClaimerId))]
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public UserModel Claimer { get; set; }
 
     [Required] public string Name { get; set; }
     public string Description { get; set; }
     public string FileId { get; set; }
     public Price PriceRange { get; set; }
+
+    [InverseProperty(nameof(LinkModel.WishDraft))]
     public List<LinkModel> Links { get; } = new();
 
     public static WishDraftModel FromWish(WishModel wish)
@@ -232,9 +224,11 @@ public class LinkModel
     public int? WishDraftId { get; set; }
 
     [ForeignKey(nameof(WishId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public WishModel Wish { get; set; }
 
     [ForeignKey(nameof(WishDraftId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public WishDraftModel WishDraft { get; set; }
 
     [Required] public string Url { get; set; }
@@ -275,6 +269,7 @@ public class SettingsModel
     }
 }
 
+[Index(nameof(SubscriberId), nameof(TargetId), IsUnique=true)]
 public class SubscriptionModel
 {
     [Key] public int SubscriptionId { get; set; }
@@ -282,9 +277,11 @@ public class SubscriptionModel
     public int TargetId { get; set; }
 
     [ForeignKey(nameof(SubscriberId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public UserModel Subscriber { get; set; }
 
     [ForeignKey(nameof(TargetId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public UserModel Target { get; set; }
 }
 
@@ -315,6 +312,7 @@ public class ReceivedBroadcastModel
     public int BroadcastId { get; set; }
 
     [ForeignKey(nameof(ReceiverId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public UserModel Receiver { get; set; }
 
     [ForeignKey(nameof(BroadcastId))]
