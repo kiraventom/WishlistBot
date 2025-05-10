@@ -19,14 +19,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             .ThenInclude(w => w.Links)
             .AsNoTracking();
 
-        var sender = users.First(u => u.UserId == userId);
-
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetUserId);
-        var targetUser = users.FirstOrDefault(u => u.UserId == targetUserId);
-
-        if (targetUser is null)
-            targetUser = sender;
-
+        var (sender, targetUser) = GetSenderAndTarget(users, userId, parameters);
         var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 
         const string plusEmoji = "\u2795";

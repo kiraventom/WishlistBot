@@ -16,18 +16,7 @@ public class FullListMessage(ILogger logger) : UserBotMessage(logger)
         var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
 
         var users = userContext.Users.Include(u => u.Wishes).AsNoTracking();
-
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetUserId);
-        var targetUser = userContext.Users
-            .Include(u => u.Wishes)
-            .AsNoTracking()
-            .FirstOrDefault(u => u.UserId == targetUserId);
-
-        if (targetUser is null)
-        {
-            var sender = users.First(u => u.UserId == userId);
-            targetUser = sender;
-        }
+        var (sender, targetUser) = GetSenderAndTarget(users, userId, parameters);
 
         var totalCount = targetUser.Wishes.Count;
         var sortedWishes = targetUser.GetSortedWishes();

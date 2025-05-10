@@ -12,21 +12,19 @@ public class DeleteSubscriberMessage(ILogger logger) : UserBotMessage(logger)
     {
         Keyboard.AddButton<MySubscribersQuery>("К моим подписчикам");
 
-        var sender = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == userId);
-
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
-        var target = userContext.Users
+        parameters.Peek(QueryParameterType.SetUserTo, out var subscriberId);
+        var subscriber = userContext.Users
             .Include(u => u.Subscriptions)
             .Include(u => u.ClaimedWishes)
-            .First(u => u.UserId == targetId);
+            .First(u => u.UserId == subscriberId);
 
         Text.Italic("Вы удалили ")
-           .InlineMention(target)
+           .InlineMention(subscriber)
            .Italic(" из списка своих подписчиков.");
 
-        var subscription = target.Subscriptions.First(s => s.SubscriberId == target.UserId);
-        target.Subscriptions.Remove(subscription);
-        target.ClaimedWishes.RemoveAll(cw => cw.Owner == sender);
+        var subscription = subscriber.Subscriptions.First(s => s.TargetId == userId);
+        subscriber.Subscriptions.Remove(subscription);
+        subscriber.ClaimedWishes.RemoveAll(cw => cw.OwnerId == userId);
 
         return Task.CompletedTask;
     }

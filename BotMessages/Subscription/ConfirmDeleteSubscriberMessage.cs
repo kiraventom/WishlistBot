@@ -16,15 +16,15 @@ public class ConfirmDeleteSubscriberMessage(ILogger logger) : UserBotMessage(log
            .NewRow()
            .AddButton<SubscriberQuery>("Отмена \u274c");
 
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
-        var target = userContext.Users.AsNoTracking().First(u => u.UserId == targetId);
+        parameters.Peek(QueryParameterType.SetUserTo, out var subscriberId);
+        var subscriber = userContext.Users.AsNoTracking().First(u => u.UserId == subscriberId);
 
         Text.Italic("Действительно удалить ")
-           .InlineMention(target)
+           .InlineMention(subscriber)
            .Italic(" из списка подписчиков?")
            .LineBreak()
            .ItalicBold("После этого ")
-           .InlineMention(target)
+           .InlineMention(subscriber)
            .ItalicBold(" больше не сможет видеть ваши виши.");
 
         return Task.CompletedTask;

@@ -12,7 +12,10 @@ public class UnsubscribeMessage(ILogger logger) : UserBotMessage(logger)
     {
         Keyboard.AddButton<MySubscriptionsQuery>("К моим подпискам");
 
-        var sender = userContext.Users.Include(u => u.Subscriptions).First(u => u.UserId == userId);
+        var sender = userContext.Users
+            .Include(u => u.Subscriptions)
+            .Include(u => u.ClaimedWishes)
+            .First(u => u.UserId == userId);
 
         parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
         var target = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == targetId);
@@ -22,10 +25,7 @@ public class UnsubscribeMessage(ILogger logger) : UserBotMessage(logger)
 
         var subscription = sender.Subscriptions.First(s => s.TargetId == target.UserId);
         sender.Subscriptions.Remove(subscription);
-        foreach (var claimedWish in sender.Wishes.Where(w => w.ClaimerId == target.UserId))
-        {
-            claimedWish.ClaimerId = null;
-        }
+        sender.ClaimedWishes.RemoveAll(cw => cw.OwnerId == target.UserId);
 
         return Task.CompletedTask;
     }

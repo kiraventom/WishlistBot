@@ -14,8 +14,6 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        var sender = userContext.Users.First(u => u.UserId == userId);
-
         parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
         var target = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == targetId);
 
@@ -37,16 +35,16 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             // Claim unclaimed wish
             if (wish.ClaimerId is null)
             {
-                wish.ClaimerId = sender.UserId;
+                wish.ClaimerId = userId;
             }
             // Unclaim wish claimed by sender
-            else if (wish.ClaimerId == sender.UserId)
+            else if (wish.ClaimerId == userId)
             {
                 wish.ClaimerId = null;
             }
             else
             {
-                Logger.Error("ShowWish: parameters contain ClaimWish, but wish.ClaimerId is nor 0 neither [{senderId}], but [{claimerId}]", sender.UserId, wish.ClaimerId);
+                Logger.Error("ShowWish: parameters contain ClaimWish, but wish.ClaimerId is nor 0 neither [{senderId}], but [{claimerId}]", userId, wish.ClaimerId);
             }
         }
 
@@ -55,7 +53,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             var claimer = userContext.Users.FirstOrDefault(u => u.UserId == wish.ClaimerId);
             if (claimer is not null)
             {
-                if (claimer.UserId == sender.UserId)
+                if (claimer.UserId == userId)
                 {
                     Text.ItalicBold("Этот виш забронирован вами").LineBreak().LineBreak();
                     Keyboard.AddButton<ShowWishQuery>("Снять бронь", new QueryParameter(QueryParameterType.SetWishTo, wishId), QueryParameter.ClaimWish)
