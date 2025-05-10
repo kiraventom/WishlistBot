@@ -11,6 +11,8 @@ using WishlistBot.BotMessages.Admin.Broadcasts;
 using WishlistBot.BotMessages.Settings;
 using WishlistBot.Queries.Settings;
 using WishlistBot.Model;
+using WishlistBot.Queries.Profile;
+using WishlistBot.BotMessages.Profile;
 
 namespace WishlistBot.BotMessages;
 
@@ -51,7 +53,9 @@ public class MessageFactory(ILogger logger)
          DeleteBroadcastQuery => new DeleteBroadcastMessage(logger),
          FinishBroadcastQuery => new FinishBroadcastMessage(logger),
          SettingsQuery => new SettingsMessage(logger),
-         ConfirmRegenerateLinkQuery => new ConfirmRegenerateLinkMessage(logger),
+         EditProfileQuery => new EditProfileMessage(logger),
+         SetProfileBirthdayQuery => new SetProfileBirthdayMessage(logger),
+         SetProfileNotesQuery => new SetProfileNotesMessage(logger),
          _ => new InvalidMessage(logger),
       };
 

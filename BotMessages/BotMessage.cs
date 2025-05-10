@@ -10,83 +10,79 @@ namespace WishlistBot.BotMessages;
 [AllowedTypes(QueryParameterType.ForceNewMessage)]
 public abstract class BotMessage(ILogger logger)
 {
-   private bool _isInited;
+    private bool _isInited;
 
-   protected ILogger Logger { get; } = logger;
+    protected ILogger Logger { get; } = logger;
 
-   public MessageText Text { get; } = new();
-   public BotKeyboard Keyboard { get; } = new();
-   public string PhotoFileId { get; protected set; }
+    public MessageText Text { get; } = new();
+    public BotKeyboard Keyboard { get; } = new();
+    public string PhotoFileId { get; protected set; }
 
-   public bool ForceNewMessage { get; private set; }
+    public bool ForceNewMessage { get; private set; }
 
-   public async Task Init(UserContext userContext, UserModel user)
-   {
-      if (_isInited)
-         return;
+    public async Task Init(UserContext userContext, UserModel user)
+    {
+        if (_isInited)
+            return;
 
-      if (!QueryParameterCollection.TryParse(user.QueryParams, out var parameters))
-         parameters = new QueryParameterCollection();
+        if (!QueryParameterCollection.TryParse(user.QueryParams, out var parameters))
+            parameters = new QueryParameterCollection();
 
-      user.BotState = BotState.Default;
+        user.BotState = BotState.Default;
 
-      var allowedTypes = GetAllowedTypes();
+        FilterParameters(parameters, GetAllowedTypes());
 
-      FilterParameters(parameters, allowedTypes);
+        if (parameters.Pop(QueryParameterType.ForceNewMessage))
+            ForceNewMessage = true;
 
-      if (parameters.Pop(QueryParameterType.ForceNewMessage))
-         ForceNewMessage = true;
+        Keyboard.InitCommonParameters(parameters);
 
-      Keyboard.InitCommonParameters(parameters);
+        await InitInternal(userContext, user.UserId, parameters);
 
-      await InitInternal(userContext, user.UserId, parameters);
+        // Parameters can change during message initialization
+        user.QueryParams = parameters.ToString();
+        user.AllowedQueries = string.Join(';', Keyboard.EnumerateQueries());
 
-      // Parameters can change during message initialization
-      user.QueryParams = parameters.ToString();
-      user.AllowedQueries = string.Join(';', Keyboard.EnumerateQueries());
+        _isInited = true;
+    }
 
-      _isInited = true;
-   }
+    protected abstract Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters);
 
-   protected abstract Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters);
+    private static void FilterParameters(QueryParameterCollection parameters, IReadOnlyCollection<QueryParameterType> allowedTypes)
+    {
+        var disallowedTypes = parameters.Select(p => p.Type).Except(allowedTypes);
 
-   private static void FilterParameters(QueryParameterCollection parameters, IReadOnlyCollection<QueryParameterType> allowedTypes)
-   {
-      var disallowedTypes = parameters
-         .Select(p => p.Type)
-         .Except(allowedTypes);
-
-      foreach (var disallowedType in disallowedTypes)
-         parameters.Pop(disallowedType);
-   }
+        foreach (var disallowedType in disallowedTypes)
+            parameters.Pop(disallowedType);
+    }
 
 #pragma warning disable CA1859
 
-   private IReadOnlyCollection<QueryParameterType> GetAllowedTypes() => GetAllowedTypes(GetType());
+    private IReadOnlyCollection<QueryParameterType> GetAllowedTypes() => GetAllowedTypes(GetType());
 
-   private static IReadOnlyCollection<QueryParameterType> GetAllowedTypes(Type type)
-   {
-      var parentAllowedTypes = GetParentAllowedTypes(type);
+    private static IReadOnlyCollection<QueryParameterType> GetAllowedTypes(Type type)
+    {
+        var parentAllowedTypes = GetParentAllowedTypes(type);
 
-      var allAllowedTypes = new HashSet<QueryParameterType>(parentAllowedTypes);
-      var allowedTypesAttributes = type.GetCustomAttributes<AllowedTypesAttribute>();
-      foreach (var allowedTypesAttribute in allowedTypesAttributes)
-      {
-         var allowedTypes = allowedTypesAttribute.AllowedTypes;
-         foreach (var allowedType in allowedTypes)
-            allAllowedTypes.Add(allowedType);
-      }
+        var allAllowedTypes = new HashSet<QueryParameterType>(parentAllowedTypes);
+        var allowedTypesAttributes = type.GetCustomAttributes<AllowedTypesAttribute>();
+        foreach (var allowedTypesAttribute in allowedTypesAttributes)
+        {
+            var allowedTypes = allowedTypesAttribute.AllowedTypes;
+            foreach (var allowedType in allowedTypes)
+                allAllowedTypes.Add(allowedType);
+        }
 
-      return allAllowedTypes;
-   }
+        return allAllowedTypes;
+    }
 
-   private static IReadOnlyCollection<QueryParameterType> GetParentAllowedTypes(Type type)
-   {
-      var childMessageAttribute = type.GetCustomAttribute<ChildMessageAttribute>();
-      if (childMessageAttribute is null)
-         return [];
+    private static IReadOnlyCollection<QueryParameterType> GetParentAllowedTypes(Type type)
+    {
+        var childMessageAttribute = type.GetCustomAttribute<ChildMessageAttribute>();
+        if (childMessageAttribute is null)
+            return [];
 
-      var parentType = childMessageAttribute.ParentMessageType;
-      return GetAllowedTypes(parentType);
-   }
+        var parentType = childMessageAttribute.ParentMessageType;
+        return GetAllowedTypes(parentType);
+    }
 }

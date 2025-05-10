@@ -35,20 +35,23 @@ public class UserContext : DbContext
 
     public UserModel GetOrAddUser(long telegramId, string firstName, string username)
     {
-        var userModel = this.Users.FirstOrDefault(u => u.TelegramId == telegramId);
+        var isNew = false;
+
+        var userModel = this.Users
+            .Include(u => u.Settings)
+            .Include(u => u.Profile)
+            .FirstOrDefault(u => u.TelegramId == telegramId);
+
         if (userModel is null)
         {
+            isNew = true;
             userModel = new UserModel()
             {
                 FirstName = firstName,
                 Tag = username,
                 TelegramId = telegramId,
-                Settings = new SettingsModel() { ReceiveNotifications = true, SendNotifications = true },
                 SubscribeId = Guid.NewGuid().ToString("N")
             };
-
-            Users.Add(userModel);
-            this.SaveChanges();
         }
 
         if (userModel.FirstName != firstName)
@@ -56,6 +59,18 @@ public class UserContext : DbContext
 
         if (userModel.Tag != username)
             userModel.Tag = username;
+
+        if (userModel.Settings is null)
+            userModel.Settings = new SettingsModel() { ReceiveNotifications = true, SendNotifications = true };
+
+        if (userModel.Profile is null)
+            userModel.Profile = new ProfileModel();
+
+        if (isNew)
+        {
+            Users.Add(userModel);
+            this.SaveChanges();
+        }
 
         return userModel;
     }
@@ -76,7 +91,14 @@ public class UserContext : DbContext
         modelBuilder.Entity<UserModel>()
             .HasOne(e => e.Settings)
             .WithOne(e => e.User)
-            .HasForeignKey<SettingsModel>(e => e.UserId);
+            .HasForeignKey<SettingsModel>(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserModel>()
+            .HasOne(e => e.Profile)
+            .WithOne(e => e.User)
+            .HasForeignKey<ProfileModel>(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
@@ -102,6 +124,7 @@ public class UserModel
     public WishDraftModel CurrentWish { get; set; }
 
     [Required] public SettingsModel Settings { get; set; }
+    [Required] public ProfileModel Profile { get; set; }
 
     [InverseProperty(nameof(WishModel.Owner))]
     public List<WishModel> Wishes { get; } = new();
@@ -122,6 +145,17 @@ public class UserModel
         Wishes.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
         return Wishes;
     }
+}
+
+public class ProfileModel
+{
+    [Key] public int ProfileId { get; set; }
+
+    public int UserId { get; set; }
+    public UserModel User { get; set; }
+
+    public DateOnly? Birthday { get; set; }
+    public string Notes { get; set; }
 }
 
 public class WishModel
@@ -241,9 +275,8 @@ public class LinkModel
 public class SettingsModel
 {
     [Key] public int SettingsId { get; set; }
-    public int UserId { get; set; }
 
-    [ForeignKey(nameof(UserId))]
+    public int UserId { get; set; }
     public UserModel User { get; set; }
 
     public bool SendNotifications { get; set; }

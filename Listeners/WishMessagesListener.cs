@@ -35,7 +35,8 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client) : I
                 return false;
         }
 
-        await SendEditWishMessageAsync(userContext, user);
+        var editWishMessage = new EditWishMessage(logger);
+        await client.SendOrEditBotMessage(logger, userContext, user.UserId, editWishMessage, forceNewMessage: true);
         return true;
     }
 
@@ -75,13 +76,13 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client) : I
         return Task.CompletedTask;
     }
 
-    private async Task HandleSettingWishMediaAsync(Message message, UserContext userContext, UserModel user)
+    private Task HandleSettingWishMediaAsync(Message message, UserContext userContext, UserModel user)
     {
         var fileId = message.Photo?.FirstOrDefault()?.FileId;
         if (fileId is null)
         {
             logger.Warning("Received message with no photo, ignoring");
-            return;
+            return Task.CompletedTask;
         }
 
         user.CurrentWish.FileId = fileId;
@@ -90,7 +91,7 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client) : I
         if (message.MediaGroupId is not null)
             logger.Warning("Media groups are not supported, ignoring other photos");
 
-        await SendEditWishMessageAsync(userContext, user);
+        return Task.CompletedTask;
     }
 
     private Task HandleSettingWishLinksAsync(Message message, UserContext userContext, UserModel user)
@@ -115,11 +116,5 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client) : I
         }
 
         return Task.CompletedTask;
-    }
-
-    private async Task SendEditWishMessageAsync(UserContext userContext, UserModel userModel)
-    {
-        var message = new EditWishMessage(logger);
-        await client.SendOrEditBotMessage(logger, userContext, userModel.UserId, message, forceNewMessage: true);
     }
 }

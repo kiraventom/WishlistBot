@@ -159,5 +159,6 @@ public static class Program
    {
       yield return new AdminMessagesListener(logger, client);
       yield return new WishMessagesListener(logger, client);
+      yield return new ProfileMessagesListener(logger, client);
    }
 }

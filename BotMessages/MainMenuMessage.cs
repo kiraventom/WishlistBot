@@ -1,11 +1,11 @@
 using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
-
 using WishlistBot.Queries.Settings;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.Queries.Profile;
 
 namespace WishlistBot.BotMessages;
 
@@ -21,6 +21,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
            .AddButton<MySubscriptionsQuery>()
            .AddButton<MySubscribersQuery>()
            .NewRow()
+           .AddButton<EditProfileQuery>()
            .AddButton<SettingsQuery>();
 
         var user = userContext.Users.Include(u => u.Settings).First(u => u.UserId == userId);
