@@ -4,7 +4,7 @@ using WishlistBot.QueryParameters;
 
 namespace WishlistBot.Keyboard;
 
-public class BotButton(string data, string caption, IEnumerable<QueryParameter> parameters)
+public class BotButton(string data, string caption, IEnumerable<QueryParameter> parameters) : IBotButton
 {
    private QueryParameterCollection Parameters { get; } = new(parameters);
 

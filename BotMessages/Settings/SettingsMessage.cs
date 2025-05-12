@@ -43,9 +43,7 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
         Text
            .Bold("Настройки бота:")
            .LineBreak().Bold(dot).Bold("Получение уведомлений: ").Verbatim(receiveNotificationsStr)
-           .LineBreak().Bold(dot).Bold("Отправка уведомлений: ").Verbatim(sendNotificationsStr)
-           .LineBreak().Bold(dot).Bold("Ссылка на ваш вишлист").Italic(" (нажмите, чтобы скопировать)").Bold(":")
-           .LineBreak().Monospace($"t.me/{Config.Instance.Username}?start={user.SubscribeId}");
+           .LineBreak().Bold(dot).Bold("Отправка уведомлений: ").Verbatim(sendNotificationsStr);
 
         var settingsEnum = user.Settings.ToEnum();
 

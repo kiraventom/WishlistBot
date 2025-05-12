@@ -41,7 +41,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
         if (!user.Settings.SendNotifications)
             Text.LineBreak().ItalicBold($"{dot}Отправка уведомлений о вишах подписчикам: ").Verbatim(mutedSpeaker);
 
-        Text.LineBreak().LineBreak().Italic("Ссылку на вишлист можно скопировать в настройках");
+        Text.LineBreak().LineBreak().Italic("Ссылку на вишлист можно скопировать в профиле");
 
         return Task.CompletedTask;
     }

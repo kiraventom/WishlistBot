@@ -16,8 +16,16 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 
         const string calendar = "\U0001f4c5 ";
         const string writingHand = "\u270d\ufe0f ";
+        const string downArrow = "\u2b07\ufe0f";
+        const string link = "\U0001f517";
 
-        Text.Verbatim("Ваш профиль:").LineBreak();
+        Text.Bold("Ваш профиль:").LineBreak();
+
+        // Invite link button
+        Keyboard.AddCopyTextButton($"{link} Ссылка на вишлист", $"t.me/{Config.Instance.Username}?start={sender.SubscribeId}");
+
+        Keyboard.NewRow();
+
 
         // Birthday
         Text.LineBreak().Verbatim(calendar);
@@ -33,8 +41,8 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
             Keyboard.AddButton<SetProfileBirthdayQuery>("Изменить дату рождения");
         }
 
-
         Keyboard.NewRow();
+
 
         // Notes
         Text.LineBreak().Verbatim(writingHand);
@@ -51,6 +59,10 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         }
 
         Keyboard.NewRow().AddButton<MainMenuQuery>("Назад");
+
+        
+        // Invite link text
+        Text.LineBreak().LineBreak().Verbatim($"{downArrow} Ссылка на ваш вишлист {downArrow}");
 
         return Task.CompletedTask;
     }
