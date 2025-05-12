@@ -31,7 +31,10 @@ public class SetWishNameMessage(ILogger logger) : UserBotMessage(logger)
                .LineBreak()
                .LineBreak().Verbatim("Укажите новое название виша:");
 
-            Keyboard.AddButton<EditWishQuery>("Отмена");
+            if (user.CurrentWish.Name.Length < 256)
+                Keyboard.AddCopyTextButton("Скопировать название", user.CurrentWish.Name);
+
+            Keyboard.NewRow().AddButton<EditWishQuery>("Отмена");
         }
 
         user.BotState = BotState.ListenForWishName;

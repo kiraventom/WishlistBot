@@ -70,16 +70,19 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
 
         var user = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
 
+        // First handle commands, so /start will always work even if listener is active
+        var botCommand = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);
+        if (botCommand is not null)
+        {
+            if (await HandleBotCommandAsync(userContext, user, botCommand, message.Text))
+                return;
+        }
+
+        // If message did not contain command, send it to listeners
         foreach (var listener in listeners)
         {
             if (await listener.HandleMessageAsync(message, userContext, user.UserId))
                 return;
-        }
-
-        var botCommand = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);
-        if (botCommand is not null)
-        {
-            await HandleBotCommandAsync(userContext, user, botCommand, message.Text);
         }
     }
 
@@ -145,22 +148,23 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
         await client.AnswerCallbackQuery(callbackQuery.Id);
     }
 
-    private async Task HandleBotCommandAsync(UserContext userContext, UserModel userModel, MessageEntity botCommand, string messageText)
+    private async Task<bool> HandleBotCommandAsync(UserContext userContext, UserModel userModel, MessageEntity botCommand, string messageText)
     {
         var commandText = messageText.Substring(botCommand.Offset, botCommand.Length);
-        await HandleUserActionAsync(userContext, userModel, commandText, messageText);
+        return await HandleUserActionAsync(userContext, userModel, commandText, messageText);
     }
 
-    private async Task HandleUserActionAsync(UserContext userContext, UserModel userModel, string actionText, string fullText)
+    private async Task<bool> HandleUserActionAsync(UserContext userContext, UserModel userModel, string actionText, string fullText)
     {
         var action = actions.FirstOrDefault(c => c.IsMatch(actionText));
         if (action is null)
         {
             logger.Warning("Action '{actionText}' does not match any of actions: [ {actions} ]", actionText, string.Join(", ", actions.Select(c => c.Name)));
-            return;
+            return false;
         }
 
         await action.ExecuteAsync(userContext, userModel, fullText);
+        return true;
     }
 
     private static Task OnError(ITelegramBotClient client, Exception exception, CancellationToken ct) => Task.CompletedTask;

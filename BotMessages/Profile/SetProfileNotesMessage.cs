@@ -13,21 +13,30 @@ public class SetProfileNotesMessage(ILogger logger) : BotMessage(logger)
     {
         var user = userContext.Users.Include(u => u.Profile).First(u => u.UserId == userId);
 
-        Keyboard
-           .NewRow()
-           .AddButton<EditProfileQuery>("Отмена");
-
         if (string.IsNullOrWhiteSpace(user.Profile.Notes))
         {
             Text.Verbatim("Введите текст заметок ").Italic("(например: \"размер одежды M, увлекаюсь warhammer, не ем сладкое\")").Verbatim(":");
         }
         else
         {
-            Text.Bold("Текущие заметки:")
-               .LineBreak().Monospace(user.Profile.Notes)
-               .LineBreak()
-               .LineBreak().Verbatim("Введите новое значение:");
+            Text.Bold("Текущие заметки:").LineBreak();
+
+            if (user.Profile.Notes.Length >= 256)
+            {
+                Text.Monospace(user.Profile.Notes);
+            }
+            else
+            {
+                Text.ExpandableQuote(user.Profile.Notes);
+                Keyboard.AddCopyTextButton("Скопировать заметки", user.Profile.Notes);
+            }
+
+            Text.LineBreak().LineBreak().Verbatim("Введите новое значение:");
         }
+
+        Keyboard
+           .NewRow()
+           .AddButton<EditProfileQuery>("Отмена");
 
         user.BotState = BotState.ListerForProfileNotes;
 

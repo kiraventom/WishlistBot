@@ -13,10 +13,6 @@ public class SetProfileBirthdayMessage(ILogger logger) : BotMessage(logger)
     {
         var user = userContext.Users.Include(u => u.Profile).First(u => u.UserId == userId);
 
-        Keyboard
-           .NewRow()
-           .AddButton<EditProfileQuery>("Отмена");
-
         if (user.Profile.Birthday is null)
         {
             Text.Verbatim("Укажите дату рождения в формате ").Monospace("ДД.ММ.ГГГГ")
@@ -29,7 +25,14 @@ public class SetProfileBirthdayMessage(ILogger logger) : BotMessage(logger)
                .Bold("Указанная дата рождения: ").Monospace(user.Profile.Birthday.Value.ToString("dd.MM.yyyy"))
                .LineBreak()
                .LineBreak().Verbatim("Введите новое значение:");
+
+            Keyboard.AddCopyTextButton("Скопировать дату рождения", user.Profile.Birthday.Value.ToString("dd.MM.yyyy"));
         }
+
+        Keyboard
+           .NewRow()
+           .AddButton<EditProfileQuery>("Отмена");
+
 
         user.BotState = BotState.ListenForBirthday;
 

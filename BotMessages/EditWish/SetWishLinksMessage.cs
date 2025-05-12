@@ -12,12 +12,6 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var user = userContext.Users.Include(u => u.CurrentWish).ThenInclude(w => w.Links).First(u => u.UserId == userId);
-        if (user.CurrentWish.Links.Any())
-            Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));
-
-        Keyboard
-           .NewRow()
-           .AddButton<EditWishQuery>("Отмена");
 
         if (user.CurrentWish.Links is null)
         {
@@ -29,13 +23,33 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
         {
             Text.Bold("Текущие ссылки: ");
 
-            foreach (var link in user.CurrentWish.Links)
+            var linksJoined = string.Join("\n", user.CurrentWish.Links.Select(l => l.Url));
+            if (linksJoined.Length >= 256)
             {
-                Text.LineBreak().Monospace(link.Url);
+                foreach (var link in user.CurrentWish.Links)
+                {
+                    Text.LineBreak().Monospace(link.Url);
+                }
+            }
+            else
+            {
+                foreach (var link in user.CurrentWish.Links)
+                {
+                    Text.LineBreak().Verbatim(link.Url);
+                }
+
+                Keyboard.AddCopyTextButton("Скопировать ссылки", linksJoined);
             }
 
             Text.LineBreak().LineBreak().Verbatim("Пришлите новые ссылки или удалите текущие:");
         }
+
+        if (user.CurrentWish.Links.Any())
+            Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));
+
+        Keyboard
+           .NewRow()
+           .AddButton<EditWishQuery>("Отмена");
 
         user.BotState = BotState.ListenForWishLinks;
 

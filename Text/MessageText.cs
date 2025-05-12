@@ -26,14 +26,7 @@ public class MessageText
       if (text is null)
          return this;
 
-      foreach (var ch in text)
-      {
-         var charCode = (int)ch;
-         if (charCode is >= 1 and <= 126)
-            _sb.Append('\\');
-
-         _sb.Append(ch);
-      }
+      MessageTextUtils.EscapeString(text, _sb);
 
       return this;
    }
