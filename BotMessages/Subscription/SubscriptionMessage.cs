@@ -72,7 +72,7 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
                 .Bold("Заметки: ")
                 .LineBreak();
 
-            Text.ExpandableQuote(notes);
+            Text.Quote(notes);
         }
 
         Text
