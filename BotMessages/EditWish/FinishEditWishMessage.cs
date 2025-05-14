@@ -18,12 +18,15 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
            .AddButton<SetWishNameQuery>("Добавить ещё виш")
            .NewRow();
 
+        // TODO This looks enormous. Look into optimizing it
         var user = userContext.Users
             .Include(u => u.CurrentWish)
-            .ThenInclude(d => d.Original)
-            .ThenInclude(u => u.Links)
+                .ThenInclude(d => d.Original)
+                .ThenInclude(u => u.Links)
+            .Include(u => u.CurrentWish)
+                .ThenInclude(d => d.Links)
             .Include(u => u.Wishes)
-            .ThenInclude(u => u.Links)
+                .ThenInclude(u => u.Links)
             .First(u => u.UserId == userId);
 
         var draft = user.CurrentWish;

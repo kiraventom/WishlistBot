@@ -13,7 +13,7 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
     {
         var user = userContext.Users.Include(u => u.CurrentWish).ThenInclude(w => w.Links).First(u => u.UserId == userId);
 
-        if (user.CurrentWish.Links is null)
+        if (user.CurrentWish.Links.Count == 0)
         {
             Text.Verbatim("Пришлите ссылки одним сообщением:")
                .LineBreak()
