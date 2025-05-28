@@ -25,7 +25,11 @@ public class NewSubscriberNotificationMessage : BotMessage, INotificationMessage
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
-        var notificationTarget = userContext.Users.Include(u => u.Subscribers).First(u => u.UserId == userId);
+        var notificationTarget = userContext.Users
+           .Include(u => u.Subscribers)
+           .ThenInclude(s => s.Subscriber)
+           .First(u => u.UserId == userId);
+
         var subscribers = notificationTarget.Subscribers.Select(s => s.Subscriber).ToList();
 
         // TODO Fix
