@@ -15,7 +15,9 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
-        var target = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == targetId);
+        var target = userContext.Users.Include(u => u.Wishes)
+           .ThenInclude(w => w.Links)
+           .First(u => u.UserId == targetId);
 
         parameters.Pop(QueryParameterType.SetWishTo, out var wishId);
 
