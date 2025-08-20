@@ -4,22 +4,40 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 using WishlistBot.Model;
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.Queries.EditWish;
+using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages;
 
-// TODO Combine common code with EditWish
-[AllowedTypes(QueryParameterType.SetWishTo, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims)]
-[ChildMessage(typeof(FullListMessage))]
+// TODO REFACTOR
+[AllowedTypes(QueryParameterType.SetWishTo, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims, QueryParameterType.CleanDraft, QueryParameterType.SaveDraft)]
+[ChildMessage(typeof(CompactListMessage))]
 public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 {
-    protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
+    protected override async Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
-        var target = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == targetId);
+        var users = userContext.Users.Include(u => u.Wishes);
+        var (sender, target) = GetSenderAndTarget(users, userId, parameters);
 
         parameters.Pop(QueryParameterType.SetWishTo, out var wishId);
 
         var wish = target.Wishes.FirstOrDefault(w => w.WishId == wishId);
+
+        if (parameters.Pop(QueryParameterType.SaveDraft))
+        {
+            userContext.Entry(sender).Reference(u => u.CurrentWish).Load();
+
+            var draft = sender.CurrentWish;
+            WishModel newWish;
+            if (draft.Original is not null)
+                newWish = await EditWish(userContext, sender, draft);
+            else
+                newWish = await AddWish(userContext, sender, draft);
+
+            sender.CurrentWish = null;
+            wish = newWish;
+        }
+
         if (wish is null)
         {
             Text.Italic("Виш не найден! Вероятно, он был удалён");
@@ -27,61 +45,94 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
                 .AddButton<CompactListQuery>($"К другим вишам {target.FirstName}")
                 .NewRow()
                 .AddButton<MainMenuQuery>("В главное меню");
-            return Task.CompletedTask;
+            return;
         }
+
+        var readOnly = sender.UserId != target.UserId;
+
+        if (readOnly)
+        {
+            if (parameters.Pop(QueryParameterType.ClaimWish))
+            {
+                // Claim unclaimed wish
+                if (wish.ClaimerId is null)
+                {
+                    wish.ClaimerId = userId;
+                }
+                // Unclaim wish claimed by sender
+                else if (wish.ClaimerId == userId)
+                {
+                    wish.ClaimerId = null;
+                }
+                else
+                {
+                    Logger.Error("ShowWish: parameters contain ClaimWish, but wish.ClaimerId is nor null neither [{senderId}], but [{claimerId}]", userId, wish.ClaimerId);
+                }
+            }
+
+            if (wish.ClaimerId is not null)
+            {
+                var claimer = userContext.Users.FirstOrDefault(u => u.UserId == wish.ClaimerId);
+                if (claimer is not null)
+                {
+                    if (claimer.UserId == userId)
+                    {
+                        Text.ItalicBold("Этот виш забронирован вами").LineBreak().LineBreak();
+
+                        if (parameters.Peek(QueryParameterType.ReturnToMyClaims))
+                        {
+                            Keyboard
+                                .AddButton<MyClaimsQuery>("Снять бронь", QueryParameter.ClaimWish, new QueryParameter(QueryParameterType.SetWishTo, wish.WishId))
+                                .NewRow();
+                        }
+                        else
+                        {
+                            Keyboard.AddButton<ShowWishQuery>("Снять бронь", new QueryParameter(QueryParameterType.SetWishTo, wishId), QueryParameter.ClaimWish)
+                                .NewRow();
+                        }
+                    }
+                    else
+                    {
+                        Text.ItalicBold("\u203c\ufe0f Этот виш забронирован ").InlineMention(claimer).ItalicBold("! \u203c\ufe0f").LineBreak().LineBreak();
+                    }
+                }
+                else
+                {
+                    Logger.Error("Wish [{wishId}]: Claimer [{claimerId}] not found in database. Cleaning ClaimerId", wish.WishId, wish.ClaimerId);
+                    wish.ClaimerId = null;
+                }
+            }
+
+            // Checking ClaimerId in separate if because it can be reset when claimer was not found in database
+            if (wish.ClaimerId is null)
+            {
+                Keyboard.AddButton<ShowWishQuery>("Забронировать", new QueryParameter(QueryParameterType.SetWishTo, wishId), QueryParameter.ClaimWish)
+                    .NewRow();
+            }
+        }
+        else
+        {
+            if (parameters.Pop(QueryParameterType.CleanDraft))
+            {
+                userContext.Entry(sender).Reference(u => u.CurrentWish).Load();
+                
+                userContext.WishDrafts.Remove(sender.CurrentWish);
+                sender.CurrentWish = null;
+            }
+
+            const string pencilEmoji = "\u270f\ufe0f";
+
+            Keyboard
+                .AddButton<EditWishQuery>($"{pencilEmoji} Редактировать", new QueryParameter(QueryParameterType.SetWishTo, wish.WishId))
+                .NewRow();
+        }
+
+        userContext.Entry(wish).Collection(w => w.Links).Load();
 
         var name = wish.Name;
         var description = wish.Description;
         var links = wish.Links;
         var priceRange = wish.PriceRange;
-
-        if (parameters.Pop(QueryParameterType.ClaimWish))
-        {
-            // Claim unclaimed wish
-            if (wish.ClaimerId is null)
-            {
-                wish.ClaimerId = userId;
-            }
-            // Unclaim wish claimed by sender
-            else if (wish.ClaimerId == userId)
-            {
-                wish.ClaimerId = null;
-            }
-            else
-            {
-                Logger.Error("ShowWish: parameters contain ClaimWish, but wish.ClaimerId is nor 0 neither [{senderId}], but [{claimerId}]", userId, wish.ClaimerId);
-            }
-        }
-
-        if (wish.ClaimerId is not null)
-        {
-            var claimer = userContext.Users.FirstOrDefault(u => u.UserId == wish.ClaimerId);
-            if (claimer is not null)
-            {
-                if (claimer.UserId == userId)
-                {
-                    Text.ItalicBold("Этот виш забронирован вами").LineBreak().LineBreak();
-                    Keyboard.AddButton<ShowWishQuery>("Снять бронь", new QueryParameter(QueryParameterType.SetWishTo, wishId), QueryParameter.ClaimWish)
-                       .NewRow();
-                }
-                else
-                {
-                    Text.ItalicBold("\u203c\ufe0f Этот виш забронирован ").InlineMention(claimer).ItalicBold("! \u203c\ufe0f").LineBreak().LineBreak();
-                }
-            }
-            else
-            {
-                Logger.Error("Wish [{wishId}]: Claimer [{claimerId}] not found in database. Cleaning ClaimerId", wish.WishId, wish.ClaimerId);
-                wish.ClaimerId = null;
-            }
-        }
-
-        // Checking ClaimerId in separate if because it can be reset when claimer was not found in database
-        if (wish.ClaimerId is null)
-        {
-            Keyboard.AddButton<ShowWishQuery>("Забронировать", new QueryParameter(QueryParameterType.SetWishTo, wishId), QueryParameter.ClaimWish)
-               .NewRow();
-        }
 
         Text.Bold("Название: ").Monospace(name);
 
@@ -108,15 +159,129 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 
         PhotoFileId = wish.FileId;
 
+        // Controls
         if (parameters.Peek(QueryParameterType.ReturnToMyClaims))
         {
+            userContext.Entry(wish).Reference(w => w.Claimer).Load();
+            userContext.Entry(wish.Claimer).Collection(c => c.ClaimedWishes).Load();
+
+            var claimedWishes = wish.Claimer.GetSortedClaimedWishes();
+
+            var totalCount = claimedWishes.Count;
+            var index = claimedWishes.IndexOf(wish);
+            var prevIndex = index - 1;
+            var nextIndex = index + 1;
+
+            if (index > 0)
+                Keyboard.AddButton<ShowWishQuery>($"\u2b05\ufe0f {prevIndex + 1}", new QueryParameter(QueryParameterType.SetWishTo, claimedWishes[prevIndex].WishId));
+
             Keyboard.AddButton<MyClaimsQuery>("Назад");
+
+            if (index < totalCount - 1)
+                Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.SetWishTo, claimedWishes[nextIndex].WishId));
         }
         else
         {
-            Keyboard.AddButton<FullListQuery>("Назад");
+            userContext.Entry(wish).Reference(w => w.Owner).Load();
+            userContext.Entry(wish.Owner).Collection(c => c.Wishes).Load();
+
+            var wishes = wish.Owner.GetSortedWishes();
+
+            var totalCount = wishes.Count;
+            var index = wishes.IndexOf(wish);
+            var prevIndex = index - 1;
+            var nextIndex = index + 1;
+
+            if (index > 0)
+                Keyboard.AddButton<ShowWishQuery>($"\u2b05\ufe0f {prevIndex + 1}", new QueryParameter(QueryParameterType.SetWishTo, wishes[prevIndex].WishId));
+
+            Keyboard.AddButton<CompactListQuery>("Назад");
+
+            if (index < totalCount - 1)
+                Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.SetWishTo, wishes[nextIndex].WishId));
+        }
+    }
+
+    private async Task<WishModel> AddWish(UserContext userContext, UserModel user, WishDraftModel draft)
+    {
+        if (draft is null)
+        {
+            Logger.Error("[{uId}]: New wish is null", user.UserId);
+            throw new NotSupportedException("Current wish is null");
         }
 
-        return Task.CompletedTask;
+        var newWish = WishModel.FromDraft(draft);
+
+        user.Wishes.Add(newWish);
+        userContext.SaveChanges();
+
+        var newWishNotification = new NotificationModel()
+        {
+            SourceId = user.UserId,
+            SubjectId = newWish.WishId,
+            Type = NotificationMessageType.NewWish
+        };
+
+        await NotificationService.Instance.SendToSubscribers(newWishNotification, userContext);
+
+        return newWish;
+    }
+
+    private async Task<WishModel> EditWish(UserContext userContext, UserModel user, WishDraftModel draft)
+    {
+        userContext.Entry(draft).Reference(d => d.Original).Load();
+        userContext.Entry(draft.Original).Collection(d => d.Links).Load();
+        userContext.Entry(draft).Collection(d => d.Links).Load();
+
+        var editedWish = WishModel.FromDraft(draft);
+
+        if (draft.Original is null)
+        {
+            Logger.Error("Draft {draftId} is not connected to original", draft.WishDraftId);
+
+            if (draft is null)
+            {
+                Logger.Error("[{uId}]: Edited wish is null", user.UserId);
+                throw new NotSupportedException("Edited wish is null");
+            }
+
+            userContext.Wishes.Add(editedWish);
+            userContext.SaveChanges();
+            return editedWish;
+        }
+
+        var wishPropertyType = WishPropertyType.None;
+
+        if (draft.Original.Name != draft.Name)
+            wishPropertyType |= WishPropertyType.Name;
+
+        if (draft.Original.Description != draft.Description)
+            wishPropertyType |= WishPropertyType.Description;
+
+        if (!draft.Original.Links.SequenceEqual(draft.Links))
+            wishPropertyType |= WishPropertyType.Links;
+
+        if (draft.Original.FileId != draft.FileId)
+            wishPropertyType |= WishPropertyType.Media;
+
+        DeleteWish(userContext, user, draft.Original);
+        user.Wishes.Add(editedWish);
+        userContext.SaveChanges();
+
+        if (wishPropertyType != WishPropertyType.None)
+        {
+            var editWishNotification = new NotificationModel()
+            {
+                SourceId = user.UserId,
+                SubjectId = editedWish.WishId,
+                Type = NotificationMessageType.WishEdit,
+            };
+
+            editWishNotification.SetExtraInt((int)wishPropertyType);
+
+            await NotificationService.Instance.SendToSubscribers(editWishNotification, userContext);
+        }
+
+        return editedWish;
     }
 }

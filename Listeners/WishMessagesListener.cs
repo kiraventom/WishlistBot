@@ -10,7 +10,7 @@ namespace WishlistBot.Listeners;
 
 public class WishMessagesListener(ILogger logger, ITelegramBotClient client) : IListener
 {
-    public async Task<bool> HandleMessageAsync(Message message, UserContext userContext, int userId)
+    public async Task<HandleResult> HandleMessageAsync(Message message, UserContext userContext, int userId)
     {
         var user = userContext.Users.Include(u => u.CurrentWish).First(u => u.UserId == userId);
         switch (user.BotState)

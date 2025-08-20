@@ -19,17 +19,33 @@ public class MySubscribersMessage(ILogger logger) : UserBotMessage(logger)
 
         var totalCount = user.Subscribers.Count;
 
-        Text.Bold(totalCount == 0 ? "У вас пока нет подписчиков :(" : "Ваши подписчики:");
+        if (totalCount == 0)
+        {
+            const string downArrow = "\u2b07\ufe0f";
+            const string link = "\U0001f517";
+
+            Text.Bold("У вас пока нет подписчиков :(")
+                .LineBreak()
+                .Italic($"Пригласите друзей, прислав им ссылку на свой вишлист {downArrow}");
+
+            Keyboard.AddCopyTextButton($"{link} Ссылка на вишлист", $"t.me/{Config.Instance.Username}?start={user.SubscribeId}");
+
+            Keyboard.NewRow();
+        }
+        else
+        {
+            Text.Bold("Ваши подписчики:");
+        }
 
         ListMessageUtils.AddListControls<MySubscribersQuery, MainMenuQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
-        {
-            var subscriber = user.Subscribers[itemIndex].Subscriber;
+                {
+                var subscriber = user.Subscribers[itemIndex].Subscriber;
 
-            Keyboard.AddButton<SubscriberQuery>(
-                    subscriber.FirstName,
-                    new QueryParameter(QueryParameterType.SetUserTo, subscriber.UserId),
-                    new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
-        });
+                Keyboard.AddButton<SubscriberQuery>(
+                        subscriber.FirstName,
+                        new QueryParameter(QueryParameterType.SetUserTo, subscriber.UserId),
+                        new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
+                });
 
         return Task.CompletedTask;
     }

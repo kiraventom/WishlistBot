@@ -8,13 +8,14 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
    private const char EQUALS_CH = '=';
 
    public static QueryParameter ForceNewWish { get; } = new(QueryParameterType.ForceNewWish);
-   public static QueryParameter ReturnToFullList { get; } = new(QueryParameterType.ReturnToFullList);
    public static QueryParameter ReturnToMyClaims { get; } = new(QueryParameterType.ReturnToMyClaims);
    public static QueryParameter ReturnToSubscriber { get; } = new(QueryParameterType.ReturnToSubscriber);
    public static QueryParameter ClaimWish { get; } = new(QueryParameterType.ClaimWish);
    public static QueryParameter ForceNewMessage { get; } = new(QueryParameterType.ForceNewMessage);
    public static QueryParameter CancelJob { get; } = new(QueryParameterType.CancelJob);
    public static QueryParameter RegenerateLink { get; } = new(QueryParameterType.RegenerateLink);
+   public static QueryParameter CleanDraft { get; } = new(QueryParameterType.CleanDraft);
+   public static QueryParameter SaveDraft { get; } = new(QueryParameterType.SaveDraft);
 
    public QueryParameterType Type { get; } = type;
    public long? Value { get; } = value;

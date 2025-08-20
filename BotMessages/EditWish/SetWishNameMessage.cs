@@ -3,6 +3,7 @@ using WishlistBot.Queries.EditWish;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.Queries;
 
 namespace WishlistBot.BotMessages.EditWish;
 
@@ -21,7 +22,7 @@ public class SetWishNameMessage(ILogger logger) : UserBotMessage(logger)
                 user.CurrentWish = null;
 
             Text.Verbatim("Укажите краткое название виша:");
-            Keyboard.AddButton<CancelEditWishQuery>();
+            Keyboard.AddButton<CompactListQuery>("Отмена");
         }
         else
         {

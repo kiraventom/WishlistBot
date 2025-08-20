@@ -5,7 +5,7 @@ public enum QueryParameterType
    ForceNewWish = 0x1,
    ClearWishProperty = 0x2,
    SetWishTo = 0x3,
-   ReturnToFullList = 0x4,
+   // ReturnToFullList = 0x4, OBSOLETE
    SetListPageTo = 0x7,
    // ReadOnly = 0x8, OBSOLETE
    SetUserTo = 0x9,
@@ -16,6 +16,8 @@ public enum QueryParameterType
    SetSettingsTo = 0xE,
    RegenerateLink = 0xF,
    ReturnToMyClaims = 0x10,
+   CleanDraft = 0x11,
+   SaveDraft = 0x12,
 
    // Admin
    SetBroadcastTo = -0x1,

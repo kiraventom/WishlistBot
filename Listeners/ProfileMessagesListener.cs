@@ -12,7 +12,7 @@ public class ProfileMessagesListener(ILogger logger, ITelegramBotClient client) 
 {
     private readonly CultureInfo _ruCulture = new CultureInfo("ru-RU");
 
-    public async Task<bool> HandleMessageAsync(Message message, UserContext userContext, int userId)
+    public async Task<HandleResult> HandleMessageAsync(Message message, UserContext userContext, int userId)
     {
         var user = userContext.Users.Include(u => u.Profile).First(u => u.UserId == userId);
         switch (user.BotState)

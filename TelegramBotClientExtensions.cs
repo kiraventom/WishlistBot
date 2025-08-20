@@ -21,9 +21,6 @@ public static class TelegramBotClientExtensions
         try
         {
             await botMessage.Init(userContext, userModel);
-
-            if (botMessage.ForceNewMessage)
-                forceNewMessage = true;
         }
         catch (Exception e)
         {
@@ -36,7 +33,7 @@ public static class TelegramBotClientExtensions
             {
                 logger.Fatal(e.ToString());
 
-                // Do not sent invalid message as notification, it's useless and annoying
+                // Do not send invalid message as notification, it's useless and annoying
                 if (botMessage is not INotificationMessage)
                 {
                     var invalidMessage = new InvalidMessage(logger);
@@ -62,7 +59,11 @@ public static class TelegramBotClientExtensions
                 await MediaStorageManager.Instance.Store(photoFileId);
             }
 
-            var shouldSendNewMessage = userModel.LastBotMessageId < 0 || forceNewMessage || userModel.ReceivedBroadcasts.Any(b => b.MessageId == userModel.LastBotMessageId);
+            var shouldSendNewMessage = 
+                userModel.LastBotMessageId < 0 
+                || botMessage.ForceNewMessage
+                || forceNewMessage 
+                || userModel.ReceivedBroadcasts.Any(b => b.MessageId == userModel.LastBotMessageId);
 
             if (shouldSendNewMessage)
             {

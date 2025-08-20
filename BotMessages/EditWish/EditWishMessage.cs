@@ -4,11 +4,12 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 using WishlistBot.Model;
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.Queries;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo)]
-[ChildMessage(typeof(FullListMessage))]
+[AllowedTypes(QueryParameterType.SetWishTo, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo)]
+[ChildMessage(typeof(CompactListMessage))]
 // TODO Separate to NewWish and EditWish
 public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
 {
@@ -31,44 +32,26 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
             .ThenInclude(w => w.Links)
             .First(u => u.UserId == userId);
 
-        if (parameters.Peek(QueryParameterType.ReturnToFullList))
+        var isEditing = parameters.Peek(QueryParameterType.SetWishTo, out var wishId);
+        if (isEditing) // Editing
         {
-            parameters.Peek(QueryParameterType.SetWishTo, out var wishId);
-
             if (user.CurrentWish is null)
             {
-                Logger.Debug("Parameter SetWishTo={setWishTo}", wishId);
-                Logger.Debug("Current user wish ids: [ {wishIds} ]", string.Join(", ", user.Wishes.Select(w => w.WishId)));
-
-                var wishToEdit = user.Wishes.FirstOrDefault(w => w.WishId == wishId);
-                if (wishToEdit is null)
-                {
-                    throw new NotSupportedException($"Can't find wish {wishId} to edit");
-                }
-
-                if (user.Wishes.Count(w => w.WishId == wishId) > 1)
-                {
-                    throw new NotSupportedException($"There are more than one wish with id {wishId}");
-                }
-
-                Logger.Debug("WishToEdit ID={wishToEdit}", wishToEdit.WishId);
-
-                var draft = WishDraftModel.FromWish(wishToEdit);
-
-                userContext.WishDrafts.Add(draft);
-                userContext.SaveChanges();
+                var wish = user.Wishes.First(w => w.WishId == wishId);
+                var draft = WishDraftModel.FromWish(wish);
+                user.CurrentWish = draft;
             }
 
             Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.SetWishTo, wishId));
             Keyboard.NewRow();
-            Keyboard.AddButton<FinishEditWishQuery>(new QueryParameter(QueryParameterType.SetWishTo, wishId));
+            Keyboard.AddButton<ShowWishQuery>("Готово", QueryParameter.SaveDraft, new QueryParameter(QueryParameterType.SetWishTo, wishId));
+            Keyboard.AddButton<ShowWishQuery>("Отмена", QueryParameter.CleanDraft);
         }
-        else
+        else // Adding
         {
-            Keyboard.AddButton<FinishEditWishQuery>();
+            Keyboard.AddButton<ShowWishQuery>("Готово", QueryParameter.SaveDraft);
+            Keyboard.AddButton<CompactListQuery>("Отмена");
         }
-
-        Keyboard.AddButton<CancelEditWishQuery>();
 
         var wishDraft = user.CurrentWish;
 

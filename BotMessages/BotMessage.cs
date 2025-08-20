@@ -31,7 +31,7 @@ public abstract class BotMessage(ILogger logger)
 
         user.BotState = BotState.Default;
 
-        FilterParameters(parameters, GetAllowedTypes());
+        FilterParameters(parameters, AllowedTypes);
 
         if (parameters.Pop(QueryParameterType.ForceNewMessage))
             ForceNewMessage = true;
@@ -71,7 +71,18 @@ public abstract class BotMessage(ILogger logger)
 
 #pragma warning disable CA1859
 
-    private IReadOnlyCollection<QueryParameterType> GetAllowedTypes() => GetAllowedTypes(GetType());
+    private static Dictionary<Type, IReadOnlyCollection<QueryParameterType>> _allowedTypes = [];
+    private IReadOnlyCollection<QueryParameterType> AllowedTypes
+    {
+        get
+        {
+            var type = GetType();
+            if (_allowedTypes.ContainsKey(type))
+                return _allowedTypes[type];
+            else
+                return _allowedTypes[type] = GetAllowedTypes(type);
+        }
+    }
 
     private static IReadOnlyCollection<QueryParameterType> GetAllowedTypes(Type type)
     {

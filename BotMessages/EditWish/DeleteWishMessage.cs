@@ -7,17 +7,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetWishTo)]
+[AllowedTypes(QueryParameterType.SetWishTo)]
 [ChildMessage(typeof(ConfirmDeleteWishMessage))]
 public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 {
     protected override async Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        if (parameters.Pop(QueryParameterType.ReturnToFullList))
-            Keyboard.AddButton<FullListQuery>("Назад к списку");
-        else
-            Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
-
+        Keyboard.AddButton<CompactListQuery>("Назад к моим вишам");
+        
         parameters.Peek(QueryParameterType.SetWishTo, out var wishId);
 
         var user = userContext.Users

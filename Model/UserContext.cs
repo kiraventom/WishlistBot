@@ -145,6 +145,12 @@ public class UserModel
         Wishes.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
         return Wishes;
     }
+
+    public List<WishModel> GetSortedClaimedWishes()
+    {
+        ClaimedWishes.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
+        return ClaimedWishes;
+    }
 }
 
 public class ProfileModel
