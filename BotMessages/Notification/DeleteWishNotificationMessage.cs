@@ -30,7 +30,6 @@ public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
 
         Keyboard
             .AddButton<SubscriptionQuery>("Перейти к подписке",
-                    QueryParameter.ReadOnly,
                     new QueryParameter(QueryParameterType.SetUserTo, notificationSource.UserId))
             .NewRow()
             .AddButton<MainMenuQuery>("В главное меню");

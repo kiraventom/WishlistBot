@@ -24,7 +24,12 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         var wish = target.Wishes.FirstOrDefault(w => w.WishId == wishId);
         if (wish is null)
         {
-            throw new NotSupportedException($"Can't find wish {wishId} to show");
+            Text.Italic("Виш не найден! Вероятно, он был удалён");
+            Keyboard
+                .AddButton<CompactListQuery>($"К другим вишам {target.FirstName}")
+                .NewRow()
+                .AddButton<MainMenuQuery>("В главное меню");
+            return Task.CompletedTask;
         }
 
         var name = wish.Name;
@@ -105,7 +110,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 
         PhotoFileId = wish.FileId;
 
-        Keyboard.AddButton<FullListQuery>("Назад", QueryParameter.ReadOnly);
+        Keyboard.AddButton<FullListQuery>("Назад");
 
         return Task.CompletedTask;
     }

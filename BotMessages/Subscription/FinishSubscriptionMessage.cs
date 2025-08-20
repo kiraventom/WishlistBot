@@ -44,7 +44,6 @@ public class FinishSubscriptionMessage(ILogger logger) : UserBotMessage(logger)
 
         Keyboard
            .AddButton<CompactListQuery>($"Открыть вишлист {target.FirstName}",
-                                        QueryParameter.ReadOnly,
                                         new QueryParameter(QueryParameterType.SetUserTo, target.UserId))
            .NewRow()
            .AddButton<MySubscriptionsQuery>("К моим подпискам");

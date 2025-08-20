@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
-[AllowedTypes(QueryParameterType.ReadOnly, QueryParameterType.ReturnToSubscriber)]
+[AllowedTypes(QueryParameterType.ReturnToSubscriber)]
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -20,7 +20,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             .AsNoTracking();
 
         var (sender, targetUser) = GetSenderAndTarget(users, userId, parameters);
-        var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
+        var isReadOnly = sender != targetUser;
 
         const string plusEmoji = "\u2795";
 

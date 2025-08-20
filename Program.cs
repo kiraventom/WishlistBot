@@ -90,7 +90,7 @@ public static class Program
 
       var logger = new LoggerConfiguration()
          .MinimumLevel.Debug()
-         .WriteTo.File(logFilePath)
+         .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day)
          .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information)
          .CreateLogger();
 

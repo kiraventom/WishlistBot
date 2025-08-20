@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Subscription;
 
-[AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ReadOnly)]
+[AllowedTypes(QueryParameterType.SetListPageTo)]
 public class MySubscriptionsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -27,7 +27,6 @@ public class MySubscriptionsMessage(ILogger logger) : UserBotMessage(logger)
 
             Keyboard.AddButton<SubscriptionQuery>(
                     userWeSubscribedTo.FirstName,
-                    QueryParameter.ReadOnly,
                     new QueryParameter(QueryParameterType.SetUserTo, userWeSubscribedTo.UserId),
                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
         });

@@ -7,16 +7,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
-[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.ReadOnly, QueryParameterType.SetListPageTo)]
+[AllowedTypes(QueryParameterType.ReturnToFullList, QueryParameterType.SetListPageTo)]
 [ChildMessage(typeof(CompactListMessage))]
 public class FullListMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        var isReadOnly = parameters.Peek(QueryParameterType.ReadOnly);
-
         var users = userContext.Users.Include(u => u.Wishes).AsNoTracking();
         var (sender, targetUser) = GetSenderAndTarget(users, userId, parameters);
+
+        var isReadOnly = sender != targetUser;
 
         var totalCount = targetUser.Wishes.Count;
         var sortedWishes = targetUser.GetSortedWishes();
