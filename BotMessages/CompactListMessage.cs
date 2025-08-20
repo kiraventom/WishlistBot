@@ -60,7 +60,8 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             // If user isn't looking at its own wishes
             if (wish.ClaimerId != null && sender != targetUser)
             {
-                Text.Bold("[БРОНЬ] ").Strikethrough(wish.Name);
+                userContext.Entry(wish).Reference(w => w.Claimer).Load();
+                Text.Bold("[").InlineMention("БРОНЬ", wish.Claimer.Tag).Bold("] ").Strikethrough(wish.Name);
             }
             else
             {

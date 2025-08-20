@@ -15,8 +15,21 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
     {
         const string giftEmoji = "\U0001f381";
 
+        var user = userContext.Users
+            .Include(u => u.ClaimedWishes)
+            .Include(u => u.Settings).First(u => u.UserId == userId);
+
         Keyboard
-           .AddButton<CompactListQuery>($"{giftEmoji} Мои виши")
+           .AddButton<CompactListQuery>($"{giftEmoji} Виши");
+
+        if (user.ClaimedWishes.Any())
+        {
+            Keyboard
+                .NewRow()
+                .AddButton<MyClaimsQuery>();
+        }
+
+        Keyboard
            .NewRow()
            .AddButton<MySubscriptionsQuery>()
            .AddButton<MySubscribersQuery>()
@@ -24,7 +37,6 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
            .AddButton<EditProfileQuery>()
            .AddButton<SettingsQuery>();
 
-        var user = userContext.Users.Include(u => u.Settings).First(u => u.UserId == userId);
         Text.Verbatim("Добро пожаловать в главное меню, ")
            .InlineMention(user)
            .Verbatim("!");

@@ -8,16 +8,14 @@ using Microsoft.EntityFrameworkCore;
 namespace WishlistBot.BotMessages;
 
 // TODO Combine common code with EditWish
-[AllowedTypes(QueryParameterType.SetWishTo, QueryParameterType.ClaimWish)]
+[AllowedTypes(QueryParameterType.SetWishTo, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims)]
 [ChildMessage(typeof(FullListMessage))]
 public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
-        var target = userContext.Users.Include(u => u.Wishes)
-           .ThenInclude(w => w.Links)
-           .First(u => u.UserId == targetId);
+        var target = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == targetId);
 
         parameters.Pop(QueryParameterType.SetWishTo, out var wishId);
 
@@ -110,7 +108,14 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 
         PhotoFileId = wish.FileId;
 
-        Keyboard.AddButton<FullListQuery>("Назад");
+        if (parameters.Peek(QueryParameterType.ReturnToMyClaims))
+        {
+            Keyboard.AddButton<MyClaimsQuery>("Назад");
+        }
+        else
+        {
+            Keyboard.AddButton<FullListQuery>("Назад");
+        }
 
         return Task.CompletedTask;
     }

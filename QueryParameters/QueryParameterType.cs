@@ -15,6 +15,7 @@ public enum QueryParameterType
    SetPriceTo = 0xD,
    SetSettingsTo = 0xE,
    RegenerateLink = 0xF,
+   ReturnToMyClaims = 0x10,
 
    // Admin
    SetBroadcastTo = -0x1,
