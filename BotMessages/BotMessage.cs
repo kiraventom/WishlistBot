@@ -4,6 +4,7 @@ using WishlistBot.Keyboard;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 using WishlistBot.Model;
+using WishlistBot.Jobs;
 
 namespace WishlistBot.BotMessages;
 
@@ -44,6 +45,18 @@ public abstract class BotMessage(ILogger logger)
         user.AllowedQueries = string.Join(';', Keyboard.EnumerateQueries());
 
         _isInited = true;
+    }
+    
+    protected void DeleteWish(UserContext userContext, UserModel user, WishModel wishToDelete)
+    {
+        var notification = userContext.Notifications.FirstOrDefault(n => n.SubjectId == wishToDelete.WishId);
+
+        if (notification is not null)
+        {
+            JobManager.Instance.StopNotificationJob(notification.NotificationId);
+        }
+
+        user.Wishes.Remove(wishToDelete);
     }
 
     protected abstract Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters);

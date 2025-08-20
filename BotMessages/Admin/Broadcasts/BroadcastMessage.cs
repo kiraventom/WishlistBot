@@ -19,7 +19,7 @@ public class BroadcastMessage(ILogger logger) : UserBotMessage(logger)
 
             if (parameters.Pop(QueryParameterType.CancelJob))
             {
-                JobManager.Instance.StopJob(broadcast.BroadcastId);
+                JobManager.Instance.StopBroadcastJob(broadcast.BroadcastId);
             }
 
             Text.Bold("Broadcast ")

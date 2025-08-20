@@ -35,7 +35,7 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
         }
         else
         {
-            user.Wishes.Remove(deletedWish);
+            DeleteWish(userContext, user, deletedWish);
         }
 
         user.CurrentWish = null;

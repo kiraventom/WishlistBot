@@ -115,7 +115,7 @@ public class FinishEditWishMessage(ILogger logger) : BotMessage(logger)
         if (draft.Original.FileId != draft.FileId)
             wishPropertyType |= WishPropertyType.Media;
 
-        user.Wishes.Remove(draft.Original);
+        DeleteWish(userContext, user, draft.Original);
         user.Wishes.Add(editedWish);
         userContext.SaveChanges();
 

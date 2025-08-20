@@ -84,8 +84,8 @@ public abstract class Job
         {
             foreach (var itemId in _itemIds)
             {
-                _cts.Token.ThrowIfCancellationRequested();
                 await Task.Delay(_interval);
+                _cts.Token.ThrowIfCancellationRequested();
                 using (var userContext = UserContext.Create())
                 {
                     await Iterate(logger, client, userContext, itemId);

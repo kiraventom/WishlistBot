@@ -67,7 +67,19 @@ public class JobManager
       _logger.Information("Started job on broadcast [{broadcastId}]", broadcastId);
    }
 
-   public void StopJob(int broadcastId)
+   public void StopNotificationJob(int notificationId)
+   {
+      if (NotificationJobs.TryGetValue(notificationId, out var job))
+      {
+         job.Cancel();
+      }
+      else
+      {
+         _logger.Warning("Attempt to stop job that is not running, notificationId [{notificationId}]", notificationId);
+      }
+   }
+
+   public void StopBroadcastJob(int broadcastId)
    {
       if (BroadcastJobs.TryGetValue(broadcastId, out var job))
       {

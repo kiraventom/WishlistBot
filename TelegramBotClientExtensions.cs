@@ -5,6 +5,7 @@ using Serilog;
 using WishlistBot.BotMessages;
 
 using WishlistBot.Model;
+using WishlistBot.Notification;
 
 namespace WishlistBot;
 
@@ -34,9 +35,18 @@ public static class TelegramBotClientExtensions
             else
             {
                 logger.Fatal(e.ToString());
-                var invalidMessage = new InvalidMessage(logger);
-                var sentMessage = await client.SendOrEditBotMessage(logger, userContext, userId, invalidMessage, forceNewMessage: true);
-                return sentMessage;
+
+                // Do not sent invalid message as notification, it's useless and annoying
+                if (botMessage is not INotificationMessage)
+                {
+                    var invalidMessage = new InvalidMessage(logger);
+                    var sentMessage = await client.SendOrEditBotMessage(logger, userContext, userId, invalidMessage, forceNewMessage: true);
+                    return sentMessage;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
