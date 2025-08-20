@@ -42,9 +42,13 @@ public class FinishSubscriptionMessage(ILogger logger) : UserBotMessage(logger)
             await NotificationService.Instance.SendToUser(newSubscriberNotification, userContext, target.UserId);
         }
 
+        var totalSubscriptions = sender.Subscriptions.Count;
+        var lastPage = totalSubscriptions / ListMessageUtils.ItemsPerPage;
+
         Keyboard
-           .AddButton<CompactListQuery>($"Открыть вишлист {target.FirstName}",
-                                        new QueryParameter(QueryParameterType.SetUserTo, target.UserId))
+           .AddButton<SubscriptionQuery>($"Открыть вишлист {target.FirstName}",
+                                        new QueryParameter(QueryParameterType.SetUserTo, target.UserId),
+                                        new QueryParameter(QueryParameterType.SetListPageTo, lastPage))
            .NewRow()
            .AddButton<MySubscriptionsQuery>("К моим подпискам");
     }
