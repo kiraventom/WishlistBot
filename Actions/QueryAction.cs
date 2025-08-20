@@ -26,13 +26,15 @@ public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFa
 
       QueryUtils.TryParseQueryStr(actionText, out _, out var parameters);
 
-      await Client.AnswerCallbackQuery(user.LastQueryId);
+      var queryId = user.LastQueryId;
       user.LastQueryId = null;
 
-      // We must pass parameters through DB, because sometimes we have to send message not after query action, butt after message (see WishMessagesListener)
+      await Client.AnswerCallbackQuery(queryId);
+
+      // We must pass parameters through DB, because sometimes we have to send message not after query action, but after message (see WishMessagesListener)
       user.QueryParams = parameters.ToString();
 
-      var message = MessageFactory.Build(_query, userContext, user.LastQueryId);
+      var message = MessageFactory.Build(_query, userContext, queryId);
       await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, message);
    }
 

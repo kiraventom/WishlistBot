@@ -53,6 +53,7 @@ public class MessageFactory(ILogger logger)
          DeleteBroadcastQuery => new DeleteBroadcastMessage(logger),
          FinishBroadcastQuery => new FinishBroadcastMessage(logger),
          SettingsQuery => new SettingsMessage(logger),
+         ConfirmRegenerateLinkQuery => new ConfirmRegenerateLinkMessage(logger),
          EditProfileQuery => new EditProfileMessage(logger),
          SetProfileBirthdayQuery => new SetProfileBirthdayMessage(logger),
          SetProfileNotesQuery => new SetProfileNotesMessage(logger),
