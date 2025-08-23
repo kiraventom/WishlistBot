@@ -86,12 +86,12 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
         var links = wishDraft.Links;
         var priceRange = wishDraft.PriceRange;
 
-        //if (wish.ClaimerId != 0)
-        //{
-        //   Text.ItalicBold("\u203c\ufe0f Будьте осторожны! Кто-то забронировал этот виш! \u203c\ufe0f").LineBreak().LineBreak();
-        //}
+        if (isEditing)
+            Text.Italic("Редактирование виша");
+        else
+            Text.Italic("Добавление виша");
 
-        Text.Italic("Редактирование виша")
+        Text
            .LineBreak()
            .LineBreak().Bold("Название: ").Monospace(name);
 

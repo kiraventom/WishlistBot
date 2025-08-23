@@ -106,7 +106,7 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client) : I
 
         var links = linksEntities.Select(l => text.Substring(l.Offset, l.Length));
 
-        userContext.Entry<WishDraftModel>(user.CurrentWish).Collection<LinkModel>(d => d.Links).Load();
+        userContext.Entry(user.CurrentWish).Collection<LinkModel>(d => d.Links).Load();
 
         user.CurrentWish.Links.Clear();
         foreach (var link in links)

@@ -26,6 +26,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         if (parameters.Pop(QueryParameterType.SaveDraft))
         {
             userContext.Entry(sender).Reference(u => u.CurrentWish).Load();
+            userContext.Entry(sender.CurrentWish).Collection(u => u.Links).Load();
 
             var draft = sender.CurrentWish;
             WishModel newWish;
@@ -231,7 +232,6 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
     {
         userContext.Entry(draft).Reference(d => d.Original).Load();
         userContext.Entry(draft.Original).Collection(d => d.Links).Load();
-        userContext.Entry(draft).Collection(d => d.Links).Load();
 
         var editedWish = WishModel.FromDraft(draft);
 
