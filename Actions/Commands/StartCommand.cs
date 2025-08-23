@@ -37,7 +37,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             user.QueryParams = collection.ToString();
             await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FinishSubscriptionMessage(Logger), forceNewMessage: true);
         }
-        // TOOD
+        // TODO
         else if (TryParseShowWishAction(actionText, out var userId, out var wishId, out var pageIndex))
         {
             var collection = new QueryParameterCollection(
@@ -74,6 +74,10 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
 
     private static bool TryParseShowWishAction(string actionText, out int userId, out int wishId, out int pageIndex)
     {
+        userId = -1;
+        wishId = -1;
+        pageIndex = -1;
+
         var parts = actionText.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 2)
         {
@@ -83,6 +87,9 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             foreach (var parameter in parametersTxt)
             {
                 var parameterKeyValue = parameter.Split('=');
+                if (parameterKeyValue.Length != 2)
+                    return false;
+
                 parameters.Add(parameterKeyValue[0], parameterKeyValue[1]);
             }
 
@@ -95,9 +102,6 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             }
         }
 
-        userId = -1;
-        wishId = -1;
-        pageIndex = -1;
         return false;
     }
 }

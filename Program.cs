@@ -29,6 +29,7 @@ public static class Program
       }
 
       var logger = InitLogger(projectDirPath, config.Token);
+      Log.Logger = logger;
 
       logger.Information("===== ENTRY POINT =====");
 
