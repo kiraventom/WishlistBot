@@ -8,7 +8,7 @@ using WishlistBot.Queries;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-[AllowedTypes(QueryParameterType.SetWishTo, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo)]
+[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo)]
 [ChildMessage(typeof(CompactListMessage))]
 // TODO Separate to NewWish and EditWish
 public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
@@ -32,7 +32,7 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
             .ThenInclude(w => w.Links)
             .First(u => u.UserId == userId);
 
-        var isEditing = parameters.Peek(QueryParameterType.SetWishTo, out var wishId);
+        var isEditing = parameters.Peek(QueryParameterType.WishId, out var wishId);
         if (isEditing) // Editing
         {
             if (user.CurrentWish is null)
@@ -42,9 +42,9 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
                 user.CurrentWish = draft;
             }
 
-            Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.SetWishTo, wishId));
+            Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.WishId, wishId));
             Keyboard.NewRow();
-            Keyboard.AddButton<ShowWishQuery>("Готово", QueryParameter.SaveDraft, new QueryParameter(QueryParameterType.SetWishTo, wishId));
+            Keyboard.AddButton<ShowWishQuery>("Готово", QueryParameter.SaveDraft, new QueryParameter(QueryParameterType.WishId, wishId));
             Keyboard.AddButton<ShowWishQuery>("Отмена", QueryParameter.CleanDraft);
         }
         else // Adding

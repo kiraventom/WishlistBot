@@ -34,8 +34,8 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
 
         Keyboard
            .AddButton<ShowWishQuery>("Перейти к вишу",
-                                     new QueryParameter(QueryParameterType.SetUserTo, notificationSource.UserId),
-                                     new QueryParameter(QueryParameterType.SetWishTo, newWish.WishId),
+                                     new QueryParameter(QueryParameterType.UserId, notificationSource.UserId),
+                                     new QueryParameter(QueryParameterType.WishId, newWish.WishId),
                                      new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
            .NewRow()
            .AddButton<MainMenuQuery>("В главное меню");

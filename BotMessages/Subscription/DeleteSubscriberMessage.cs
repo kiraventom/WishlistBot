@@ -12,7 +12,7 @@ public class DeleteSubscriberMessage(ILogger logger) : UserBotMessage(logger)
     {
         Keyboard.AddButton<MySubscribersQuery>("К моим подписчикам");
 
-        parameters.Peek(QueryParameterType.SetUserTo, out var subscriberId);
+        parameters.Peek(QueryParameterType.UserId, out var subscriberId);
         var subscriber = userContext.Users
             .Include(u => u.Subscriptions)
             .Include(u => u.ClaimedWishes)

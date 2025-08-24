@@ -17,7 +17,7 @@ public class UnsubscribeMessage(ILogger logger) : UserBotMessage(logger)
             .Include(u => u.ClaimedWishes)
             .First(u => u.UserId == userId);
 
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
+        parameters.Peek(QueryParameterType.UserId, out var targetId);
         var target = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == targetId);
 
         Text.Italic("Вы отписались от вишлиста ")

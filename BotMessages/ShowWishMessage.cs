@@ -10,7 +10,7 @@ using WishlistBot.Notification;
 namespace WishlistBot.BotMessages;
 
 // TODO REFACTOR
-[AllowedTypes(QueryParameterType.SetWishTo, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims, QueryParameterType.CleanDraft, QueryParameterType.SaveDraft)]
+[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims, QueryParameterType.CleanDraft, QueryParameterType.SaveDraft)]
 [ChildMessage(typeof(CompactListMessage))]
 public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 {
@@ -19,7 +19,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         var users = userContext.Users.Include(u => u.Wishes);
         var (sender, target) = GetSenderAndTarget(users, userId, parameters);
 
-        parameters.Pop(QueryParameterType.SetWishTo, out var wishId);
+        parameters.Pop(QueryParameterType.WishId, out var wishId);
 
         var wish = target.Wishes.FirstOrDefault(w => w.WishId == wishId);
 
@@ -83,12 +83,12 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
                         if (parameters.Peek(QueryParameterType.ReturnToMyClaims))
                         {
                             Keyboard
-                                .AddButton<MyClaimsQuery>("Снять бронь", QueryParameter.ClaimWish, new QueryParameter(QueryParameterType.SetWishTo, wish.WishId))
+                                .AddButton<MyClaimsQuery>("Снять бронь", QueryParameter.ClaimWish, new QueryParameter(QueryParameterType.WishId, wish.WishId))
                                 .NewRow();
                         }
                         else
                         {
-                            Keyboard.AddButton<ShowWishQuery>("Снять бронь", new QueryParameter(QueryParameterType.SetWishTo, wishId), QueryParameter.ClaimWish)
+                            Keyboard.AddButton<ShowWishQuery>("Снять бронь", new QueryParameter(QueryParameterType.WishId, wishId), QueryParameter.ClaimWish)
                                 .NewRow();
                         }
                     }
@@ -107,7 +107,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             // Checking ClaimerId in separate if because it can be reset when claimer was not found in database
             if (wish.ClaimerId is null)
             {
-                Keyboard.AddButton<ShowWishQuery>("Забронировать", new QueryParameter(QueryParameterType.SetWishTo, wishId), QueryParameter.ClaimWish)
+                Keyboard.AddButton<ShowWishQuery>("Забронировать", new QueryParameter(QueryParameterType.WishId, wishId), QueryParameter.ClaimWish)
                     .NewRow();
             }
         }
@@ -124,7 +124,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             const string pencilEmoji = "\u270f\ufe0f";
 
             Keyboard
-                .AddButton<EditWishQuery>($"{pencilEmoji} Редактировать", new QueryParameter(QueryParameterType.SetWishTo, wish.WishId))
+                .AddButton<EditWishQuery>($"{pencilEmoji} Редактировать", new QueryParameter(QueryParameterType.WishId, wish.WishId))
                 .NewRow();
         }
 
@@ -174,12 +174,12 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             var nextIndex = index + 1;
 
             if (index > 0)
-                Keyboard.AddButton<ShowWishQuery>($"\u2b05\ufe0f {prevIndex + 1}", new QueryParameter(QueryParameterType.SetWishTo, claimedWishes[prevIndex].WishId));
+                Keyboard.AddButton<ShowWishQuery>($"\u2b05\ufe0f {prevIndex + 1}", new QueryParameter(QueryParameterType.WishId, claimedWishes[prevIndex].WishId));
 
             Keyboard.AddButton<MyClaimsQuery>("Назад");
 
             if (index < totalCount - 1)
-                Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.SetWishTo, claimedWishes[nextIndex].WishId));
+                Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, claimedWishes[nextIndex].WishId));
         }
         else
         {
@@ -194,12 +194,12 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             var nextIndex = index + 1;
 
             if (index > 0)
-                Keyboard.AddButton<ShowWishQuery>($"\u2b05\ufe0f {prevIndex + 1}", new QueryParameter(QueryParameterType.SetWishTo, wishes[prevIndex].WishId));
+                Keyboard.AddButton<ShowWishQuery>($"\u2b05\ufe0f {prevIndex + 1}", new QueryParameter(QueryParameterType.WishId, wishes[prevIndex].WishId));
 
             Keyboard.AddButton<CompactListQuery>("Назад");
 
             if (index < totalCount - 1)
-                Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.SetWishTo, wishes[nextIndex].WishId));
+                Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, wishes[nextIndex].WishId));
         }
     }
 

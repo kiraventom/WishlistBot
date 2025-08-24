@@ -39,7 +39,7 @@ public class NewSubscriberNotificationMessage : BotMessage, INotificationMessage
 
         Keyboard
            .AddButton<SubscriberQuery>("Перейти к подписчику",
-                                     new QueryParameter(QueryParameterType.SetUserTo, notificationSource.UserId),
+                                     new QueryParameter(QueryParameterType.UserId, notificationSource.UserId),
                                      new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
            .NewRow()
            .AddButton<MainMenuQuery>("В главное меню");

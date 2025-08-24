@@ -12,7 +12,7 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
+        parameters.Peek(QueryParameterType.UserId, out var targetId);
         var target = userContext.Users
             .Include(u => u.Wishes)
             .Include(u => u.Profile)

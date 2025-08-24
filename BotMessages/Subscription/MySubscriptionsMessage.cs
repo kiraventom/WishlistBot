@@ -27,7 +27,7 @@ public class MySubscriptionsMessage(ILogger logger) : UserBotMessage(logger)
 
             Keyboard.AddButton<SubscriptionQuery>(
                     userWeSubscribedTo.FirstName,
-                    new QueryParameter(QueryParameterType.SetUserTo, userWeSubscribedTo.UserId),
+                    new QueryParameter(QueryParameterType.UserId, userWeSubscribedTo.UserId),
                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
         });
 

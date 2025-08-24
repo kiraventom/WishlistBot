@@ -86,7 +86,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         // TODO strikethrough if claimed
-        Text.InlineUrl(wish.Name, $"t.me/{Config.Instance.Username}?start=action=showwish_setuserto={wish.OwnerId}_setwishto={wish.WishId}_setlistpageto={pageIndex}");
+        Text.InlineUrl(wish.Name, $"t.me/{Config.Instance.Username}?start=action=showwish_userid={wish.OwnerId}_wishid={wish.WishId}_setlistpageto={pageIndex}");
 
         if (wish.PriceRange != Price.NotSet)
         {

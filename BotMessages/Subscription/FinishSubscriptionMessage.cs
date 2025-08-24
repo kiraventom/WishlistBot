@@ -9,14 +9,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Subscription;
 
-[AllowedTypes(QueryParameterType.SetUserTo)]
+[AllowedTypes(QueryParameterType.UserId)]
 public class FinishSubscriptionMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override async Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var sender = userContext.Users.Include(u => u.Subscriptions).First(u => u.UserId == userId);
 
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
+        parameters.Peek(QueryParameterType.UserId, out var targetId);
         var target = userContext.Users.First(u => u.UserId == targetId);
 
         if (sender.Subscriptions.Any(s => s.TargetId == target.UserId))
@@ -47,7 +47,7 @@ public class FinishSubscriptionMessage(ILogger logger) : UserBotMessage(logger)
 
         Keyboard
            .AddButton<SubscriptionQuery>($"Открыть вишлист {target.FirstName}",
-                                        new QueryParameter(QueryParameterType.SetUserTo, target.UserId),
+                                        new QueryParameter(QueryParameterType.UserId, target.UserId),
                                         new QueryParameter(QueryParameterType.SetListPageTo, lastPage))
            .NewRow()
            .AddButton<MySubscriptionsQuery>("К моим подпискам");

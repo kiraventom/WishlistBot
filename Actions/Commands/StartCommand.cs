@@ -33,7 +33,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                 return;
             }
 
-            var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.SetUserTo, userToSubscribeTo.UserId)]);
+            var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.UserId, userToSubscribeTo.UserId)]);
             user.QueryParams = collection.ToString();
             await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FinishSubscriptionMessage(Logger), forceNewMessage: true);
         }
@@ -42,8 +42,8 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         {
             var collection = new QueryParameterCollection(
             [
-                new QueryParameter(QueryParameterType.SetUserTo, userId), 
-                new QueryParameter(QueryParameterType.SetWishTo, wishId),
+                new QueryParameter(QueryParameterType.UserId, userId), 
+                new QueryParameter(QueryParameterType.WishId, wishId),
                 new QueryParameter(QueryParameterType.SetListPageTo, pageIndex)
             ]);
 
@@ -95,8 +95,17 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
 
             if (parameters["action"] == "showwish")
             {
-                userId = int.Parse(parameters["setuserto"]);
-                wishId = int.Parse(parameters["setwishto"]);
+                if (parameters.ContainsKey("setuserto")) // legacy
+                    userId = int.Parse(parameters["setuserto"]);
+                else
+                    userId = int.Parse(parameters["userid"]);
+
+
+                if (parameters.ContainsKey("setwishto")) // legacy
+                    wishId = int.Parse(parameters["setwishto"]);
+                else
+                    wishId = int.Parse(parameters["wishid"]);
+
                 pageIndex = int.Parse(parameters["setlistpageto"]);
                 return true;
             }

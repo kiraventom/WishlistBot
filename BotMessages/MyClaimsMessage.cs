@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
-[AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ClaimWish, QueryParameterType.SetWishTo)]
+[AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ClaimWish, QueryParameterType.WishId)]
 public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -21,7 +21,7 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 
         if (parameters.Pop(QueryParameterType.ClaimWish))
         {
-            parameters.Pop(QueryParameterType.SetWishTo, out var wishId);
+            parameters.Pop(QueryParameterType.WishId, out var wishId);
             var claimedWish = sender.ClaimedWishes.First(cw => cw.WishId == wishId);
             claimedWish.ClaimerId = null;
             userContext.SaveChanges();
@@ -37,8 +37,8 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 
         Keyboard.AddButton<ShowWishQuery>(
                 $"{claimedWish.Owner.FirstName}: {claimedWish.Name}",
-                new QueryParameter(QueryParameterType.SetUserTo, claimedWish.OwnerId),
-                new QueryParameter(QueryParameterType.SetWishTo, claimedWish.WishId),
+                new QueryParameter(QueryParameterType.UserId, claimedWish.OwnerId),
+                new QueryParameter(QueryParameterType.WishId, claimedWish.WishId),
                 new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
                 QueryParameter.ReturnToMyClaims);
         });

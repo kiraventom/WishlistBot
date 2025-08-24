@@ -43,7 +43,7 @@ public class MySubscribersMessage(ILogger logger) : UserBotMessage(logger)
 
                 Keyboard.AddButton<SubscriberQuery>(
                         subscriber.FirstName,
-                        new QueryParameter(QueryParameterType.SetUserTo, subscriber.UserId),
+                        new QueryParameter(QueryParameterType.UserId, subscriber.UserId),
                         new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
                 });
 

@@ -16,7 +16,7 @@ public class ConfirmUnsubscribeMessage(ILogger logger) : UserBotMessage(logger)
            .NewRow()
            .AddButton<SubscriptionQuery>("Отмена \u274c");
 
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
+        parameters.Peek(QueryParameterType.UserId, out var targetId);
         var target = userContext.Users.AsNoTracking().First(u => u.UserId == targetId);
 
         Text.Italic("Действительно отписаться от ")

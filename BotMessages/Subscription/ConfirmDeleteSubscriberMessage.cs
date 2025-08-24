@@ -16,7 +16,7 @@ public class ConfirmDeleteSubscriberMessage(ILogger logger) : UserBotMessage(log
            .NewRow()
            .AddButton<SubscriberQuery>("Отмена \u274c");
 
-        parameters.Peek(QueryParameterType.SetUserTo, out var subscriberId);
+        parameters.Peek(QueryParameterType.UserId, out var subscriberId);
         var subscriber = userContext.Users.AsNoTracking().First(u => u.UserId == subscriberId);
 
         Text.Italic("Действительно удалить ")

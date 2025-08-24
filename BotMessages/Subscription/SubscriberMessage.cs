@@ -14,7 +14,7 @@ public class SubscriberMessage(ILogger logger) : UserBotMessage(logger)
     {
         var sender = userContext.Users.Include(u => u.Subscriptions).First(u => u.UserId == userId);
 
-        parameters.Peek(QueryParameterType.SetUserTo, out var targetId);
+        parameters.Peek(QueryParameterType.UserId, out var targetId);
         var target = userContext.Users
             .Include(u => u.Wishes)
             .Include(u => u.Profile)
