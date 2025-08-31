@@ -5,167 +5,170 @@ namespace WishlistBot.Text;
 
 public class MessageText
 {
-   private readonly StringBuilder _sb = new();
+    private readonly StringBuilder _sb = new();
 
-   public MessageText(string text = null)
-   {
-      if (text is not null)
-      {
-         Verbatim(text);
-      }
-   }
+    public MessageText(string text = null)
+    {
+        if (text is not null)
+        {
+            Verbatim(text);
+        }
+    }
 
-   public MessageText LineBreak()
-   {
-      _sb.AppendLine();
-      return this;
-   }
+    public MessageText LineBreak()
+    {
+        _sb.AppendLine();
+        return this;
+    }
 
-   public MessageText Verbatim(string text)
-   {
-      if (text is null)
-         return this;
+    public MessageText Verbatim(string text)
+    {
+        if (text is null)
+            return this;
 
-      MessageTextUtils.EscapeString(text, _sb);
+        MessageTextUtils.EscapeString(text, _sb);
 
-      return this;
-   }
+        return this;
+    }
 
-   public MessageText Bold(string text)
-   {
-      _sb.Append('*');
-      Verbatim(text);
-      _sb.Append('*');
+    public MessageText Bold(string text)
+    {
+        _sb.Append('*');
+        Verbatim(text);
+        _sb.Append('*');
 
-      return this;
-   }
+        return this;
+    }
 
-   public MessageText Italic(string text)
-   {
-      _sb.Append('_');
-      Verbatim(text);
-      _sb.Append('_');
+    public MessageText Italic(string text)
+    {
+        _sb.Append('_');
+        Verbatim(text);
+        _sb.Append('_');
 
-      return this;
-   }
+        return this;
+    }
 
-   public MessageText ItalicBold(string text)
-   {
-      _sb.Append('*').Append('_');
-      Verbatim(text);
-      _sb.Append('_').Append('*');
+    public MessageText ItalicBold(string text)
+    {
+        _sb.Append('*').Append('_');
+        Verbatim(text);
+        _sb.Append('_').Append('*');
 
-      return this;
-   }
+        return this;
+    }
 
-   public MessageText Strikethrough(string text)
-   {
-      _sb.Append('~');
-      Verbatim(text);
-      _sb.Append('~');
+    public MessageText Strikethrough(string text)
+    {
+        _sb.Append('~');
+        Verbatim(text);
+        _sb.Append('~');
 
-      return this;
-   }
+        return this;
+    }
 
-   public MessageText Spoiler(string text)
-   {
-      _sb.Append("||");
-      Verbatim(text);
-      _sb.Append("||");
+    public MessageText Spoiler(string text)
+    {
+        _sb.Append("||");
+        Verbatim(text);
+        _sb.Append("||");
 
-      return this;
-   }
+        return this;
+    }
 
-   public MessageText InlineUrl(string text, string link)
-   {
-      _sb.Append('[');
-      Verbatim(text);
-      _sb.Append(']');
+    public MessageText InlineUrl(string text, string link)
+    {
+        _sb.Append('[');
+        Verbatim(text);
+        _sb.Append(']');
 
-      var escapedLink = EscapeLink(link);
-      _sb.Append('(').Append(escapedLink).Append(')');
-      return this;
-   }
+        var escapedLink = EscapeLink(link);
+        _sb.Append('(').Append(escapedLink).Append(')');
+        return this;
+    }
 
-   public MessageText InlineUrl(string link)
-   {
-      var domainName = MessageTextUtils.GetDomainFromLink(link);
-      domainName = char.ToUpper(domainName[0]) + domainName[1..];
-      return InlineUrl(domainName, link);
-   }
+    public MessageText InlineUrl(string link)
+    {
+        var domainName = MessageTextUtils.GetDomainFromLink(link);
+        domainName = char.ToUpper(domainName[0]) + domainName[1..];
+        return InlineUrl(domainName, link);
+    }
 
-   public MessageText InlineMention(UserModel userModel)
-   {
-      return string.IsNullOrEmpty(userModel.Tag)
-         ? InlineMention(userModel.FirstName, userModel.TelegramId)
-         : InlineMention(userModel.FirstName, userModel.Tag);
-   }
+    public MessageText InlineMention(UserModel userModel, string text = null)
+    {
+        if (text is null)
+            text = userModel.FirstName;
 
-   public MessageText InlineMention(string text, string tag)
-   {
-      _sb.Append('[');
-      Verbatim(text);
-      _sb.Append(']');
+        return string.IsNullOrEmpty(userModel.Tag)
+            ? InlineMention(text, userModel.TelegramId)
+            : InlineMention(text, userModel.Tag);
+    }
 
-      _sb.Append('(')
-         .Append(@"t.me/")
-         .Append(tag)
-         .Append(')');
+    public MessageText InlineMention(string text, string tag)
+    {
+        _sb.Append('[');
+        Verbatim(text);
+        _sb.Append(']');
 
-      return this;
-   }
+        _sb.Append('(')
+            .Append(@"t.me/")
+            .Append(tag)
+            .Append(')');
 
-   public MessageText InlineMention(string text, long userId)
-   {
-      _sb.Append('[');
-      Verbatim(text);
-      _sb.Append(']');
+        return this;
+    }
 
-      _sb.Append('(')
-         .Append(@"tg://user?id=")
-         .Append(userId)
-         .Append(')');
+    public MessageText InlineMention(string text, long userId)
+    {
+        _sb.Append('[');
+        Verbatim(text);
+        _sb.Append(']');
 
-      return this;
-   }
+        _sb.Append('(')
+            .Append(@"tg://user?id=")
+            .Append(userId)
+            .Append(')');
 
-   public MessageText Monospace(string text)
-   {
-      _sb.Append('`');
-      Verbatim(text);
-      _sb.Append('`');
+        return this;
+    }
 
-      return this;
-   }
+    public MessageText Monospace(string text)
+    {
+        _sb.Append('`');
+        Verbatim(text);
+        _sb.Append('`');
 
-   public MessageText Quote(string text)
-   {
-      // Empty bold definition to separate from previous quote
-      _sb.Append("**");
-      var lines = text.Split('\n');
+        return this;
+    }
 
-      for (var i = 0; i < lines.Length; ++i)
-      {
-         var line = lines[i];
-         _sb.Append('>');
-         Verbatim(line);
+    public MessageText Quote(string text)
+    {
+        // Empty bold definition to separate from previous quote
+        _sb.Append("**");
+        var lines = text.Split('\n');
 
-         if (i < lines.Length - 1)
-            _sb.AppendLine();
-      }
+        for (var i = 0; i < lines.Length; ++i)
+        {
+            var line = lines[i];
+            _sb.Append('>');
+            Verbatim(line);
 
-      return this;
-   }
+            if (i < lines.Length - 1)
+                _sb.AppendLine();
+        }
 
-   public MessageText ExpandableQuote(string text)
-   {
-      Quote(text);
+        return this;
+    }
 
-      _sb.Append("||");
-      return this;
-   }
+    public MessageText ExpandableQuote(string text)
+    {
+        Quote(text);
 
-   public override string ToString() => _sb.ToString();
+        _sb.Append("||");
+        return this;
+    }
 
-   private static string EscapeLink(string link) => link.Replace("\\", @"\\").Replace(")", "\\)");
+    public override string ToString() => _sb.ToString();
+
+    private static string EscapeLink(string link) => link.Replace("\\", @"\\").Replace(")", "\\)");
 }

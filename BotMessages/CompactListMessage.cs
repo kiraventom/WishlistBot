@@ -82,7 +82,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         if (wish.ClaimerId != null && isReadonly)
         {
             userContext.Entry(wish).Reference(w => w.Claimer).Load();
-            Text.Bold("[").InlineMention("БРОНЬ", wish.Claimer.Tag).Bold("] ");
+            Text.Bold("[").InlineMention(wish.Claimer, "БРОНЬ").Bold("] ");
         }
 
         // TODO strikethrough if claimed
