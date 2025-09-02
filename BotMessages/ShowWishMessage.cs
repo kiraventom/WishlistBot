@@ -114,8 +114,11 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         else
         {
             userContext.Entry(sender).Reference(u => u.CurrentWish).Load();
-            userContext.WishDrafts.Remove(sender.CurrentWish);
-            sender.CurrentWish = null;
+            if (sender.CurrentWish is not null)
+            {
+                userContext.WishDrafts.Remove(sender.CurrentWish);
+                sender.CurrentWish = null;
+            }
 
             const string pencilEmoji = "\u270f\ufe0f";
 
