@@ -16,7 +16,7 @@ public enum QueryParameterType
    SetSettingsTo = 0xE,
    RegenerateLink = 0xF,
    ReturnToMyClaims = 0x10,
-   CleanDraft = 0x11,
+   // CleanDraft = 0x11, OBSOLETE
    SaveDraft = 0x12,
 
    // Admin

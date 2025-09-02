@@ -10,7 +10,7 @@ using WishlistBot.Notification;
 namespace WishlistBot.BotMessages;
 
 // TODO REFACTOR
-[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims, QueryParameterType.CleanDraft, QueryParameterType.SaveDraft)]
+[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims, QueryParameterType.SaveDraft)]
 [ChildMessage(typeof(CompactListMessage))]
 public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 {
@@ -113,13 +113,9 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
-            if (parameters.Pop(QueryParameterType.CleanDraft))
-            {
-                userContext.Entry(sender).Reference(u => u.CurrentWish).Load();
-                
-                userContext.WishDrafts.Remove(sender.CurrentWish);
-                sender.CurrentWish = null;
-            }
+            userContext.Entry(sender).Reference(u => u.CurrentWish).Load();
+            userContext.WishDrafts.Remove(sender.CurrentWish);
+            sender.CurrentWish = null;
 
             const string pencilEmoji = "\u270f\ufe0f";
 

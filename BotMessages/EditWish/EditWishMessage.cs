@@ -45,7 +45,7 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
             Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.WishId, wishId));
             Keyboard.NewRow();
             Keyboard.AddButton<ShowWishQuery>("Готово", QueryParameter.SaveDraft, new QueryParameter(QueryParameterType.WishId, wishId));
-            Keyboard.AddButton<ShowWishQuery>("Отмена", QueryParameter.CleanDraft);
+            Keyboard.AddButton<ShowWishQuery>("Отмена");
         }
         else // Adding
         {

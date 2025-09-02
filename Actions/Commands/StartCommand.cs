@@ -4,7 +4,6 @@ using WishlistBot.BotMessages;
 using WishlistBot.BotMessages.Subscription;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
-using WishlistBot.BotMessages.EditWish;
 
 namespace WishlistBot.Actions.Commands;
 
@@ -15,6 +14,9 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
     public override async Task ExecuteAsync(UserContext userContext, UserModel user, string actionText)
     {
         user.QueryParams = null;
+
+        userContext.Entry(user).Reference(u => u.CurrentWish).Load();
+        user.CurrentWish = null;
 
         var isSubscribe = TryParseSubscribeId(actionText, out var subscribeId);
         if (isSubscribe)
