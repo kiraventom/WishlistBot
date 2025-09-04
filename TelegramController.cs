@@ -44,7 +44,7 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
             {
                 try
                 {
-                    if (update.Message is { } message)
+                    if (update.Message is { } message )
                     {
                         var result = await HandleMessageAsync(message, userContext);
                         // TODO Delete message before acting
@@ -71,9 +71,10 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
     {
         var sender = message.From!;
 
-        logger.Information("Received '{text}' ([{messageId}]) from '{first} {last}' (@{tag} [{id}])", message.Text, message.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
-
+        var isNewUser = userContext.Users.All(u => u.TelegramId != sender.Id);
         var user = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
+
+        logger.Information("Received message [{messageId}] with text '{text}' from user [{userId}] '{firstname}'{newUser}", message.MessageId, message.Text, user.UserId, user.FirstName, isNewUser ? " (new user)" : string.Empty);
 
         // First handle commands, so /start will always work even if listener is active
         var botCommand = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);
@@ -99,14 +100,15 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
     {
         var sender = callbackQuery.From!;
 
-        logger.Information("Received callback query ([{callbackQueryId}]) with data '{data}' on message [{messageId}] from '{first} {last}' (@{tag} [{id}])", callbackQuery.Id, callbackQuery.Data, callbackQuery.Message?.MessageId, sender.FirstName, sender.LastName, sender.Username, sender.Id);
+        var isNewUser = userContext.Users.All(u => u.TelegramId != sender.Id);
+        var user = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
 
-        var userModel = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
+        logger.Information("Received callback query [{callbackQueryId}] with data '{data}' on message [{messageId}] from user [{userId}] '{firstname}'{newUser}", callbackQuery.Id, callbackQuery.Data, callbackQuery.Message?.MessageId, user.UserId, user.FirstName, isNewUser ? " (new user)" : string.Empty);
 
-        if (callbackQuery.Message is null || callbackQuery.Message.MessageId < userModel.LastBotMessageId)
+        if (callbackQuery.Message is null || callbackQuery.Message.MessageId < user.LastBotMessageId)
         {
             await client.AnswerCallbackQuery(callbackQuery.Id, "Управление из старых сообщений не\u00a0поддерживается.\nИспользуйте последнее сообщение или\u00a0отправьте\u00a0/start", showAlert: true);
-            logger.Warning("Attempt to use old message [{oldMessageId}] (last is [{lastMessageId}]. Showed alert to user [{userId}]", callbackQuery.Message.MessageId, userModel.LastBotMessageId, userModel.UserId);
+            logger.Warning("Attempt to use old message [{oldMessageId}] (last is [{lastMessageId}]. Showed alert to user [{userId}]", callbackQuery.Message.MessageId, user.LastBotMessageId, user.UserId);
             return;
         }
 
@@ -116,19 +118,19 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
             return;
         }
 
-        if (!string.IsNullOrEmpty(userModel.AllowedQueries))
+        if (!string.IsNullOrEmpty(user.AllowedQueries))
         {
-            var allowedQueries = userModel.AllowedQueries.Split(';');
+            var allowedQueries = user.AllowedQueries.Split(';');
             if (!allowedQueries.Contains(callbackQuery.Data))
             {
-                logger.Warning("Unexpected query [{queryId}] '{query}', allowed queries: '{allowed}'", callbackQuery.Id, callbackQuery.Data, userModel.AllowedQueries);
+                logger.Warning("Unexpected query [{queryId}] '{query}', allowed queries: '{allowed}'", callbackQuery.Id, callbackQuery.Data, user.AllowedQueries);
                 await client.AnswerCallbackQuery(callbackQuery.Id, "Произошла ошибка.\nИспользуйте\u00a0команду\u00a0/start и напишите разработчику\n(контакт в профиле бота)", showAlert: true);
                 return;
             }
         }
 
-        userModel.LastQueryId = callbackQuery.Id;
-        await HandleUserActionAsync(userContext, userModel, callbackQuery.Data, callbackQuery.Data);
+        user.LastQueryId = callbackQuery.Id;
+        await HandleUserActionAsync(userContext, user, callbackQuery.Data, callbackQuery.Data);
     }
 
     private async Task<HandleResult> HandleBotCommandAsync(UserContext userContext, UserModel userModel, MessageEntity botCommand, string messageText)

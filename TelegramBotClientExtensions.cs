@@ -77,7 +77,7 @@ public static class TelegramBotClientExtensions
                     message = await client.SendPhoto(chatId: userModel.TelegramId, photo: photo, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
                 }
 
-                logger.Information("Sent '{text}' to [{id}] with inline keyboard", text, userModel.UserId);
+                logger.Information("Sent '{text}' to [{id}] with inline keyboard, messageId [{messageId}]", text, userModel.UserId, message.MessageId);
             }
             else
             {
@@ -110,7 +110,7 @@ public static class TelegramBotClientExtensions
                     message = await client.EditMessageCaption(chatId: userModel.TelegramId, messageId: userModel.LastBotMessageId.Value, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
                 }
 
-                logger.Information("Edited [{messageId}] to '{text}'", userModel.LastBotMessageId, text);
+                logger.Information("Edited [{messageId}] for [{userId}] to '{text}'", userModel.LastBotMessageId, userModel.UserId, text);
             }
 
             userModel.LastBotMessageId = message.MessageId;
