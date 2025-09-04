@@ -105,8 +105,9 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
 
         if (callbackQuery.Message is null || callbackQuery.Message.MessageId < userModel.LastBotMessageId)
         {
-                await client.AnswerCallbackQuery(callbackQuery.Id, "Управление из старых сообщений не\u00a0поддерживается.\nИспользуйте последнее сообщение или\u00a0отправьте\u00a0/start", showAlert: true);
-                return;
+            await client.AnswerCallbackQuery(callbackQuery.Id, "Управление из старых сообщений не\u00a0поддерживается.\nИспользуйте последнее сообщение или\u00a0отправьте\u00a0/start", showAlert: true);
+            logger.Warning("Attempt to use old message [{oldMessageId}] (last is [{lastMessageId}]. Showed alert to user [{userId}]", callbackQuery.Message.MessageId, userModel.LastBotMessageId, userModel.UserId);
+            return;
         }
 
         if (callbackQuery.Data is null)
