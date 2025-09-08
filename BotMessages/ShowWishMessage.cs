@@ -137,7 +137,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         Text.Bold("Название: ").Monospace(name);
 
         if (description is not null)
-            Text.LineBreak().Bold("Описание: ").LineBreak().ExpandableQuote(description);
+            Text.LineBreak().Bold("Описание: ").LineBreak().Quote(description);
 
         if (links.Any())
         {

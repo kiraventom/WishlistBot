@@ -96,7 +96,7 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
            .LineBreak().Bold("Название: ").Monospace(name);
 
         if (description is not null)
-            Text.LineBreak().Bold("Описание: ").LineBreak().ExpandableQuote(description);
+            Text.LineBreak().Bold("Описание: ").LineBreak().Quote(description);
 
         if (links.Any())
         {
