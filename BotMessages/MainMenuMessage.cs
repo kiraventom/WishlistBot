@@ -48,7 +48,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
             Text.LineBreak();
 
         if (!user.Settings.ReceiveNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Получение уведомлений о вишах подписчиков: ").Verbatim(mutedSpeaker);
+            Text.LineBreak().ItalicBold($"{dot}Получение уведомлений о вишах подписок: ").Verbatim(mutedSpeaker);
 
         if (!user.Settings.SendNotifications)
             Text.LineBreak().ItalicBold($"{dot}Отправка уведомлений о вишах подписчикам: ").Verbatim(mutedSpeaker);

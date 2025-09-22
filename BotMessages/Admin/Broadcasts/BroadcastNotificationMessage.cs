@@ -22,8 +22,8 @@ public class BroadcastNotificationMessage : BotMessage, INotificationMessage
 
         var broadcast = userContext.Broadcasts.AsNoTracking().First(b => b.BroadcastId == _broadcastId);
         Text.Bold("Рассылка от разработчика:")
-           .LineBreak()
-           .Italic(broadcast.Text);
+            .LineBreak()
+            .Italic(broadcast.Text);
 
         PhotoFileId = broadcast.FileId;
 
