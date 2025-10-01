@@ -45,7 +45,9 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
         }
 
         if (user.CurrentWish.Links.Any())
-            Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));
+            Keyboard
+                .NewRow()
+                .AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));
 
         Keyboard
            .NewRow()

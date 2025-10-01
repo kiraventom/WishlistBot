@@ -16,6 +16,7 @@ using WishlistBot.BotMessages.Profile;
 
 namespace WishlistBot.BotMessages;
 
+// TODO Replace with attributes
 public class MessageFactory(ILogger logger)
 {
    public BotMessage Build(IQuery query, UserContext userContext, string queryId)
@@ -53,6 +54,7 @@ public class MessageFactory(ILogger logger)
          SettingsQuery => new SettingsMessage(logger),
          ConfirmRegenerateLinkQuery => new ConfirmRegenerateLinkMessage(logger),
          EditProfileQuery => new EditProfileMessage(logger),
+         ConfirmChangeProfileTypeQuery => new ConfirmChangeProfileTypeMessage(logger),
          SetProfileBirthdayQuery => new SetProfileBirthdayMessage(logger),
          SetProfileNotesQuery => new SetProfileNotesMessage(logger),
          _ => new InvalidMessage(logger),

@@ -18,6 +18,7 @@ public enum QueryParameterType
    ReturnToMyClaims = 0x10,
    // CleanDraft = 0x11, OBSOLETE
    SaveDraft = 0x12,
+   ChangeProfileType = 0x13,
 
    // Admin
    SetBroadcastTo = -0x1,

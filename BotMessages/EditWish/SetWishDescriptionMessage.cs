@@ -35,7 +35,9 @@ public class SetWishDescriptionMessage(ILogger logger) : BotMessage(logger)
         }
 
         if (!string.IsNullOrEmpty(user.CurrentWish.Description))
-            Keyboard.AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Description));
+            Keyboard
+                .NewRow()
+                .AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Description));
 
         Keyboard
            .NewRow()

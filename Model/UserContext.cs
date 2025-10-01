@@ -162,6 +162,8 @@ public class ProfileModel
 
     public DateOnly? Birthday { get; set; }
     public string Notes { get; set; }
+
+    public bool IsPublic { get; set; }
 }
 
 public class WishModel

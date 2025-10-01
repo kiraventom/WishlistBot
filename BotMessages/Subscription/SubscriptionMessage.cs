@@ -20,6 +20,15 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
 
         Keyboard.AddButton<ConfirmUnsubscribeQuery>("Отписаться");
 
+        if (target.Profile.IsPublic)
+        {
+            const string link = "\U0001f517";
+
+            Keyboard
+               .NewRow()
+               .AddCopyTextButton($"{link} Ссылка на вишлист", $"t.me/{Config.Instance.Username}?start={target.SubscribeId}");        
+        }
+
         if (target.Wishes.Count != 0)
         {
             Keyboard

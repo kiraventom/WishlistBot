@@ -18,14 +18,21 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         const string writingHand = "\u270d\ufe0f ";
         const string downArrow = "\u2b07\ufe0f";
         const string link = "\U0001f517";
+        const string locked = "\U0001f512";
+        const string unlocked = "\U0001f513";
 
-        Text.Bold("Ваш профиль:").LineBreak();
+        if (parameters.Pop(QueryParameterType.ChangeProfileType))
+        {
+            sender.Profile.IsPublic = !sender.Profile.IsPublic;
+        }
 
         // Invite link button
         Keyboard.AddCopyTextButton($"{link} Ссылка на вишлист", $"t.me/{Config.Instance.Username}?start={sender.SubscribeId}");
-
         Keyboard.NewRow();
 
+        // Public/private
+        Text.Bold("Тип профиля").Italic(sender.Profile.IsPublic ? "Открытый" : "Закрытый").LineBreak();
+        Keyboard.AddButton<ConfirmChangeProfileTypeQuery>(sender.Profile.IsPublic ? $"{locked} Закрыть профиль" : $"{unlocked} Открыть профиль");
 
         // Birthday
         Text.LineBreak().Verbatim(calendar);
@@ -42,7 +49,6 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         }
 
         Keyboard.NewRow();
-
 
         // Notes
         Text.LineBreak().Verbatim(writingHand);

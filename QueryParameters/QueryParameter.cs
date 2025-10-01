@@ -15,6 +15,7 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
    public static QueryParameter CancelJob { get; } = new(QueryParameterType.CancelJob);
    public static QueryParameter RegenerateLink { get; } = new(QueryParameterType.RegenerateLink);
    public static QueryParameter SaveDraft { get; } = new(QueryParameterType.SaveDraft);
+   public static QueryParameter ChangeProfileType { get; } = new(QueryParameterType.ChangeProfileType);
 
    public QueryParameterType Type { get; } = type;
    public long? Value { get; } = value;
