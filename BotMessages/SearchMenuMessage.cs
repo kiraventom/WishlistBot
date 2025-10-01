@@ -28,6 +28,7 @@ public class SearchMenuMessage(ILogger logger, string searchQuery = null) : BotM
 
             var result = userContext.Users
                 .Include(u => u.Profile)
+                .AsEnumerable()
                 .FirstOrDefault(u => string.Equals(u.Tag, searchQuery, StringComparison.OrdinalIgnoreCase));
 
             if (result is null)
