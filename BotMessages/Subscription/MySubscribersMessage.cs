@@ -28,7 +28,7 @@ public class MySubscribersMessage(ILogger logger) : UserBotMessage(logger)
                 .LineBreak()
                 .Italic($"Пригласите друзей, прислав им ссылку на свой вишлист {downArrow}");
 
-            Keyboard.AddCopyTextButton($"{link} Ссылка на вишлист", $"");
+            Keyboard.AddCopyTextButton($"{link} Ссылка на вишлист", user.GetSubscribeLink());
 
             Keyboard.NewRow();
         }
