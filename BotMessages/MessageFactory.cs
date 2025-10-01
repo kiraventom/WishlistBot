@@ -24,6 +24,7 @@ public class MessageFactory(ILogger logger)
       BotMessage botMessage = query switch
       {
          MainMenuQuery => new MainMenuMessage(logger),
+         SearchMenuQuery => new SearchMenuMessage(logger),
          MyClaimsQuery => new MyClaimsMessage(logger),
          ConfirmDeleteWishQuery => new ConfirmDeleteWishMessage(logger),
          SetWishDescriptionQuery => new SetWishDescriptionMessage(logger),

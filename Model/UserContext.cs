@@ -151,6 +151,8 @@ public class UserModel
         ClaimedWishes.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
         return ClaimedWishes;
     }
+
+    public string GetSubscribeLink() => $"https://t.me/{Config.Instance.Username}?start={SubscribeId}";
 }
 
 public class ProfileModel

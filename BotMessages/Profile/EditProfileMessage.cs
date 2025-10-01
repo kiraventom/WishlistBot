@@ -7,6 +7,7 @@ using WishlistBot.Queries.Profile;
 
 namespace WishlistBot.BotMessages.Profile;
 
+[AllowedTypes(QueryParameterType.ChangeProfileType)]
 public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -27,12 +28,14 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         }
 
         // Invite link button
-        Keyboard.AddCopyTextButton($"{link} Ссылка на вишлист", $"t.me/{Config.Instance.Username}?start={sender.SubscribeId}");
+        Keyboard.AddCopyTextButton($"{link} Ссылка на вишлист", sender.GetSubscribeLink());
         Keyboard.NewRow();
 
         // Public/private
-        Text.Bold("Тип профиля").Italic(sender.Profile.IsPublic ? "Открытый" : "Закрытый").LineBreak();
-        Keyboard.AddButton<ConfirmChangeProfileTypeQuery>(sender.Profile.IsPublic ? $"{locked} Закрыть профиль" : $"{unlocked} Открыть профиль");
+        Text.Bold("Тип профиля: ").Italic(sender.Profile.IsPublic ? "Открытый" : "Закрытый").LineBreak();
+        Keyboard
+            .AddButton<ConfirmChangeProfileTypeQuery>(sender.Profile.IsPublic ? $"{locked} Закрыть профиль" : $"{unlocked} Открыть профиль")
+            .NewRow();
 
         // Birthday
         Text.LineBreak().Verbatim(calendar);

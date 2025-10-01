@@ -14,6 +14,9 @@ public enum BotState
     ListenForBirthday = 0x5,
     ListerForProfileNotes = 0x6,
 
+    // Search
+    ListenForSearchQuery = 0x7,
+
     // Admin
     ListenForBroadcast = -0x1
 }

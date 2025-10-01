@@ -26,7 +26,7 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
 
             Keyboard
                .NewRow()
-               .AddCopyTextButton($"{link} Ссылка на вишлист", $"t.me/{Config.Instance.Username}?start={target.SubscribeId}");        
+               .AddCopyTextButton($"{link} Ссылка на вишлист", target.GetSubscribeLink());
         }
 
         if (target.Wishes.Count != 0)
