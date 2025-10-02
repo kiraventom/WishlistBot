@@ -1,6 +1,7 @@
 using Serilog;
 using WishlistBot.Model;
 using WishlistBot.Queries.Admin.Broadcasts;
+using WishlistBot.Queries.Admin.Users;
 using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Admin;
@@ -14,7 +15,7 @@ public class AdminMenuMessage(ILogger logger) : UserBotMessage(logger)
         Keyboard
            .AddButton<BroadcastsQuery>()
            .NewRow()
-           .AddButton("@admin_users", "Users")
+           .AddButton<UsersQuery>()
            .NewRow()
            .AddButton("@admin_state", "Bot state");
 

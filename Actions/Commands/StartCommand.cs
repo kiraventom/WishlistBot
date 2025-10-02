@@ -4,6 +4,7 @@ using WishlistBot.BotMessages;
 using WishlistBot.BotMessages.Subscription;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
+using WishlistBot.BotMessages.Admin.Users;
 
 namespace WishlistBot.Actions.Commands;
 
@@ -53,13 +54,30 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             
             await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new ShowWishMessage(Logger));
         }
+        else if (TryParseAdminShowUserAction(actionText, out var userId1))
+        {
+            if (!user.IsAdmin)
+            {
+                Logger.Warning("{actionText} called, but [{id}] is not admin", actionText, user.UserId);
+                return;
+            }
+
+            var collection = new QueryParameterCollection(
+            [
+                new QueryParameter(QueryParameterType.UserId, userId1), 
+            ]);
+
+            user.QueryParams = collection.ToString();
+            
+            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new UserMessage(Logger));
+        }
         else
         {
             await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
         }
     }
 
-    public override bool ShouldCleanup(string actionText) => TryParseShowWishAction(actionText, out _, out _, out _);
+    public override bool ShouldCleanup(string actionText) => TryParseShowWishAction(actionText, out _, out _, out _) || TryParseAdminShowUserAction(actionText, out _);
 
     private static bool TryParseSubscribeId(string actionText, out string subscribeId)
     {
@@ -109,6 +127,35 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                     wishId = int.Parse(parameters["wishid"]);
 
                 pageIndex = int.Parse(parameters["setlistpageto"]);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryParseAdminShowUserAction(string actionText, out int userId)
+    {
+        userId = -1;
+
+        var parts = actionText.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 2)
+        {
+            Dictionary<string, string> parameters = new();
+
+            var parametersTxt = parts[1].Split('_');
+            foreach (var parameter in parametersTxt)
+            {
+                var parameterKeyValue = parameter.Split('=');
+                if (parameterKeyValue.Length != 2)
+                    return false;
+
+                parameters.Add(parameterKeyValue[0], parameterKeyValue[1]);
+            }
+
+            if (parameters["action"] == "adminshowuser")
+            {
+                userId = int.Parse(parameters["userid"]);
                 return true;
             }
         }

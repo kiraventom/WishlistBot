@@ -13,6 +13,8 @@ using WishlistBot.Queries.Settings;
 using WishlistBot.Model;
 using WishlistBot.Queries.Profile;
 using WishlistBot.BotMessages.Profile;
+using WishlistBot.Queries.Admin.Users;
+using WishlistBot.BotMessages.Admin.Users;
 
 namespace WishlistBot.BotMessages;
 
@@ -46,6 +48,8 @@ public class MessageFactory(ILogger logger)
          ConfirmDeleteSubscriberQuery => new ConfirmDeleteSubscriberMessage(logger),
          DeleteSubscriberQuery => new DeleteSubscriberMessage(logger),
          AdminMenuQuery => new AdminMenuMessage(logger),
+         UsersQuery => new UsersMessage(logger),
+         UserQuery => new UserMessage(logger),
          BroadcastQuery => new BroadcastMessage(logger),
          BroadcastsQuery => new BroadcastsMessage(logger),
          ConfirmBroadcastQuery => new ConfirmBroadcastMessage(logger),
