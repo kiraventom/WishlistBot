@@ -185,7 +185,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             userContext.Entry(wish).Reference(w => w.Owner).Load();
             userContext.Entry(wish.Owner).Collection(c => c.Wishes).Load();
 
-            var wishes = wish.Owner.GetSortedWishes();
+            var wishes = wish.Owner.GetSortedWishes().ToList();
 
             var totalCount = wishes.Count;
             var index = wishes.IndexOf(wish);

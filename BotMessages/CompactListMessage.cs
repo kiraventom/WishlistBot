@@ -9,44 +9,103 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
-[AllowedTypes(QueryParameterType.ReturnToSubscriber, QueryParameterType.SetListPageTo)]
+[AllowedTypes(QueryParameterType.ReturnToSubscriber, QueryParameterType.SetListPageTo, QueryParameterType.ChangeWishSortOrder, QueryParameterType.ChangeWishSortProperty, QueryParameterType.WishFilterToggleUnclaimed)]
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var users = userContext.Users
             .Include(u => u.CurrentWish)
-            .Include(u => u.Wishes)
-            .ThenInclude(w => w.Links)
-            .AsNoTracking();
+            .Include(u => u.Wishes).ThenInclude(w => w.Links)
+            .Include(u => u.WishViewSettings);
 
         var (sender, targetUser) = GetSenderAndTarget(users, userId, parameters);
         var isReadOnly = sender.UserId != targetUser.UserId;
 
-        const string plusEmoji = "\u2795";
+        var wishViewSettings = sender.GetOrCreateWishViewSettings(targetUser.UserId);
 
-        if (!isReadOnly)
-            Keyboard.AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
+        if (parameters.Pop(QueryParameterType.ChangeWishSortOrder))
+            wishViewSettings.Descending = !wishViewSettings.Descending;
 
-        Keyboard.NewRow();
+        if (parameters.Pop(QueryParameterType.ChangeWishSortProperty))
+        {
+            var newSortProperty = wishViewSettings.SortProperty + 1;
+            if (Enum.IsDefined(newSortProperty))
+                wishViewSettings.SortProperty = newSortProperty;
+            else
+                wishViewSettings.SortProperty = SortProperty.Default;
+        }
 
-        var sortedWishes = targetUser.GetSortedWishes();
-        var totalCount = sortedWishes.Count;
+        if (parameters.Pop(QueryParameterType.WishFilterToggleUnclaimed))
+            wishViewSettings.OnlyUnclaimed = !wishViewSettings.OnlyUnclaimed;
+
+        var totalCount = targetUser.Wishes.Count;
+        var sortedWishes = targetUser.GetSortedWishes(wishViewSettings).ToList();
+        var sortedCount = sortedWishes.Count;
+
+        var countText = totalCount == sortedCount ? $"{sortedCount}" : $"{sortedCount} / {totalCount}";
 
         if (isReadOnly)
             Text.Bold("Виши ")
                .InlineMention(targetUser)
-               .Bold($" ({totalCount}):");
+               .Bold($" [{countText}]:");
         else
-            Text.Bold($"Ваши виши ({totalCount}):");
+            Text.Bold($"Ваши виши [{countText}]:");
 
-        Text.LineBreak();
+        var sortPropertyText = wishViewSettings.SortProperty switch
+        {
+            SortProperty.Default when wishViewSettings.Descending => "От новых к старым",
+            SortProperty.Price when wishViewSettings.Descending => "От дорогих к дешёвым",
+            SortProperty.Default => "От старых к новым",
+            SortProperty.Price => "От дешёвых к дорогим",
+        };
+
+        const string ascendingEmoji = "\U0001F53A";
+        const string descsendingEmoji = "\U0001F53B";
+        const string calendarEmoji = "\U0001F4C5";
+        const string dollarEmoji = "\U0001F4B2";
+
+        var sortPropertyButton = wishViewSettings.SortProperty switch
+        {
+            SortProperty.Default => $"{calendarEmoji} По дате",
+            SortProperty.Price => $"{dollarEmoji} По цене",
+        };
+
+        var sortOrderButton = wishViewSettings.Descending switch
+        {
+            false => $"{ascendingEmoji}",
+            true => $"{descsendingEmoji}",
+        };
+
+        Text.LineBreak()
+            .Italic("Сортировка: ").Verbatim(sortPropertyText);
 
         if (isReadOnly)
         {
+            const string unclaimedWishesEmoji = "\U0001F513";
+            const string allWishesEmoji = "\U0001F539";
+
+            var toggleUnclaimedButton = wishViewSettings.OnlyUnclaimed 
+                ? $"{unclaimedWishesEmoji} Без брони"
+                : $"{allWishesEmoji} Все виши";
+
+            if (wishViewSettings.OnlyUnclaimed)
+            {
+                Text.LineBreak()
+                    .Italic("Фильтр: ").Verbatim("Только виши без брони");
+            }
+
+            Text.LineBreak().LineBreak();
+
+            Keyboard
+                .NewRow()
+                .AddButton<CompactListQuery>(toggleUnclaimedButton, QueryParameter.WishFilterToggleUnclaimed)
+                .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty) 
+                .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
+
             if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
             {
-                TextListMessageUtils.AddListControls<CompactListQuery, SubscriberQuery>(Text, Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+                TextListMessageUtils.AddListControls<CompactListQuery, SubscriberQuery>(Text, Keyboard, parameters, sortedCount, (itemIndex, pageIndex) =>
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, itemIndex, pageIndex, isReadOnly);
@@ -54,7 +113,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             }
             else
             {
-                TextListMessageUtils.AddListControls<CompactListQuery, SubscriptionQuery>(Text, Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+                TextListMessageUtils.AddListControls<CompactListQuery, SubscriptionQuery>(Text, Keyboard, parameters, sortedCount, (itemIndex, pageIndex) =>
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, itemIndex, pageIndex, isReadOnly);
@@ -63,8 +122,20 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
+            Text.LineBreak().LineBreak();
+
+            Keyboard
+                .NewRow()
+                .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty) 
+                .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
+
+            const string plusEmoji = "\u2795";
+
+            Keyboard.NewRow()
+                .AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
+
             sender.CurrentWish = null;
-                TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+                TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, (itemIndex, pageIndex) =>
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, itemIndex, pageIndex, isReadOnly);

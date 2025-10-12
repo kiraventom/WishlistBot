@@ -19,6 +19,9 @@ public enum QueryParameterType
    // CleanDraft = 0x11, OBSOLETE
    SaveDraft = 0x12,
    ChangeProfileType = 0x13,
+   ChangeWishSortOrder = 0x14,
+   ChangeWishSortProperty = 0x15,
+   WishFilterToggleUnclaimed = 0x16,
 
    // Admin
    SetBroadcastTo = -0x1,

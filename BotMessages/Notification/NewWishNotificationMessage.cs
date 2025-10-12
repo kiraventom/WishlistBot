@@ -29,7 +29,8 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
         var notificationSource = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == _notificationSourceId);
         var newWish = userContext.Wishes.First(w => w.WishId == _newWishId);
 
-        var wishIndex = notificationSource.GetSortedWishes().IndexOf(newWish);
+        // TODO ToList() here is not very cool
+        var wishIndex = notificationSource.GetSortedWishes().ToList().IndexOf(newWish);
         var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
         Keyboard

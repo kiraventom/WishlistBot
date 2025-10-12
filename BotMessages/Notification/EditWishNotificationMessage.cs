@@ -32,7 +32,8 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
         var editedWish = userContext.Wishes.First(w => w.WishId == _editedWishId);
 
-        var wishIndex = notificationSource.GetSortedWishes().IndexOf(editedWish);
+        // TODO ToList() here is not very cool
+        var wishIndex = notificationSource.GetSortedWishes().ToList().IndexOf(editedWish);
         var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
         Keyboard

@@ -87,6 +87,7 @@ public class UserContext : DbContext
         modelBuilder.Entity<WishModel>().Property(e => e.PriceRange).HasConversion<int>();
         modelBuilder.Entity<WishDraftModel>().Property(e => e.PriceRange).HasConversion<int>();
         modelBuilder.Entity<NotificationModel>().Property(e => e.Type).HasConversion<int>();
+        modelBuilder.Entity<WishViewSettingsModel>().Property(e => e.SortProperty).HasConversion<int>();
 
         modelBuilder.Entity<UserModel>()
             .HasOne(e => e.Settings)
@@ -140,10 +141,26 @@ public class UserModel
 
     public List<ReceivedBroadcastModel> ReceivedBroadcasts { get; } = new();
 
-    public List<WishModel> GetSortedWishes()
+    [InverseProperty(nameof(WishViewSettingsModel.Viewer))]
+    public List<WishViewSettingsModel> WishViewSettings { get; } = new();
+
+    public IOrderedEnumerable<WishModel> GetSortedWishes(WishViewSettingsModel viewSettings = null)
     {
-        Wishes.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
-        return Wishes;
+        var descending = viewSettings?.Descending ?? false;
+        var property = viewSettings?.SortProperty ?? SortProperty.Default;
+        var onlyUnclaimed = viewSettings?.OnlyUnclaimed ?? false;
+
+        return property switch
+        {
+            SortProperty.Default when descending && onlyUnclaimed => Wishes.Where(w => w.ClaimerId == null).OrderByDescending(w => w.Order),
+            SortProperty.Price when descending && onlyUnclaimed => Wishes.Where(w => w.ClaimerId == null).OrderByDescending(w => ((int)w.PriceRange)),
+            SortProperty.Default when descending => Wishes.OrderByDescending(w => w.Order),
+            SortProperty.Price when descending => Wishes.OrderByDescending(w => ((int)w.PriceRange)),
+            SortProperty.Default when onlyUnclaimed => Wishes.Where(w => w.ClaimerId == null).OrderBy(w => w.Order),
+            SortProperty.Price when onlyUnclaimed => Wishes.Where(w => w.ClaimerId == null).OrderBy(w => ((int)w.PriceRange)),
+            SortProperty.Default => Wishes.OrderBy(w => w.Order),
+            SortProperty.Price => Wishes.OrderBy(w => ((int)w.PriceRange)),
+        };
     }
 
     public List<WishModel> GetSortedClaimedWishes()
@@ -153,6 +170,23 @@ public class UserModel
     }
 
     public string GetSubscribeLink() => $"https://t.me/{Config.Instance.Username}?start={SubscribeId}";
+    
+    public WishViewSettingsModel GetOrCreateWishViewSettings(int targetId)
+    {
+        var target = WishViewSettings.FirstOrDefault(wvs => wvs.TargetId == targetId);
+        if (target is null)
+        {
+            target = new WishViewSettingsModel()
+            {
+                TargetId = targetId,
+                ViewerId = UserId,
+            };
+
+            WishViewSettings.Add(target);
+        }
+
+        return target;
+    }
 }
 
 public class ProfileModel
@@ -361,6 +395,26 @@ public class ReceivedBroadcastModel
     [ForeignKey(nameof(BroadcastId))]
     public BroadcastModel Broadcast { get; set; }
     public int MessageId { get; set; }
+}
+
+public class WishViewSettingsModel
+{
+    [Key] public int WishViewSettingsId { get; set; }
+    public int TargetId { get; set; }
+    public int ViewerId { get; set; }
+
+    [ForeignKey(nameof(TargetId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public UserModel Target { get; set; }
+
+    [ForeignKey(nameof(ViewerId))]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public UserModel Viewer { get; set; }
+
+    public bool Descending { get; set; }
+    public SortProperty SortProperty { get; set; }
+
+    public bool OnlyUnclaimed { get; set; }
 }
 
 public class NotificationModel

@@ -20,7 +20,7 @@ public static class TextListMessageUtils
 
           if (totalCount == 0)
           {
-              keyboard.AddButton<TParentQuery>();
+              keyboard.AddButton<TParentQuery>("Назад");
               return;
           }
 
