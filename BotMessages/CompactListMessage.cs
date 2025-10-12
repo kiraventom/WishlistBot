@@ -97,9 +97,12 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
             Text.LineBreak().LineBreak();
 
+            Keyboard.NewRow();
+
+            if (wishViewSettings.OnlyUnclaimed || sortedWishes.Any(sw => sw.ClaimerId != null))
+                Keyboard.AddButton<CompactListQuery>(toggleUnclaimedButton, QueryParameter.WishFilterToggleUnclaimed);
+
             Keyboard
-                .NewRow()
-                .AddButton<CompactListQuery>(toggleUnclaimedButton, QueryParameter.WishFilterToggleUnclaimed)
                 .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty) 
                 .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
 
