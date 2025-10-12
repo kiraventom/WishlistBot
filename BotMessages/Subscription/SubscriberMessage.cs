@@ -20,6 +20,13 @@ public class SubscriberMessage(ILogger logger) : UserBotMessage(logger)
             .Include(u => u.Profile)
             .First(u => u.UserId == targetId);
 
+        if (target.Wishes.Count != 0)
+        {
+            Keyboard
+               .AddButton<CompactListQuery>("Открыть вишлист", QueryParameter.ReturnToSubscriber)
+               .NewRow();
+        }
+
         var isSenderSubscribed = sender.Subscriptions.Any(s => s.TargetId == target.UserId);
 
         if (isSenderSubscribed)
@@ -32,13 +39,6 @@ public class SubscriberMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         Keyboard.AddButton<ConfirmDeleteSubscriberQuery>();
-
-        if (target.Wishes.Count != 0)
-        {
-            Keyboard
-               .NewRow()
-               .AddButton<CompactListQuery>("Открыть вишлист", QueryParameter.ReturnToSubscriber);
-        }
 
         Keyboard
            .NewRow()

@@ -18,7 +18,16 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
             .Include(u => u.Profile)
             .First(u => u.UserId == targetId);
 
-        Keyboard.AddButton<ConfirmUnsubscribeQuery>("Отписаться");
+        if (target.Wishes.Count != 0)
+        {
+            Keyboard
+               .AddButton<CompactListQuery>("Открыть вишлист")
+               .NewRow();
+        }
+
+        Keyboard
+            .NewRow()
+            .AddButton<ConfirmUnsubscribeQuery>("Отписаться");
 
         if (target.Profile.IsPublic)
         {
@@ -27,13 +36,6 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
             Keyboard
                .NewRow()
                .AddCopyTextButton($"{link} Ссылка на вишлист", target.GetSubscribeLink());
-        }
-
-        if (target.Wishes.Count != 0)
-        {
-            Keyboard
-               .NewRow()
-               .AddButton<CompactListQuery>("Открыть вишлист");
         }
 
         Keyboard
