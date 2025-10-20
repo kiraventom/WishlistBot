@@ -20,6 +20,7 @@ public class UserContext : DbContext
     public DbSet<BroadcastModel> Broadcasts { get; set; }
     public DbSet<ReceivedBroadcastModel> ReceivedBroadcasts { get; set; }
     public DbSet<NotificationModel> Notifications { get; set; }
+    public DbSet<UserExtraModel> UserExtra { get; set; }
 
     public UserContext(DbContextOptions<UserContext> options) : base(options)
     {
@@ -488,6 +489,20 @@ public class NotificationModel
         var byteArray = Encoding.UTF8.GetBytes(value);
         Extra = Convert.ToBase64String(byteArray);
     }
+}
+
+public class UserExtraModel
+{
+    [Key]
+    public int UserExtraModelId { get; set; }
+
+    public int UserId { get; set; }
+
+    [ForeignKey(nameof(UserId))]
+    public UserModel User { get; set; }
+
+    public bool KeyboardCleaned => LastCleanedMessageId < 0;
+    public int? LastCleanedMessageId { get; set; }
 }
     
 public class OrderAssignmentInterceptor : SaveChangesInterceptor

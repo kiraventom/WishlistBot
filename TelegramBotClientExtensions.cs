@@ -6,6 +6,7 @@ using WishlistBot.BotMessages;
 
 using WishlistBot.Model;
 using WishlistBot.Notification;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace WishlistBot;
 
@@ -113,6 +114,9 @@ public static class TelegramBotClientExtensions
                 logger.Information("Edited [{messageId}] for [{userId}] to '{text}'", userModel.LastBotMessageId, userModel.UserId, text);
             }
 
+            if (userModel.LastBotMessageId is int lastBotMessageId && lastBotMessageId != message.MessageId)
+                await ClearKeyboard(client, logger, userModel.TelegramId, lastBotMessageId);
+
             userModel.LastBotMessageId = message.MessageId;
         }
         catch (Exception e)
@@ -122,5 +126,22 @@ public static class TelegramBotClientExtensions
         }
 
         return message;
+    }
+
+    public static async Task ClearKeyboard(this ITelegramBotClient client, ILogger logger, long userId, long telegramMessageId, bool suppressLog = false)
+    {
+        var empty = new InlineKeyboardMarkup() { InlineKeyboard = Enumerable.Empty<IEnumerable<InlineKeyboardButton>>() };
+
+        try
+        {
+            await client.EditMessageReplyMarkup(chatId: userId, messageId: (int)telegramMessageId, replyMarkup: empty);
+            if (!suppressLog)
+                logger.Information("Cleared keyboard on message [{messageId}], userId [{userId}]", telegramMessageId, userId);
+        }
+        catch (Exception ex)
+        {
+            if (!suppressLog)
+                logger.Error("Failed to clear keyboard on message [{messageId}], userId [{userId}], error: {ex}", telegramMessageId, userId, ex.ToString());
+        }
     }
 }
