@@ -43,7 +43,7 @@ public class SearchMenuMessage(ILogger logger, string searchQuery = null) : BotM
                 Text.Bold("Пользователь найден, но он закрыл вишлист!")
                     .LineBreak()
                     .LineBreak()
-                    .Verbatim($"У пользователя ").Bold(result.FirstName).Verbatim(" закрытый профиль.")
+                    .Verbatim($"У пользователя ").InlineMention(result).Verbatim(" закрытый профиль.")
                     .LineBreak()
                     .Verbatim("Попросите его открыть профиль или прислать вам ссылку на его вишлист.");
             }
