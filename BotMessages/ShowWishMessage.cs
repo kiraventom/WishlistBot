@@ -182,13 +182,23 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
+            userContext.Entry(sender).Collection(u => u.WishViewSettings).Load();
             userContext.Entry(wish).Reference(w => w.Owner).Load();
             userContext.Entry(wish.Owner).Collection(c => c.Wishes).Load();
 
-            var wishes = wish.Owner.GetSortedWishes().ToList();
+            var wishViewSettings = sender.GetOrCreateWishViewSettings(target.UserId);
+            var wishes = wish.Owner.GetSortedWishes(wishViewSettings).ToList();
+            var index = wishes.IndexOf(wish);
+
+            // TODO: Make this prettier, DRY
+            if (index == -1)
+            {
+                wishViewSettings.OnlyUnclaimed = false;
+                wishes = wish.Owner.GetSortedWishes(wishViewSettings).ToList();
+                index = wishes.IndexOf(wish);
+            }
 
             var totalCount = wishes.Count;
-            var index = wishes.IndexOf(wish);
             var prevIndex = index - 1;
             var nextIndex = index + 1;
 

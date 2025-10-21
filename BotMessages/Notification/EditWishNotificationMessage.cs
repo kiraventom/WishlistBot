@@ -3,6 +3,7 @@ using WishlistBot.Notification;
 using WishlistBot.Queries;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Notification;
 
@@ -32,8 +33,24 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
         var editedWish = userContext.Wishes.First(w => w.WishId == _editedWishId);
 
+        var sender = userContext.Users
+            .Include(u => u.WishViewSettings)
+            .First(u => u.UserId == userId);
+
+        var wishViewSettings = sender.GetOrCreateWishViewSettings(_notificationSourceId);
+
         // TODO ToList() here is not very cool
-        var wishIndex = notificationSource.GetSortedWishes().ToList().IndexOf(editedWish);
+        var wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
+        var wishIndex = wishes.IndexOf(editedWish);
+        //
+        // TODO: Make this prettier, DRY
+        if (wishIndex == -1)
+        {
+            wishViewSettings.OnlyUnclaimed = false;
+            wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
+            wishIndex = wishes.IndexOf(editedWish);
+        }
+
         var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
         Keyboard

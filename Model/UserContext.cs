@@ -145,7 +145,7 @@ public class UserModel
     [InverseProperty(nameof(WishViewSettingsModel.Viewer))]
     public List<WishViewSettingsModel> WishViewSettings { get; } = new();
 
-    public IOrderedEnumerable<WishModel> GetSortedWishes(WishViewSettingsModel viewSettings = null)
+    public IOrderedEnumerable<WishModel> GetSortedWishes(WishViewSettingsModel viewSettings)
     {
         var descending = viewSettings?.Descending ?? false;
         var property = viewSettings?.SortProperty ?? SortProperty.Default;

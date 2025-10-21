@@ -29,8 +29,21 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
         var notificationSource = userContext.Users.Include(u => u.Wishes).First(u => u.UserId == _notificationSourceId);
         var newWish = userContext.Wishes.First(w => w.WishId == _newWishId);
 
+        var sender = userContext.Users.Include(u => u.WishViewSettings).First(u => u.UserId == userId);
+        var wishViewSettings = sender.GetOrCreateWishViewSettings(_notificationSourceId);
+
         // TODO ToList() here is not very cool
-        var wishIndex = notificationSource.GetSortedWishes().ToList().IndexOf(newWish);
+        var wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
+        var wishIndex = wishes.IndexOf(newWish);
+
+        // TODO: Make this prettier, DRY
+        if (wishIndex == -1)
+        {
+            wishViewSettings.OnlyUnclaimed = false;
+            wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
+            wishIndex = wishes.IndexOf(newWish);
+        }
+
         var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
 
         Keyboard

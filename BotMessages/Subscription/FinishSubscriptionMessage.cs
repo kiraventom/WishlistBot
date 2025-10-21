@@ -1,5 +1,4 @@
 using Serilog;
-using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Notification;
 using WishlistBot.BotMessages.Notification;
