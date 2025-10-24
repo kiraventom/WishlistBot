@@ -14,6 +14,8 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
+        const string plusEmoji = "\u2795";
+
         var users = userContext.Users
             .Include(u => u.CurrentWish)
             .Include(u => u.Wishes).ThenInclude(w => w.Links)
@@ -40,6 +42,28 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             wishViewSettings.OnlyUnclaimed = !wishViewSettings.OnlyUnclaimed;
 
         var totalCount = targetUser.Wishes.Count;
+
+        if (totalCount == 0)
+        {
+            Text.Bold("Вишлист пуст :(");
+            if (isReadOnly)
+            {
+                if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
+                    Keyboard.AddButton<SubscriberQuery>("Назад");
+                else
+                    Keyboard.AddButton<SubscriptionQuery>("Назад");
+            }
+            else
+            {
+                Keyboard
+                    .AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish)
+                    .NewRow()
+                    .AddButton<MainMenuQuery>("Назад");
+            }
+
+            return Task.CompletedTask;
+        }
+
         var sortedWishes = targetUser.GetSortedWishes(wishViewSettings).ToList();
         var sortedCount = sortedWishes.Count;
 
@@ -47,17 +71,17 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
         if (isReadOnly)
             Text.Bold("Виши ")
-               .InlineMention(targetUser)
-               .Bold($" [{countText}]:");
+                .InlineMention(targetUser)
+                .Bold($" [{countText}]:");
         else
             Text.Bold($"Ваши виши [{countText}]:");
 
         var sortPropertyText = wishViewSettings.SortProperty switch
         {
             SortProperty.Default when wishViewSettings.Descending => "От новых к старым",
-            SortProperty.Price when wishViewSettings.Descending => "От дорогих к дешёвым",
-            SortProperty.Default => "От старых к новым",
-            SortProperty.Price => "От дешёвых к дорогим",
+                SortProperty.Price when wishViewSettings.Descending => "От дорогих к дешёвым",
+                SortProperty.Default => "От старых к новым",
+                SortProperty.Price => "От дешёвых к дорогим",
         };
 
         const string ascendingEmoji = "\U0001F53A";
@@ -68,13 +92,13 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         var sortPropertyButton = wishViewSettings.SortProperty switch
         {
             SortProperty.Default => $"{calendarEmoji} По дате",
-            SortProperty.Price => $"{dollarEmoji} По цене",
+                SortProperty.Price => $"{dollarEmoji} По цене",
         };
 
         var sortOrderButton = wishViewSettings.Descending switch
         {
             false => $"{ascendingEmoji}",
-            true => $"{descsendingEmoji}",
+                  true => $"{descsendingEmoji}",
         };
 
         Text.LineBreak()
@@ -109,18 +133,18 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
             {
                 TextListMessageUtils.AddListControls<CompactListQuery, SubscriberQuery>(Text, Keyboard, parameters, sortedCount, (itemIndex, pageIndex) =>
-                {
-                    var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, itemIndex, pageIndex, isReadOnly);
-                });
+                        {
+                        var wish = sortedWishes[itemIndex];
+                        AddWishText(userContext, wish, itemIndex, pageIndex, isReadOnly);
+                        });
             }
             else
             {
                 TextListMessageUtils.AddListControls<CompactListQuery, SubscriptionQuery>(Text, Keyboard, parameters, sortedCount, (itemIndex, pageIndex) =>
-                {
-                    var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, itemIndex, pageIndex, isReadOnly);
-                });
+                        {
+                        var wish = sortedWishes[itemIndex];
+                        AddWishText(userContext, wish, itemIndex, pageIndex, isReadOnly);
+                        });
             }
         }
         else
@@ -132,17 +156,15 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty) 
                 .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
 
-            const string plusEmoji = "\u2795";
-
             Keyboard.NewRow()
                 .AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
 
             sender.CurrentWish = null;
-                TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, (itemIndex, pageIndex) =>
-                {
+            TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, (itemIndex, pageIndex) =>
+                    {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, itemIndex, pageIndex, isReadOnly);
-                });
+                    });
         }
 
         return Task.CompletedTask;
