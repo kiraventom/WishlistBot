@@ -25,7 +25,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         var (sender, targetUser) = GetSenderAndTarget(users, userId, parameters);
         var isReadOnly = sender.UserId != targetUser.UserId;
 
-        var wishViewSettings = sender.GetOrCreateWishViewSettings(targetUser.UserId);
+        var wishViewSettings = sender.GetOrCreateViewerTarget<WishViewSettingsModel>(targetUser.UserId);
 
         if (parameters.Pop(QueryParameterType.ChangeWishSortOrder))
             wishViewSettings.Descending = !wishViewSettings.Descending;

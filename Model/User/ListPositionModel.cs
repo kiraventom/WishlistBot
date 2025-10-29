@@ -4,9 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.Model.User;
 
-public class WishViewSettingsModel : IViewerTarget
+public class ListPositionsModel : IViewerTarget
 {
-    [Key] public int WishViewSettingsId { get; set; }
+    [Key]
+    public int ListPositionModelId { get; set; }
+
     public int TargetId { get; set; }
     public int ViewerId { get; set; }
 
@@ -18,9 +20,11 @@ public class WishViewSettingsModel : IViewerTarget
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public UserModel Viewer { get; set; }
 
-    public bool Descending { get; set; }
-    public SortProperty SortProperty { get; set; }
-
-    public bool OnlyUnclaimed { get; set; }
+    public int WishPage { get; set; }
+    public int SubscriberPage { get; set; }
+    public int SubscriptionPage { get; set; }
+    public int ClaimPage { get; set; }
+    public int AdminBroadcastPage { get; set; }
+    public int AdminUserPage { get; set; }
 }
 

@@ -37,7 +37,7 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
             .Include(u => u.WishViewSettings)
             .First(u => u.UserId == userId);
 
-        var wishViewSettings = sender.GetOrCreateWishViewSettings(_notificationSourceId);
+        var wishViewSettings = sender.GetOrCreateViewerTarget<WishViewSettingsModel>(_notificationSourceId);
 
         // TODO ToList() here is not very cool
         var wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
