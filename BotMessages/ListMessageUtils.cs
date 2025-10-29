@@ -8,10 +8,9 @@ public static class ListMessageUtils
 {
    public const int ItemsPerPage = 5;
 
-   public static void AddListControls<TListQuery, TParentQuery>(BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, Action<int, int> addButtonAt)
+   public static void AddListControls<TListQuery, TParentQuery>(BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, int pageIndex, Action<int> addButtonAt, Action<int> setPageIndex)
       where TListQuery : IQuery, new() where TParentQuery : IQuery, new()
    {
-      var pageIndex = 0;
       if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndexValue))
          pageIndex = (int)pageIndexValue;
 
@@ -27,13 +26,15 @@ public static class ListMessageUtils
       if (pagesCount != 0 && pageIndex >= pagesCount)
          pageIndex = pagesCount - 1;
 
+      setPageIndex(pageIndex);
+
       for (var itemOnPageIndex = 0; itemOnPageIndex < ItemsPerPage; ++itemOnPageIndex)
       {
          var itemIndex = pageIndex * ItemsPerPage + itemOnPageIndex;
          if (itemIndex >= totalCount)
             break;
 
-         addButtonAt(itemIndex, pageIndex);
+         addButtonAt(itemIndex);
          keyboard.NewRow();
       }
 

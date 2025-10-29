@@ -9,12 +9,11 @@ public static class TextListMessageUtils
 {
    public const int ItemsPerPage = 15;
 
-   public static void AddListControls<TListQuery, TParentQuery>(MessageText text, BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, Action<int, int> addLineAt)
+   public static void AddListControls<TListQuery, TParentQuery>(MessageText text, BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, int pageIndex, Action<int> addLineAt, Action<int> setPageIndex)
       where TListQuery : IQuery, new() where TParentQuery : IQuery, new()
       {
           keyboard.NewRow();
 
-          var pageIndex = 0;
           if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndexValue))
               pageIndex = (int)pageIndexValue;
 
@@ -30,13 +29,15 @@ public static class TextListMessageUtils
           if (pagesCount != 0 && pageIndex >= pagesCount)
               pageIndex = pagesCount - 1;
 
+          setPageIndex(pageIndex);
+
           for (var itemOnPageIndex = 0; itemOnPageIndex < ItemsPerPage; ++itemOnPageIndex)
           {
               var itemIndex = pageIndex * ItemsPerPage + itemOnPageIndex;
               if (itemIndex >= totalCount)
                   break;
 
-              addLineAt(itemIndex, pageIndex);
+              addLineAt(itemIndex);
               text.LineBreak();
           }
 

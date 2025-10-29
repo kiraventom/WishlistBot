@@ -13,6 +13,7 @@ public class MySubscriptionsMessage(ILogger logger) : UserBotMessage(logger)
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var user = userContext.Users
+            .Include(u => u.ListPositions)
             .Include(u => u.Subscriptions)
             .ThenInclude(s => s.Target)
             .First(u => u.UserId == userId);
@@ -21,15 +22,15 @@ public class MySubscriptionsMessage(ILogger logger) : UserBotMessage(logger)
 
         Text.Bold(totalCount == 0 ? "Вы ещё ни на кого не подписаны :(" : "Ваши подписки:");
 
-        ListMessageUtils.AddListControls<MySubscriptionsQuery, MainMenuQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+        ListMessageUtils.AddListControls<MySubscriptionsQuery, MainMenuQuery>(Keyboard, parameters, totalCount, user.ListPositions.SubscriptionPage, itemIndex =>
         {
             var userWeSubscribedTo = user.Subscriptions[itemIndex].Target;
 
             Keyboard.AddButton<SubscriptionQuery>(
                     userWeSubscribedTo.FirstName,
-                    new QueryParameter(QueryParameterType.UserId, userWeSubscribedTo.UserId),
-                    new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
-        });
+                    new QueryParameter(QueryParameterType.UserId, userWeSubscribedTo.UserId));
+        },
+        pageIndex => user.ListPositions.SubscriptionPage = pageIndex);
 
         return Task.CompletedTask;
     }

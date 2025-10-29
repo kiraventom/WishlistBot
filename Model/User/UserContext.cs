@@ -34,6 +34,7 @@ public class UserContext : DbContext
         var userModel = this.Users
             .Include(u => u.Settings)
             .Include(u => u.Profile)
+            .Include(u => u.ListPositions)
             .FirstOrDefault(u => u.TelegramId == telegramId);
 
         if (userModel is null)
@@ -59,6 +60,9 @@ public class UserContext : DbContext
 
         if (userModel.Profile is null)
             userModel.Profile = new ProfileModel();
+
+        if (userModel.ListPositions is null)
+            userModel.ListPositions = new ListPositionsModel();
 
         if (isNew)
         {
@@ -93,6 +97,12 @@ public class UserContext : DbContext
             .HasOne(e => e.Profile)
             .WithOne(e => e.User)
             .HasForeignKey<ProfileModel>(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserModel>()
+            .HasOne(e => e.ListPositions)
+            .WithOne(e => e.User)
+            .HasForeignKey<ListPositionsModel>(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -3,13 +3,13 @@ using System.Reflection;
 
 namespace WishlistBot.Model.User;
 
-public class ViewerTargetHelper
+public class ViewerTargetBuilder
 {
     private readonly Dictionary<Type, IList> _propertiesCache = [];
 
-    public static ViewerTargetHelper Instance { get; } = new();
+    public static ViewerTargetBuilder Instance { get; } = new();
 
-    private ViewerTargetHelper() { }
+    private ViewerTargetBuilder() { }
 
     public T GetOrCreateViewerTarget<T>(UserModel userModel, int targetId) where T : IViewerTarget, new()
     {

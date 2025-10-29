@@ -22,18 +22,23 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
             .AsNoTracking()
             .ToList();
 
+        var sender = userContext.Users
+            .Include(u => u.ListPositions)
+            .First(u => u.UserId == userId);
+
         var totalCount = users.Count;
 
-        TextListMessageUtils.AddListControls<UsersQuery, AdminMenuQuery>(Text, Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+        TextListMessageUtils.AddListControls<UsersQuery, AdminMenuQuery>(Text, Keyboard, parameters, totalCount, sender.ListPositions.AdminUserPage, itemIndex =>
         {
             var user = users[itemIndex];
-            AddUserText(userContext, user, itemIndex, pageIndex);
-        });
+            AddUserText(userContext, user, itemIndex);
+        },
+        pageIndex => sender.ListPositions.AdminUserPage = pageIndex);
 
         return Task.CompletedTask;
     }
 
-    private void AddUserText(UserContext userContext, UserModel user, int itemIndex, int pageIndex)
+    private void AddUserText(UserContext userContext, UserModel user, int itemIndex)
     {
         const string locked = "\U0001f512";
         const string unlocked = "\U0001f513";

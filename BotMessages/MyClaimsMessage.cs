@@ -14,6 +14,7 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
         Text.Bold("Здесь отображаются забронированные вами виши.");
 
         var users = userContext.Users
+            .Include(u => u.ListPositions)
             .Include(u => u.ClaimedWishes)
             .ThenInclude(cw => cw.Owner);
 
@@ -31,17 +32,17 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 
         var totalCount = claimedWishes.Count;
 
-        ListMessageUtils.AddListControls<MyClaimsQuery, MainMenuQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+        ListMessageUtils.AddListControls<MyClaimsQuery, MainMenuQuery>(Keyboard, parameters, totalCount, sender.ListPositions.ClaimPage, itemIndex =>
         {
-        var claimedWish = claimedWishes[itemIndex];
+            var claimedWish = claimedWishes[itemIndex];
 
-        Keyboard.AddButton<ShowWishQuery>(
-                $"{claimedWish.Owner.FirstName}: {claimedWish.Name}",
-                new QueryParameter(QueryParameterType.UserId, claimedWish.OwnerId),
-                new QueryParameter(QueryParameterType.WishId, claimedWish.WishId),
-                new QueryParameter(QueryParameterType.SetListPageTo, pageIndex),
-                QueryParameter.ReturnToMyClaims);
-        });
+            Keyboard.AddButton<ShowWishQuery>(
+                    $"{claimedWish.Owner.FirstName}: {claimedWish.Name}",
+                    new QueryParameter(QueryParameterType.UserId, claimedWish.OwnerId),
+                    new QueryParameter(QueryParameterType.WishId, claimedWish.WishId),
+                    QueryParameter.ReturnToMyClaims);
+        },
+        pageIndex => sender.ListPositions.ClaimPage = pageIndex);
 
         return Task.CompletedTask;
     }

@@ -2,7 +2,7 @@ namespace WishlistBot.Model.User;
 
 public static class UserModelExtensions
 {
-    public static T GetOrCreateViewerTarget<T>(this UserModel userModel, int targetId) where T : IViewerTarget, new() => ViewerTargetHelper.Instance.GetOrCreateViewerTarget<T>(userModel, targetId);
+    public static T GetOrCreateViewerTarget<T>(this UserModel userModel, int targetId) where T : IViewerTarget, new() => ViewerTargetBuilder.Instance.GetOrCreateViewerTarget<T>(userModel, targetId);
 
     public static IOrderedEnumerable<WishModel> GetSortedWishes(this UserModel userModel, WishViewSettingsModel viewSettings)
     {

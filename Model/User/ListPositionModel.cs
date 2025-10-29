@@ -4,21 +4,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.Model.User;
 
-public class ListPositionsModel : IViewerTarget
+public class ListPositionsModel
 {
     [Key]
     public int ListPositionModelId { get; set; }
 
-    public int TargetId { get; set; }
-    public int ViewerId { get; set; }
+    public int UserId { get; set; }
 
-    [ForeignKey(nameof(TargetId))]
+    [ForeignKey(nameof(UserId))]
     [DeleteBehavior(DeleteBehavior.Cascade)]
-    public UserModel Target { get; set; }
-
-    [ForeignKey(nameof(ViewerId))]
-    [DeleteBehavior(DeleteBehavior.Cascade)]
-    public UserModel Viewer { get; set; }
+    public UserModel User { get; set; }
 
     public int WishPage { get; set; }
     public int SubscriberPage { get; set; }

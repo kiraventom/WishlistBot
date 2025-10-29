@@ -27,6 +27,7 @@ public class UserModel
 
     [Required] public SettingsModel Settings { get; set; }
     [Required] public ProfileModel Profile { get; set; }
+    [Required] public ListPositionsModel ListPositions { get; set; }
 
     [InverseProperty(nameof(WishModel.Owner))]
     public List<WishModel> Wishes { get; } = new();
@@ -44,8 +45,5 @@ public class UserModel
 
     [InverseProperty(nameof(WishViewSettingsModel.Viewer))]
     public List<WishViewSettingsModel> WishViewSettings { get; } = new();
-
-    [InverseProperty(nameof(ListPositionsModel.Viewer))]
-    public List<ListPositionsModel> ListPositions { get; } = new();
 }
 

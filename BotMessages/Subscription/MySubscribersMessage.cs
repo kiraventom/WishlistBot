@@ -13,6 +13,7 @@ public class MySubscribersMessage(ILogger logger) : UserBotMessage(logger)
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var user = userContext.Users
+            .Include(u => u.ListPositions)
             .Include(u => u.Subscribers)
             .ThenInclude(s => s.Subscriber)
             .First(u => u.UserId == userId);
@@ -37,15 +38,15 @@ public class MySubscribersMessage(ILogger logger) : UserBotMessage(logger)
             Text.Bold("Ваши подписчики:");
         }
 
-        ListMessageUtils.AddListControls<MySubscribersQuery, MainMenuQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
-                {
+        ListMessageUtils.AddListControls<MySubscribersQuery, MainMenuQuery>(Keyboard, parameters, totalCount, user.ListPositions.SubscriberPage, itemIndex =>
+            {
                 var subscriber = user.Subscribers[itemIndex].Subscriber;
 
                 Keyboard.AddButton<SubscriberQuery>(
                         subscriber.FirstName,
-                        new QueryParameter(QueryParameterType.UserId, subscriber.UserId),
-                        new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
-                });
+                        new QueryParameter(QueryParameterType.UserId, subscriber.UserId));
+            },
+            pageIndex => user.ListPositions.SubscriberPage = pageIndex);
 
         return Task.CompletedTask;
     }

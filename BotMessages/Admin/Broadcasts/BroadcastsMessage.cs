@@ -13,6 +13,7 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
+        var sender = userContext.Users.Include(u => u.ListPositions).First(u => u.UserId == userId);
         var broadcasts = userContext.Broadcasts.AsNoTracking().AsEnumerable().Reverse().ToList();
         var totalCount = broadcasts.Count;
 
@@ -33,7 +34,7 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
             Text.Bold("No broadcasts");
         }
 
-        ListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(Keyboard, parameters, totalCount, (itemIndex, pageIndex) =>
+        ListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(Keyboard, parameters, totalCount, itemIndex =>
         {
             const string pencilEmoji = "\u270f\ufe0f ";
             const string envelopeEmoji = "\u2709\ufe0f ";
@@ -52,7 +53,8 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
              name,
              new QueryParameter(QueryParameterType.SetBroadcastTo, broadcast.BroadcastId),
              new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
-        });
+        },
+        pageIndex => sender.ListPositions.AdminBroadcastPage = pageIndex);
 
         Keyboard
            .NewRow()
