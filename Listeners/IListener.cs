@@ -1,5 +1,5 @@
 using Telegram.Bot.Types;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 
 namespace WishlistBot.Listeners;
 

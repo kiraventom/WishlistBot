@@ -5,6 +5,7 @@ using WishlistBot.Queries.Subscription;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 using WishlistBot.Model;
+using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
@@ -79,9 +80,10 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         var sortPropertyText = wishViewSettings.SortProperty switch
         {
             SortProperty.Default when wishViewSettings.Descending => "От новых к старым",
-                SortProperty.Price when wishViewSettings.Descending => "От дорогих к дешёвым",
-                SortProperty.Default => "От старых к новым",
-                SortProperty.Price => "От дешёвых к дорогим",
+            SortProperty.Price when wishViewSettings.Descending => "От дорогих к дешёвым",
+            SortProperty.Default => "От старых к новым",
+            SortProperty.Price => "От дешёвых к дорогим",
+            _ => "ERROR"
         };
 
         const string ascendingEmoji = "\U0001F53A";
@@ -92,7 +94,8 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         var sortPropertyButton = wishViewSettings.SortProperty switch
         {
             SortProperty.Default => $"{calendarEmoji} По дате",
-                SortProperty.Price => $"{dollarEmoji} По цене",
+            SortProperty.Price => $"{dollarEmoji} По цене",
+            _ => "ERROR"
         };
 
         var sortOrderButton = wishViewSettings.Descending switch

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.QueryParameters;

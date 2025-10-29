@@ -3,6 +3,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using WishlistBot.BotMessages.Admin.Broadcasts;
 using WishlistBot.Model;
+using WishlistBot.Model.User;
 
 namespace WishlistBot.Listeners;
 

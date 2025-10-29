@@ -4,7 +4,7 @@ using Telegram.Bot.Types.Enums;
 using Serilog;
 using WishlistBot.BotMessages;
 
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 using WishlistBot.Notification;
 using Telegram.Bot.Types.ReplyMarkups;
 

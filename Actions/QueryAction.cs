@@ -3,7 +3,7 @@ using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.BotMessages;
 using WishlistBot.Queries.Admin;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 
 namespace WishlistBot.Actions;
 

@@ -2,7 +2,7 @@ using Serilog;
 using Telegram.Bot;
 using WishlistBot.BotMessages;
 using WishlistBot.Jobs;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.BotMessages.Notification;
 

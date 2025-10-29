@@ -3,11 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-
 using WishlistBot.Notification;
 using WishlistBot.QueryParameters;
 
-namespace WishlistBot.Model;
+namespace WishlistBot.Model.User;
 
 public class UserContext : DbContext
 {
@@ -161,6 +160,7 @@ public class UserModel
             SortProperty.Price when onlyUnclaimed => Wishes.Where(w => w.ClaimerId == null).OrderBy(w => ((int)w.PriceRange)),
             SortProperty.Default => Wishes.OrderBy(w => w.Order),
             SortProperty.Price => Wishes.OrderBy(w => ((int)w.PriceRange)),
+            _ => Wishes.OrderByDescending(w => w.Order)
         };
     }
 

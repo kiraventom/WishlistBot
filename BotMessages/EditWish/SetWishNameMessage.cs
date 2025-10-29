@@ -2,6 +2,7 @@ using Serilog;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
+using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries;
 

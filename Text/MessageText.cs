@@ -1,5 +1,5 @@
 using System.Text;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 
 namespace WishlistBot.Text;
 

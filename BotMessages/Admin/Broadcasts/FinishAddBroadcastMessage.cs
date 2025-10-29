@@ -1,7 +1,7 @@
 using Serilog;
 using WishlistBot.Queries.Admin.Broadcasts;
 using WishlistBot.QueryParameters;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 
 namespace WishlistBot.BotMessages.Admin.Broadcasts;
 

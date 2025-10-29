@@ -1,5 +1,5 @@
 using Serilog;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 using WishlistBot.Queries.Settings;
 using WishlistBot.QueryParameters;
 

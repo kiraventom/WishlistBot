@@ -3,7 +3,7 @@ using WishlistBot.Queries;
 using WishlistBot.Queries.Subscription;
 using WishlistBot.Queries.Settings;
 using WishlistBot.QueryParameters;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries.Profile;
 

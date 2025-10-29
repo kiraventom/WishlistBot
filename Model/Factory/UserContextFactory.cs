@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.Model.User;
 
 namespace WishlistBot.Model.Factory;
 

@@ -3,7 +3,7 @@ using WishlistBot.Queries.Subscription;
 using WishlistBot.Notification;
 using WishlistBot.BotMessages.Notification;
 using WishlistBot.QueryParameters;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Subscription;

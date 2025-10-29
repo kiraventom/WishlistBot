@@ -5,7 +5,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
 using WishlistBot.Actions;
 using WishlistBot.Listeners;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 using WishlistBot.Extra;
 
 namespace WishlistBot;

@@ -10,7 +10,7 @@ using WishlistBot.BotMessages.Admin;
 using WishlistBot.BotMessages.Admin.Broadcasts;
 using WishlistBot.BotMessages.Settings;
 using WishlistBot.Queries.Settings;
-using WishlistBot.Model;
+using WishlistBot.Model.User;
 using WishlistBot.Queries.Profile;
 using WishlistBot.BotMessages.Profile;
 using WishlistBot.Queries.Admin.Users;
