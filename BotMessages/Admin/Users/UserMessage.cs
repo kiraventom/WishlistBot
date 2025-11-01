@@ -6,6 +6,7 @@ using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Admin.Users;
 
+[ChildMessage(typeof(UsersMessage))]
 public class UserMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

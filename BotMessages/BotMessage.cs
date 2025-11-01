@@ -33,6 +33,7 @@ public abstract class BotMessage(ILogger logger)
         user.BotState = BotState.Default;
 
         FilterParameters(parameters, AllowedTypes);
+        FilterPositions(userContext, user);
 
         if (parameters.Pop(QueryParameterType.ForceNewMessage))
             ForceNewMessage = true;
@@ -70,6 +71,21 @@ public abstract class BotMessage(ILogger logger)
             parameters.Pop(disallowedType);
     }
 
+    private void FilterPositions(UserContext userContext, UserModel user)
+    {
+        // TODO Bruh
+        userContext.Entry(user).Reference(u => u.ListPositions).Load();
+        userContext.Entry(user.ListPositions).Reference(u => u.WishPage).Load();
+        userContext.Entry(user.ListPositions).Reference(u => u.SubscriberPage).Load();
+        userContext.Entry(user.ListPositions).Reference(u => u.SubscriptionPage).Load();
+        userContext.Entry(user.ListPositions).Reference(u => u.ClaimPage).Load();
+        userContext.Entry(user.ListPositions).Reference(u => u.AdminBroadcastPage).Load();
+        userContext.Entry(user.ListPositions).Reference(u => u.AdminUserPage).Load();
+
+        foreach (var listPosition in Enum.GetValues<ListPosition>().Except(AllowedPositions))
+            user.ListPositions.GetListPosition(listPosition).Page = 0;
+    }
+
 #pragma warning disable CA1859
 
     private static Dictionary<Type, IReadOnlyCollection<QueryParameterType>> _allowedTypes = [];
@@ -82,6 +98,20 @@ public abstract class BotMessage(ILogger logger)
                 return _allowedTypes[type];
             else
                 return _allowedTypes[type] = GetAllowedTypes(type);
+        }
+    }
+
+    // TODO move all that into separate class
+    private static Dictionary<Type, IReadOnlyCollection<ListPosition>> _allowedPositions = [];
+    private IReadOnlyCollection<ListPosition> AllowedPositions
+    {
+        get
+        {
+            var type = GetType();
+            if (_allowedPositions.ContainsKey(type))
+                return _allowedPositions[type];
+            else
+                return _allowedPositions[type] = GetAllowedListPositions(type);
         }
     }
 
@@ -109,5 +139,31 @@ public abstract class BotMessage(ILogger logger)
 
         var parentType = childMessageAttribute.ParentMessageType;
         return GetAllowedTypes(parentType);
+    }
+
+    private static IReadOnlyCollection<ListPosition> GetAllowedListPositions(Type type)
+    {
+        var parentListPositions = GetParentAllowedListPositions(type);
+
+        var allAllowedPositions = new HashSet<ListPosition>(parentListPositions);
+        var allowedPositionsAttributes = type.GetCustomAttributes<AllowedListPositionsAttribute>();
+        foreach (var allowedPositionsAttribute in allowedPositionsAttributes)
+        {
+            var allowedPositions = allowedPositionsAttribute.AllowedPositions;
+            foreach (var allowedPosition in allowedPositions)
+                allAllowedPositions.Add(allowedPosition);
+        }
+
+        return allAllowedPositions;
+    }
+
+    private static IReadOnlyCollection<ListPosition> GetParentAllowedListPositions(Type type)
+    {
+        var childMessageAttribute = type.GetCustomAttribute<ChildMessageAttribute>();
+        if (childMessageAttribute is null)
+            return [];
+
+        var parentType = childMessageAttribute.ParentMessageType;
+        return GetAllowedListPositions(parentType);
     }
 }

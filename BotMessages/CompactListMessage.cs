@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
+[AllowedListPositions(ListPosition.Wish, ListPosition.Subscriber, ListPosition.Subscription)]
 [AllowedTypes(QueryParameterType.ReturnToSubscriber, QueryParameterType.SetListPageTo, QueryParameterType.ChangeWishSortOrder, QueryParameterType.ChangeWishSortProperty, QueryParameterType.WishFilterToggleUnclaimed)]
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
@@ -18,6 +19,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         const string plusEmoji = "\u2795";
 
         var users = userContext.Users
+            .Include(u => u.ListPositions).ThenInclude(l => l.WishPage)
             .Include(u => u.CurrentWish)
             .Include(u => u.Wishes).ThenInclude(w => w.Links)
             .Include(u => u.WishViewSettings);
@@ -136,20 +138,18 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
             {
                 TextListMessageUtils.AddListControls<CompactListQuery, SubscriberQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
-                        {
-                        var wish = sortedWishes[itemIndex];
-                        AddWishText(userContext, wish, itemIndex, isReadOnly);
-                        },
-                    pageIndex => sender.ListPositions.WishPage = pageIndex);
+                {
+                    var wish = sortedWishes[itemIndex];
+                    AddWishText(userContext, wish, itemIndex, isReadOnly);
+                });
             }
             else
             {
                 TextListMessageUtils.AddListControls<CompactListQuery, SubscriptionQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
-                        {
-                        var wish = sortedWishes[itemIndex];
-                        AddWishText(userContext, wish, itemIndex, isReadOnly);
-                        },
-                        pageIndex => sender.ListPositions.WishPage = pageIndex);
+                {
+                    var wish = sortedWishes[itemIndex];
+                    AddWishText(userContext, wish, itemIndex, isReadOnly);
+                });
             }
         }
         else
@@ -166,11 +166,10 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
             sender.CurrentWish = null;
             TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
-                    {
-                    var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, itemIndex, isReadOnly);
-                    },
-                    pageIndex => sender.ListPositions.WishPage = pageIndex);
+            {
+                var wish = sortedWishes[itemIndex];
+                AddWishText(userContext, wish, itemIndex, isReadOnly);
+            });
         }
 
         return Task.CompletedTask;

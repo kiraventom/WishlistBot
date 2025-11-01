@@ -7,6 +7,7 @@ using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Admin.Users;
 
+[AllowedListPositions(ListPosition.AdminUserPage)]
 [AllowedTypes(QueryParameterType.SetListPageTo)]
 public class UsersMessage(ILogger logger) : BotMessage(logger)
 {
@@ -23,7 +24,7 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
             .ToList();
 
         var sender = userContext.Users
-            .Include(u => u.ListPositions)
+            .Include(u => u.ListPositions).ThenInclude(l => l.AdminUserPage)
             .First(u => u.UserId == userId);
 
         var totalCount = users.Count;
@@ -32,8 +33,7 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
         {
             var user = users[itemIndex];
             AddUserText(userContext, user, itemIndex);
-        },
-        pageIndex => sender.ListPositions.AdminUserPage = pageIndex);
+        });
 
         return Task.CompletedTask;
     }

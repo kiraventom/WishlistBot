@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
+[AllowedListPositions(ListPosition.Claim)]
 [AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ClaimWish, QueryParameterType.WishId)]
 public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 {
@@ -14,9 +15,8 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
         Text.Bold("Здесь отображаются забронированные вами виши.");
 
         var users = userContext.Users
-            .Include(u => u.ListPositions)
-            .Include(u => u.ClaimedWishes)
-            .ThenInclude(cw => cw.Owner);
+            .Include(u => u.ListPositions).ThenInclude(u => u.ClaimPage)
+            .Include(u => u.ClaimedWishes).ThenInclude(cw => cw.Owner);
 
         var (sender, _) = GetSenderAndTarget(users, userId, parameters);
 
@@ -41,8 +41,7 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
                     new QueryParameter(QueryParameterType.UserId, claimedWish.OwnerId),
                     new QueryParameter(QueryParameterType.WishId, claimedWish.WishId),
                     QueryParameter.ReturnToMyClaims);
-        },
-        pageIndex => sender.ListPositions.ClaimPage = pageIndex);
+        });
 
         return Task.CompletedTask;
     }

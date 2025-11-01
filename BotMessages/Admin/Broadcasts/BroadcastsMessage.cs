@@ -7,13 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
+[AllowedListPositions(ListPosition.AdminBroadcast)]
 [AllowedTypes(QueryParameterType.SetListPageTo)]
 [ChildMessage(typeof(AdminMenuMessage))]
 public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        var sender = userContext.Users.Include(u => u.ListPositions).First(u => u.UserId == userId);
+        var sender = userContext.Users
+            .Include(u => u.ListPositions).ThenInclude(l => l.AdminBroadcastPage)
+            .First(u => u.UserId == userId);
+
         var broadcasts = userContext.Broadcasts.AsNoTracking().AsEnumerable().Reverse().ToList();
         var totalCount = broadcasts.Count;
 
@@ -34,7 +38,7 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
             Text.Bold("No broadcasts");
         }
 
-        ListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(Keyboard, parameters, totalCount, itemIndex =>
+        ListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(Keyboard, parameters, totalCount, sender.ListPositions.AdminBroadcastPage, itemIndex =>
         {
             const string pencilEmoji = "\u270f\ufe0f ";
             const string envelopeEmoji = "\u2709\ufe0f ";
@@ -49,12 +53,8 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
             if (broadcast.Deleted)
                 name = name.Insert(0, trashEmoji);
 
-            Keyboard.AddButton<BroadcastQuery>(
-             name,
-             new QueryParameter(QueryParameterType.SetBroadcastTo, broadcast.BroadcastId),
-             new QueryParameter(QueryParameterType.SetListPageTo, pageIndex));
-        },
-        pageIndex => sender.ListPositions.AdminBroadcastPage = pageIndex);
+            Keyboard.AddButton<BroadcastQuery>(name, new QueryParameter(QueryParameterType.SetBroadcastTo, broadcast.BroadcastId));
+        });
 
         Keyboard
            .NewRow()

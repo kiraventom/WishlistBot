@@ -1,4 +1,6 @@
+using Serilog;
 using WishlistBot.Keyboard;
+using WishlistBot.Model.User;
 using WishlistBot.Queries;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
@@ -9,11 +11,12 @@ public static class TextListMessageUtils
 {
    public const int ItemsPerPage = 15;
 
-   public static void AddListControls<TListQuery, TParentQuery>(MessageText text, BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, int pageIndex, Action<int> addLineAt, Action<int> setPageIndex)
+   public static void AddListControls<TListQuery, TParentQuery>(MessageText text, BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, ListPositionModel listPosition, Action<int> addLineAt)
       where TListQuery : IQuery, new() where TParentQuery : IQuery, new()
       {
           keyboard.NewRow();
 
+          var pageIndex = listPosition.Page;
           if (parameters.Pop(QueryParameterType.SetListPageTo, out var pageIndexValue))
               pageIndex = (int)pageIndexValue;
 
@@ -29,7 +32,9 @@ public static class TextListMessageUtils
           if (pagesCount != 0 && pageIndex >= pagesCount)
               pageIndex = pagesCount - 1;
 
-          setPageIndex(pageIndex);
+          Log.Logger.Warning("listPos.Page before: {0}", listPosition.Page);
+          listPosition.Page = pageIndex;
+          Log.Logger.Warning("listPos.Page after: {0}", listPosition.Page);
 
           for (var itemOnPageIndex = 0; itemOnPageIndex < ItemsPerPage; ++itemOnPageIndex)
           {

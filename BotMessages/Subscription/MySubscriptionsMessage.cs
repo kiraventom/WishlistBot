@@ -7,15 +7,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Subscription;
 
+[AllowedListPositions(ListPosition.Subscription)]
 [AllowedTypes(QueryParameterType.SetListPageTo)]
 public class MySubscriptionsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var user = userContext.Users
-            .Include(u => u.ListPositions)
-            .Include(u => u.Subscriptions)
-            .ThenInclude(s => s.Target)
+            .Include(u => u.ListPositions).ThenInclude(l => l.SubscriptionPage)
+            .Include(u => u.Subscriptions).ThenInclude(s => s.Target)
             .First(u => u.UserId == userId);
 
         var totalCount = user.Subscriptions.Count;
@@ -29,8 +29,7 @@ public class MySubscriptionsMessage(ILogger logger) : UserBotMessage(logger)
             Keyboard.AddButton<SubscriptionQuery>(
                     userWeSubscribedTo.FirstName,
                     new QueryParameter(QueryParameterType.UserId, userWeSubscribedTo.UserId));
-        },
-        pageIndex => user.ListPositions.SubscriptionPage = pageIndex);
+        });
 
         return Task.CompletedTask;
     }

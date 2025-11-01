@@ -64,7 +64,7 @@ public static class Program
 
       while (true)
       {
-         if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Q)
+         if (Console.In.Peek() is (int)'q' or (int)'Q')
             return;
 
          await Task.Delay(10);

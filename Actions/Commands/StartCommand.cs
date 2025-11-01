@@ -41,13 +41,12 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FinishSubscriptionMessage(Logger), forceNewMessage: true);
         }
         // TODO
-        else if (TryParseShowWishAction(actionText, out var userId, out var wishId, out var pageIndex))
+        else if (TryParseShowWishAction(actionText, out var userId, out var wishId))
         {
             var collection = new QueryParameterCollection(
             [
                 new QueryParameter(QueryParameterType.UserId, userId), 
                 new QueryParameter(QueryParameterType.WishId, wishId),
-                new QueryParameter(QueryParameterType.SetListPageTo, pageIndex)
             ]);
 
             user.QueryParams = collection.ToString();
@@ -77,7 +76,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         }
     }
 
-    public override bool ShouldCleanup(string actionText) => TryParseShowWishAction(actionText, out _, out _, out _) || TryParseAdminShowUserAction(actionText, out _);
+    public override bool ShouldCleanup(string actionText) => TryParseShowWishAction(actionText, out _, out _) || TryParseAdminShowUserAction(actionText, out _);
 
     private static bool TryParseSubscribeId(string actionText, out string subscribeId)
     {
@@ -92,11 +91,10 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         return false;
     }
 
-    private static bool TryParseShowWishAction(string actionText, out int userId, out int wishId, out int pageIndex)
+    private static bool TryParseShowWishAction(string actionText, out int userId, out int wishId)
     {
         userId = -1;
         wishId = -1;
-        pageIndex = -1;
 
         var parts = actionText.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 2)
@@ -126,7 +124,6 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                 else
                     wishId = int.Parse(parameters["wishid"]);
 
-                pageIndex = int.Parse(parameters["setlistpageto"]);
                 return true;
             }
         }
