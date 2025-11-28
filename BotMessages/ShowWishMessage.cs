@@ -7,6 +7,7 @@ using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Notification;
+using WishlistBot.BotMessages.Subscription;
 
 namespace WishlistBot.BotMessages;
 
@@ -60,6 +61,13 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
                 if (wish.ClaimerId is null)
                 {
                     wish.ClaimerId = userId;
+                    userContext.Entry(target).Collection(u => u.Subscribers).Load();
+
+                    // If claimer is not subscribed, subscribe him automatically
+                    if (target.Subscribers.All(s => s.SubscriberId != sender.UserId))
+                    {
+                        await FinishSubscriptionMessage.PerformSubscription(Logger, userContext, sender, target);
+                    }
                 }
                 // Unclaim wish claimed by sender
                 else if (wish.ClaimerId == userId)
@@ -159,6 +167,30 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         PhotoFileId = wish.FileId;
+
+        string shareText;
+        
+        if (readOnly)
+        {
+        shareText = 
+$@"
+
+{target.FirstName} добавил {wish.Name} в свой вишлист!
+Открыть в Вишлист БОТ:
+{wish.BuildLink(target.SubscribeId)}";
+        }
+        else
+        {
+        shareText = 
+$@"
+
+Я добавил {wish.Name} в свой вишлист!
+Открыть в Вишлист БОТ:
+{wish.BuildLink(target.SubscribeId)}";
+        }
+
+        Keyboard.AddShareButton("Поделиться", shareText)
+            .NewRow();
 
         // Controls
         if (parameters.Peek(QueryParameterType.ReturnToMyClaims))

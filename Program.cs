@@ -28,8 +28,7 @@ public static class Program
          return;
       }
 
-      var logger = InitLogger(projectDirPath, config.Token);
-      Log.Logger = logger;
+      var logger = InitLogger(projectDirPath);
 
       logger.Information("===== ENTRY POINT =====");
 
@@ -83,7 +82,7 @@ public static class Program
       return Path.Combine(homeDirPath, ".config", PROJECT_NAME);
    }
 
-   private static Logger InitLogger(string projectDirPath, string botToken)
+   private static Logger InitLogger(string projectDirPath)
    {
       var logsDirPath = Path.Combine(projectDirPath, "logs");
       Directory.CreateDirectory(logsDirPath);
@@ -94,6 +93,8 @@ public static class Program
          .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day)
          .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information)
          .CreateLogger();
+
+      Log.Logger = logger;
 
       return logger;
    }

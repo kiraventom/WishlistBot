@@ -41,11 +41,11 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FinishSubscriptionMessage(Logger), forceNewMessage: true);
         }
         // TODO
-        else if (TryParseShowWishAction(actionText, out var userId, out var wishId))
+        else if (TryParseShowWishAction(actionText, out var userSubscribeId, out var wishId) && userContext.Users.FirstOrDefault(u => u.SubscribeId.StartsWith(userSubscribeId)) is {} wishOwner)
         {
             var collection = new QueryParameterCollection(
             [
-                new QueryParameter(QueryParameterType.UserId, userId), 
+                new QueryParameter(QueryParameterType.UserId, wishOwner.UserId), 
                 new QueryParameter(QueryParameterType.WishId, wishId),
             ]);
 
@@ -91,9 +91,9 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         return false;
     }
 
-    private static bool TryParseShowWishAction(string actionText, out int userId, out int wishId)
+    private static bool TryParseShowWishAction(string actionText, out string userSubcribeId, out int wishId)
     {
-        userId = -1;
+        userSubcribeId = null;
         wishId = -1;
 
         var parts = actionText.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -111,20 +111,16 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                 parameters.Add(parameterKeyValue[0], parameterKeyValue[1]);
             }
 
-            if (parameters["action"] == "showwish")
+            if (parameters["a"] == "sw")
             {
-                if (parameters.ContainsKey("setuserto")) // legacy
-                    userId = int.Parse(parameters["setuserto"]);
-                else
-                    userId = int.Parse(parameters["userid"]);
+                bool success = true;
+                success = parameters.TryGetValue("u", out userSubcribeId) && success;
+                Log.Warning("u = {userid}", userSubcribeId);
+                success = parameters.TryGetValue("w", out var wishIdStr) && success;
+                Log.Warning("w = {wishid}", wishIdStr);
+                success = int.TryParse(wishIdStr, out wishId) && success;
 
-
-                if (parameters.ContainsKey("setwishto")) // legacy
-                    wishId = int.Parse(parameters["setwishto"]);
-                else
-                    wishId = int.Parse(parameters["wishid"]);
-
-                return true;
+                return success;
             }
         }
 

@@ -140,7 +140,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 TextListMessageUtils.AddListControls<CompactListQuery, SubscriberQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
                 {
                     var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, itemIndex, isReadOnly);
+                    AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
                 });
             }
             else
@@ -148,7 +148,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 TextListMessageUtils.AddListControls<CompactListQuery, SubscriptionQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
                 {
                     var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, itemIndex, isReadOnly);
+                    AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
                 });
             }
         }
@@ -168,14 +168,14 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
             {
                 var wish = sortedWishes[itemIndex];
-                AddWishText(userContext, wish, itemIndex, isReadOnly);
+                AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
             });
         }
 
         return Task.CompletedTask;
     }
 
-    private void AddWishText(UserContext userContext, WishModel wish, int itemIndex, bool isReadonly)
+    private void AddWishText(UserContext userContext, WishModel wish, string subscribeId, int itemIndex, bool isReadonly)
     {
         Text.Bold($"{itemIndex + 1}. ");
 
@@ -187,7 +187,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         // TODO strikethrough if claimed
-        Text.InlineUrl(wish.Name, $"t.me/{Config.Instance.Username}?start=action=showwish_userid={wish.OwnerId}_wishid={wish.WishId}");
+        Text.InlineUrl(wish.Name, wish.BuildLink(subscribeId));
 
         if (wish.PriceRange != Price.NotSet)
         {

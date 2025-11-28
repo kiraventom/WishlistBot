@@ -16,6 +16,7 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
 
         var target = userContext.Users
             .Include(u => u.Wishes)
+            .Include(u => u.Subscribers)
             .Include(u => u.Profile)
             .First(u => u.UserId == targetId);
 
@@ -26,9 +27,18 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
                .NewRow();
         }
 
-        Keyboard
-            .NewRow()
-            .AddButton<ConfirmUnsubscribeQuery>("Отписаться");
+        if (target.Subscribers.Any(s => s.SubscriberId == userId))
+        {
+            Keyboard
+                .NewRow()
+                .AddButton<ConfirmUnsubscribeQuery>("Отписаться");
+        }
+        else
+        {
+            Keyboard
+                .NewRow()
+                .AddButton<FinishSubscriptionQuery>("Подписаться");
+        }
 
         if (target.Profile.IsPublic)
         {

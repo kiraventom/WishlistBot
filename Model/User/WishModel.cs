@@ -47,5 +47,10 @@ public class WishModel
 
         return wish;
     }
+
+    public string BuildLink(string subscribeId)
+    {
+        subscribeId = subscribeId[..20];
+        return $"t.me/{Config.Instance.Username}?start=a=sw_u={subscribeId}_w={WishId}"; }
 }
 

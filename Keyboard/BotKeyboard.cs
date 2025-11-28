@@ -26,6 +26,8 @@ public class BotKeyboard()
 
     public BotKeyboard AddCopyTextButton(string caption, string textToCopy) => AddButton(new CopyTextBotButton(caption, textToCopy));
 
+    public BotKeyboard AddShareButton(string caption, string textToShare) => AddButton(new ShareBotButton(caption, textToShare));
+
     public BotKeyboard AddButton<T>(string customCaption, params QueryParameter[] parameters) where T : IQuery, new()
     {
         var query = new T();
