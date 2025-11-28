@@ -44,7 +44,7 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
         const string unlocked = "\U0001f513";
 
         Text.Bold($"{itemIndex + 1}. ");
-        Text.InlineUrl(user.FirstName, $"t.me/{Config.Instance.Username}?start=action=adminshowuser_userid={user.UserId}");
+        Text.InlineUrl(user.FirstName, $"t.me/{Config.Instance.Username}?start=a=asu_u={user.UserId}");
         Text.Verbatim($" {(user.Profile.IsPublic ? unlocked : locked)}");
         Text.Verbatim($" W: {user.Wishes.Count} (")
             .Spoiler(user.Wishes.Count(w => w.ClaimerId != null).ToString())

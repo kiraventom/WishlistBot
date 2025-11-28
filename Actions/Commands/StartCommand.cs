@@ -146,9 +146,9 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                 parameters.Add(parameterKeyValue[0], parameterKeyValue[1]);
             }
 
-            if (parameters["action"] == "adminshowuser")
+            if (parameters["a"] == "asu")
             {
-                userId = int.Parse(parameters["userid"]);
+                userId = int.Parse(parameters["u"]);
                 return true;
             }
         }
