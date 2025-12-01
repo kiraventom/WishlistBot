@@ -26,12 +26,12 @@ public class FinishSubscriptionMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
+            await PerformSubscription(Logger, userContext, sender, target);
+
             Text.Italic("Вы успешно подписались на вишлист ")
                 .InlineMention(target)
                 .Italic("!");
         }
-
-        await PerformSubscription(Logger, userContext, sender, target);
 
         var totalSubscriptions = sender.Subscriptions.Count;
         var lastPage = totalSubscriptions / ListMessageUtils.ItemsPerPage;
