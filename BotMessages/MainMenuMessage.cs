@@ -55,7 +55,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
         if (!user.Settings.SendNotifications)
             Text.LineBreak().ItalicBold($"{dot}Отправка уведомлений о вишах подписчикам: ").Verbatim(mutedSpeaker);
 
-        Text.LineBreak().LineBreak().Italic("Ссылку на вишлист можно скопировать в профиле");
+        Text.LineBreak().LineBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
 
         return Task.CompletedTask;
     }

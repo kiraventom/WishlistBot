@@ -28,7 +28,12 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         }
 
         // Invite link button
-        Keyboard.AddCopyTextButton($"{link} Ссылка на вишлист", sender.GetSubscribeLink());
+        Keyboard.AddShareButton($"{link} Отправить вишлист другу", 
+$@"
+
+Мой вишлист в Вишлист БОТ:
+{sender.GetSubscribeLink()}");
+
         Keyboard.NewRow();
 
         // Public/private
