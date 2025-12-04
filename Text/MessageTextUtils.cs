@@ -37,8 +37,8 @@ public static partial class MessageTextUtils
             Price.Under1000 => "от 500 до 1000₽",
             Price.Under3000 => "от 1000 до 3000₽",
             Price.Under5000 => "от 3000 до 5000₽",
-            Price.Under10000 => "от 5000 до 10000₽",
-            Price.Over10000 => "больше 10000₽",
+            Price.Under10000 => "от 5000 до 10 000₽",
+            Price.Over10000 => "больше 10 000₽",
             _ => "incorrect"
         };
     }
@@ -49,11 +49,11 @@ public static partial class MessageTextUtils
         {
             Price.NotSet => string.Empty,
             Price.Under500 => "<500₽",
-            Price.Under1000 => "500-1000₽",
-            Price.Under3000 => "1000-3000₽",
-            Price.Under5000 => "3000-5000₽",
-            Price.Under10000 => "5000-10000₽",
-            Price.Over10000 => ">10000₽",
+            Price.Under1000 => "500-1к ₽",
+            Price.Under3000 => "1-3к ₽",
+            Price.Under5000 => "3-5к ₽",
+            Price.Under10000 => "5-10к ₽",
+            Price.Over10000 => ">10к ₽",
             _ => "incorrect"
         };
     }
