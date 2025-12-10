@@ -5,7 +5,7 @@ namespace WishlistBot.Model.User;
 
 public class ViewerTargetBuilder
 {
-    private readonly Dictionary<Type, IList> _propertiesCache = [];
+    private readonly Dictionary<Type, PropertyInfo> _propertiesCache = [];
 
     public static ViewerTargetBuilder Instance { get; } = new();
 
@@ -14,17 +14,16 @@ public class ViewerTargetBuilder
     public T GetOrCreateViewerTarget<T>(UserModel userModel, int targetId) where T : IViewerTarget, new()
     {
         List<T> typedList;
-        if (!_propertiesCache.TryGetValue(typeof(T), out var list))
+        if (!_propertiesCache.TryGetValue(typeof(T), out var prop))
         {
-            var listProp = userModel.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(pi => pi.PropertyType == typeof(List<T>)).FirstOrDefault();
-            if (listProp is null)
+            prop = userModel.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(pi => pi.PropertyType == typeof(List<T>)).FirstOrDefault();
+            if (prop is null)
                 throw new NotSupportedException($"Property of type 'List<{typeof(T).Name}>' not found in '{userModel.GetType().Name}'");
 
-            list = (IList)listProp.GetValue(userModel);
-            _propertiesCache.Add(typeof(T), list);
+            _propertiesCache.Add(typeof(T), prop);
         }
 
-        typedList = (List<T>)list;
+        typedList = (List<T>)prop.GetValue(userModel);
 
         var target = typedList.FirstOrDefault(wvs => wvs.TargetId == targetId);
         if (target is null)
