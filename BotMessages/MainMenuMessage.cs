@@ -43,6 +43,12 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
            .InlineMention(user)
            .Verbatim("!");
 
+        if (user.UserId == 100)
+        {
+            Text.LineBreak().LineBreak()
+                .Verbatim("🏆").Bold("ПОЛЬЗОВАТЕЛЬ #100").Verbatim("🏆");
+        }
+
         const string mutedSpeaker = "\U0001f507";
         const string dot = "⋅ ";
 
