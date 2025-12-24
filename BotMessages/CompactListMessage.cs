@@ -70,14 +70,18 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         var sortedWishes = targetUser.GetSortedWishes(wishViewSettings).ToList();
         var sortedCount = sortedWishes.Count;
 
-        var countText = totalCount == sortedCount ? $"{sortedCount}" : $"{sortedCount} / {totalCount}";
+        var countText = totalCount == sortedCount ? $"{sortedCount}" : $"{sortedCount} из {totalCount}";
 
         if (isReadOnly)
-            Text.Bold("Виши ")
-                .InlineMention(targetUser)
-                .Bold($" [{countText}]:");
+        {
+            Text.Bold("Виши ").InlineMention(targetUser);
+        }
         else
-            Text.Bold($"Ваши виши [{countText}]:");
+        {
+            Text.Bold($"Ваши виши");
+        }
+
+        Text.Bold($" ({countText} вишей)");
 
         var sortPropertyText = wishViewSettings.SortProperty switch
         {
@@ -141,7 +145,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-                });
+                }, buttonCaption: "Страница");
             }
             else
             {
@@ -149,7 +153,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-                });
+                }, buttonCaption: "Страница");
             }
         }
         else
@@ -165,11 +169,12 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 .AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
 
             sender.CurrentWish = null;
+
             TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
             {
                 var wish = sortedWishes[itemIndex];
                 AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-            });
+            }, buttonCaption: "Страница");
         }
 
         return Task.CompletedTask;
