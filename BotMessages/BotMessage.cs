@@ -75,6 +75,13 @@ public abstract class BotMessage(ILogger logger)
     {
         // TODO Bruh
         userContext.Entry(user).Reference(u => u.ListPositions).Load();
+
+        if (user.ListPositions is null)
+        {
+            Logger.Warning("User [{userId}] list positions is null", user.UserId);
+            return;
+        }
+
         userContext.Entry(user.ListPositions).Reference(u => u.WishPage).Load();
         userContext.Entry(user.ListPositions).Reference(u => u.SubscriberPage).Load();
         userContext.Entry(user.ListPositions).Reference(u => u.SubscriptionPage).Load();
