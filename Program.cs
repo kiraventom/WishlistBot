@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿//test change
+using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using System.Reflection;
