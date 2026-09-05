@@ -1,0 +1,7 @@
+services:
+  wishlist-bot:
+    build: .
+    container_name: wishlist-bot
+    restart: unless-stopped 
+    volumes:
+      - $CONFIG_DIR:/app/config

@@ -72,14 +72,8 @@ public static class Program
 
    private static string GetProjectDirPath()
    {
-      if (OperatingSystem.IsWindows())
-      {
-         var appDataDirPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-         return Path.Combine(appDataDirPath, PROJECT_NAME);
-      }
-
-      var homeDirPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-      return Path.Combine(homeDirPath, ".config", PROJECT_NAME);
+      var curDir = Environment.CurrentDirectory;
+      return Path.Combine(curDir, "config");
    }
 
    private static Logger InitLogger(string projectDirPath)
