@@ -44,7 +44,7 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
             wishIndex = wishes.IndexOf(newWish);
         }
 
-        var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
+        var pageIndex = wishIndex / TextListMessageUtils.ItemsPerPage;
 
         Keyboard
            .AddButton<ShowWishQuery>("Перейти к вишу",

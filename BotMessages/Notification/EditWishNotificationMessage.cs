@@ -51,7 +51,7 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
             wishIndex = wishes.IndexOf(editedWish);
         }
 
-        var pageIndex = wishIndex / ListMessageUtils.ItemsPerPage;
+        var pageIndex = wishIndex / TextListMessageUtils.ItemsPerPage;
 
         Keyboard
            .AddButton<ShowWishQuery>("Перейти к вишу",

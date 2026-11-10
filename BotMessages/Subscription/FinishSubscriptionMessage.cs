@@ -33,13 +33,11 @@ public class FinishSubscriptionMessage(ILogger logger) : UserBotMessage(logger)
                 .Italic("!");
         }
 
-        var totalSubscriptions = sender.Subscriptions.Count;
-        var lastPage = totalSubscriptions / ListMessageUtils.ItemsPerPage;
-
+        // NOTE: no SetListPageTo here. This button opens the profile window, not a list,
+        // and the page parameter used to leak from the subscriptions count into the wishlist page.
         Keyboard
             .AddButton<SubscriptionQuery>($"Открыть вишлист {target.FirstName}",
-                    new QueryParameter(QueryParameterType.UserId, target.UserId),
-                    new QueryParameter(QueryParameterType.SetListPageTo, lastPage))
+                    new QueryParameter(QueryParameterType.UserId, target.UserId))
             .NewRow()
             .AddButton<MySubscriptionsQuery>("К моим подпискам");
     }

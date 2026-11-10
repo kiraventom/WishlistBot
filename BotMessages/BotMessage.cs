@@ -1,5 +1,7 @@
 using Serilog;
+using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using WishlistBot.Keyboard;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
@@ -82,15 +84,46 @@ public abstract class BotMessage(ILogger logger)
             return;
         }
 
-        userContext.Entry(user.ListPositions).Reference(u => u.WishPage).Load();
-        userContext.Entry(user.ListPositions).Reference(u => u.SubscriberPage).Load();
-        userContext.Entry(user.ListPositions).Reference(u => u.SubscriptionPage).Load();
-        userContext.Entry(user.ListPositions).Reference(u => u.ClaimPage).Load();
-        userContext.Entry(user.ListPositions).Reference(u => u.AdminBroadcastPage).Load();
-        userContext.Entry(user.ListPositions).Reference(u => u.AdminUserPage).Load();
+        var listPositions = user.ListPositions;
+
+        EnsureListPosition(userContext, listPositions, ListPosition.Wish);
+        EnsureListPosition(userContext, listPositions, ListPosition.Subscriber);
+        EnsureListPosition(userContext, listPositions, ListPosition.Subscription);
+        EnsureListPosition(userContext, listPositions, ListPosition.Claim);
+        EnsureListPosition(userContext, listPositions, ListPosition.AdminBroadcast);
+        EnsureListPosition(userContext, listPositions, ListPosition.AdminUserPage);
 
         foreach (var listPosition in Enum.GetValues<ListPosition>().Except(AllowedPositions))
-            user.ListPositions.GetListPosition(listPosition).Page = 0;
+            listPositions.GetListPosition(listPosition).Page = 0;
+    }
+
+    private static void EnsureListPosition(UserContext userContext, ListPositionsModel listPositions, ListPosition position)
+    {
+        switch (position)
+        {
+            case ListPosition.Wish: EnsureReference(userContext, listPositions, l => l.WishPage); break;
+            case ListPosition.Subscriber: EnsureReference(userContext, listPositions, l => l.SubscriberPage); break;
+            case ListPosition.Subscription: EnsureReference(userContext, listPositions, l => l.SubscriptionPage); break;
+            case ListPosition.Claim: EnsureReference(userContext, listPositions, l => l.ClaimPage); break;
+            case ListPosition.AdminBroadcast: EnsureReference(userContext, listPositions, l => l.AdminBroadcastPage); break;
+            case ListPosition.AdminUserPage: EnsureReference(userContext, listPositions, l => l.AdminUserPage); break;
+            default: throw new NotSupportedException();
+        }
+    }
+
+    // Rows created before the AdjustListPosition migration have NULL foreign keys, so the navigation
+    // is an untracked instance left by the property initializer: all writes to it are silently lost.
+    // Attach a real row instead, so that the page finally starts to persist for those users.
+    private static void EnsureReference(
+        UserContext userContext,
+        ListPositionsModel listPositions,
+        Expression<Func<ListPositionsModel, ListPositionModel>> navigation)
+    {
+        var reference = userContext.Entry(listPositions).Reference(navigation);
+        reference.Load();
+
+        if (reference.CurrentValue is null || userContext.Entry(reference.CurrentValue).State == EntityState.Detached)
+            reference.CurrentValue = new ListPositionModel();
     }
 
 #pragma warning disable CA1859

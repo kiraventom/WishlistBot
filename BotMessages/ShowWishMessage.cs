@@ -45,7 +45,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         {
             Text.Italic("Виш не найден! Вероятно, он был удалён");
             Keyboard
-                .AddButton<CompactListQuery>($"К другим вишам {target.FirstName}")
+                .AddButton<CompactListQuery>($"К другим вишам {target.FirstName}", new QueryParameter(QueryParameterType.SetListPageTo, 0))
                 .NewRow()
                 .AddButton<MainMenuQuery>("В главное меню");
             return;
@@ -208,7 +208,9 @@ $@"
             if (index > 0)
                 Keyboard.AddButton<ShowWishQuery>($"\u2b05\ufe0f {prevIndex + 1}", new QueryParameter(QueryParameterType.WishId, claimedWishes[prevIndex].WishId));
 
-            Keyboard.AddButton<MyClaimsQuery>("Назад");
+            // Return to the page of the claims list that contains this wish
+            Keyboard.AddButton<MyClaimsQuery>("Назад",
+                new QueryParameter(QueryParameterType.SetListPageTo, Math.Max(index, 0) / ListMessageUtils.ItemsPerPage));
 
             if (index < totalCount - 1)
                 Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, claimedWishes[nextIndex].WishId));
@@ -238,7 +240,9 @@ $@"
             if (index > 0)
                 Keyboard.AddButton<ShowWishQuery>($"\u2b05\ufe0f {prevIndex + 1}", new QueryParameter(QueryParameterType.WishId, wishes[prevIndex].WishId));
 
-            Keyboard.AddButton<CompactListQuery>("Назад");
+            // Return to the page of the wishlist that contains this wish
+            Keyboard.AddButton<CompactListQuery>("Назад",
+                new QueryParameter(QueryParameterType.SetListPageTo, Math.Max(index, 0) / TextListMessageUtils.ItemsPerPage));
 
             if (index < totalCount - 1)
                 Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, wishes[nextIndex].WishId));
