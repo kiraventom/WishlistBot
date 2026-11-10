@@ -13,7 +13,6 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
    public static QueryParameter ClaimWish { get; } = new(QueryParameterType.ClaimWish);
    public static QueryParameter ForceNewMessage { get; } = new(QueryParameterType.ForceNewMessage);
    public static QueryParameter CancelJob { get; } = new(QueryParameterType.CancelJob);
-   public static QueryParameter RegenerateLink { get; } = new(QueryParameterType.RegenerateLink);
    public static QueryParameter SaveDraft { get; } = new(QueryParameterType.SaveDraft);
    public static QueryParameter ChangeWishSortOrder { get; } = new(QueryParameterType.ChangeWishSortOrder);
    public static QueryParameter ChangeWishSortProperty { get; } = new(QueryParameterType.ChangeWishSortProperty);
@@ -24,26 +23,29 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
 
    public static bool TryParse(string str, out QueryParameter parameter)
    {
-      int type = default;
-      long value = default;
+      parameter = default;
 
       var parts = str.Split(EQUALS_CH);
+      if (parts.Length is < 1 or > 2)
+         return false;
 
-      var isValidValue = parts.Length == 2 && 
-         long.TryParse(parts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
+      // Both the type and the value (when present) must be valid,
+      // otherwise the parameter would silently turn into an empty one
+      if (!int.TryParse(parts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var type)
+          || !Enum.IsDefined((QueryParameterType)type))
+         return false;
 
-      var isValidType = parts.Length >= 1 && 
-         int.TryParse(parts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out type) && 
-         Enum.IsDefined((QueryParameterType)type);
-
-      parameter = isValidType switch
+      if (parts.Length == 1)
       {
-         true when isValidValue => new QueryParameter((QueryParameterType)type, value),
-         true => new QueryParameter((QueryParameterType)type),
-         _ => default
-      };
+         parameter = new QueryParameter((QueryParameterType)type);
+         return true;
+      }
 
-      return isValidType || isValidValue;
+      if (!long.TryParse(parts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var value))
+         return false;
+
+      parameter = new QueryParameter((QueryParameterType)type, value);
+      return true;
    }
 
    public override string ToString()
