@@ -36,17 +36,16 @@ public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
-            Text.Bold("Ваши друзья:");
+            Text.Bold("Ваши друзья:").LineBreak().LineBreak();
         }
 
-        ListMessageUtils.AddListControls<MyFriendsQuery, MainMenuQuery>(Keyboard, parameters, totalCount, user.ListPositions.FriendPage, itemIndex =>
+        TextListMessageUtils.AddListControls<MyFriendsQuery, MainMenuQuery>(Text, Keyboard, parameters, totalCount, user.ListPositions.FriendPage, itemIndex =>
         {
             var friend = friends[itemIndex].Friend;
 
-            Keyboard.AddButton<FriendQuery>(
-                    friend.FirstName,
-                    new QueryParameter(QueryParameterType.UserId, friend.UserId));
-        });
+            Text.Bold($"{itemIndex + 1}. ");
+            Text.InlineUrl(friend.FirstName, friend.BuildFriendLink());
+        }, buttonCaption: "Страница");
 
         return Task.CompletedTask;
     }

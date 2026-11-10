@@ -11,6 +11,8 @@ public class BroadcastModel
     public DateTime? DateTimeSent { get; set; }
     public bool Deleted { get; set; }
 
+    public string BuildLink() => DeepLink.BuildBroadcast(BroadcastId);
+
     public string GetShortText()
     {
         if (Text is null)

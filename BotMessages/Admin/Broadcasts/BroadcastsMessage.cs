@@ -38,7 +38,10 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
             Text.Bold("No broadcasts");
         }
 
-        ListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(Keyboard, parameters, totalCount, sender.ListPositions.AdminBroadcastPage, itemIndex =>
+        if (totalCount != 0)
+            Text.LineBreak().LineBreak();
+
+        TextListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(Text, Keyboard, parameters, totalCount, sender.ListPositions.AdminBroadcastPage, itemIndex =>
         {
             const string pencilEmoji = "\u270f\ufe0f ";
             const string envelopeEmoji = "\u2709\ufe0f ";
@@ -53,8 +56,9 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
             if (broadcast.Deleted)
                 name = name.Insert(0, trashEmoji);
 
-            Keyboard.AddButton<BroadcastQuery>(name, new QueryParameter(QueryParameterType.SetBroadcastTo, broadcast.BroadcastId));
-        });
+            Text.Bold($"{itemIndex + 1}. ");
+            Text.InlineUrl(name, broadcast.BuildLink());
+        }, buttonCaption: "Страница");
 
         Keyboard
            .NewRow()

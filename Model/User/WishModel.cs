@@ -48,9 +48,7 @@ public class WishModel
         return wish;
     }
 
-    public string BuildLink(string subscribeId)
-    {
-        subscribeId = subscribeId[..20];
-        return $"t.me/{Config.Instance.Username}?start=a=sw_u={subscribeId}_w={WishId}"; }
+    public string BuildLink(string subscribeId, bool returnToClaims = false) =>
+        DeepLink.BuildWish(subscribeId[..20], WishId, returnToClaims);
 }
 

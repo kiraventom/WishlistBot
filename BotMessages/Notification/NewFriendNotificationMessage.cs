@@ -35,7 +35,7 @@ public class NewFriendNotificationMessage : BotMessage, INotificationMessage
         // TODO Fix
         friends.Sort((f0, f1) => f0.UserId.CompareTo(f1.UserId));
         var friendIndex = friends.IndexOf(notificationSource);
-        var pageIndex = friendIndex / ListMessageUtils.ItemsPerPage;
+        var pageIndex = friendIndex / TextListMessageUtils.ItemsPerPage;
 
         Keyboard
            .AddButton<FriendQuery>("Перейти к другу",

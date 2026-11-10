@@ -5,6 +5,12 @@ using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages;
 
+/// <summary>
+/// DEPRECATED: списки, отрисованные кнопками, заменены на текстовые списки со ссылками
+/// (<see cref="TextListMessageUtils"/>). Оставлено на время переходного периода,
+/// новый код должен использовать только текстовые списки.
+/// </summary>
+[Obsolete("Кнопочные списки больше не используются: список рендерится ссылками через TextListMessageUtils")]
 public static class ListMessageUtils
 {
    public const int ItemsPerPage = 5;

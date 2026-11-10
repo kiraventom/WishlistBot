@@ -5,6 +5,7 @@ using WishlistBot.BotMessages.Friends;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 using WishlistBot.BotMessages.Admin.Users;
+using WishlistBot.BotMessages.Admin.Broadcasts;
 
 namespace WishlistBot.Actions.Commands;
 
@@ -19,66 +20,137 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         userContext.Entry(user).Reference(u => u.CurrentWish).Load();
         user.CurrentWish = null;
 
-        var isInviteLink = TryParseSubscribeId(actionText, out var subscribeId);
-        if (isInviteLink)
+        if (TryParseInviteLink(actionText, out var subscribeId))
         {
-            var userToAddAsFriend = userContext.Users.FirstOrDefault(u => u.SubscribeId == subscribeId);
+            await HandleInviteLink(userContext, user, subscribeId);
+            return;
+        }
 
-            if (userToAddAsFriend is null)
+        if (DeepLink.TryParse(actionText, out var kind, out var parameters))
+        {
+            var handled = kind switch
             {
-                await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FailFriendLinkMessage(Logger), forceNewMessage: true);
+                DeepLink.Kind.Wish => await HandleWishLink(userContext, user, parameters),
+                DeepLink.Kind.Friend => await HandleFriendLink(userContext, user, parameters),
+                DeepLink.Kind.Broadcast => await HandleBroadcastLink(userContext, user, parameters),
+                DeepLink.Kind.AdminUser => await HandleAdminUserLink(userContext, user, parameters),
+                _ => false,
+            };
+
+            if (handled)
                 return;
-            }
-
-            if (userToAddAsFriend == user)
-            {
-                await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
-                return;
-            }
-
-            var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.UserId, userToAddAsFriend.UserId)]);
-            user.QueryParams = collection.ToString();
-            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new AddFriendMessage(Logger), forceNewMessage: true);
         }
-        // TODO
-        else if (TryParseShowWishAction(actionText, out var userSubscribeId, out var wishId) && userContext.Users.FirstOrDefault(u => u.SubscribeId.StartsWith(userSubscribeId)) is {} wishOwner)
-        {
-            var collection = new QueryParameterCollection(
-            [
-                new QueryParameter(QueryParameterType.UserId, wishOwner.UserId), 
-                new QueryParameter(QueryParameterType.WishId, wishId),
-            ]);
 
-            user.QueryParams = collection.ToString();
-            
-            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new ShowWishMessage(Logger));
-        }
-        else if (TryParseAdminShowUserAction(actionText, out var userId1))
-        {
-            if (!user.IsAdmin)
-            {
-                Logger.Warning("{actionText} called, but [{id}] is not admin", actionText, user.UserId);
-                return;
-            }
-
-            var collection = new QueryParameterCollection(
-            [
-                new QueryParameter(QueryParameterType.UserId, userId1), 
-            ]);
-
-            user.QueryParams = collection.ToString();
-            
-            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new UserMessage(Logger));
-        }
-        else
-        {
-            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
-        }
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
     }
 
-    public override bool ShouldCleanup(string actionText) => TryParseShowWishAction(actionText, out _, out _) || TryParseAdminShowUserAction(actionText, out _);
+    public override bool ShouldCleanup(string actionText) =>
+        !TryParseInviteLink(actionText, out _) && DeepLink.TryParse(actionText, out _, out _);
 
-    private static bool TryParseSubscribeId(string actionText, out string subscribeId)
+    private async Task HandleInviteLink(UserContext userContext, UserModel user, string subscribeId)
+    {
+        var userToAddAsFriend = userContext.Users.FirstOrDefault(u => u.SubscribeId == subscribeId);
+
+        if (userToAddAsFriend is null)
+        {
+            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FailFriendLinkMessage(Logger), forceNewMessage: true);
+            return;
+        }
+
+        if (userToAddAsFriend == user)
+        {
+            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
+            return;
+        }
+
+        SetQueryParams(user, new QueryParameter(QueryParameterType.UserId, userToAddAsFriend.UserId));
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new AddFriendMessage(Logger), forceNewMessage: true);
+    }
+
+    private async Task<bool> HandleWishLink(UserContext userContext, UserModel user, IReadOnlyDictionary<string, string> parameters)
+    {
+        if (!parameters.TryGetValue(DeepLink.UserKey, out var userSubscribeId)
+            || !parameters.TryGetValue(DeepLink.WishIdKey, out var wishIdStr)
+            || !int.TryParse(wishIdStr, out var wishId))
+        {
+            return false;
+        }
+
+        var wishOwner = userContext.Users.FirstOrDefault(u => u.SubscribeId.StartsWith(userSubscribeId));
+        if (wishOwner is null)
+            return false;
+
+        var queryParameters = new List<QueryParameter>
+        {
+            new(QueryParameterType.UserId, wishOwner.UserId),
+            new(QueryParameterType.WishId, wishId),
+        };
+
+        // Ссылка из списка броней должна вернуть обратно в этот список
+        if (parameters.TryGetValue(DeepLink.ReturnToClaimsKey, out var claimsFlag) && claimsFlag == "1")
+            queryParameters.Add(QueryParameter.ReturnToMyClaims);
+
+        SetQueryParams(user, queryParameters.ToArray());
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new ShowWishMessage(Logger));
+        return true;
+    }
+
+    private async Task<bool> HandleFriendLink(UserContext userContext, UserModel user, IReadOnlyDictionary<string, string> parameters)
+    {
+        if (!parameters.TryGetValue(DeepLink.UserKey, out var friendSubscribeId))
+            return false;
+
+        var friend = userContext.Users.FirstOrDefault(u => u.SubscribeId.StartsWith(friendSubscribeId));
+        if (friend is null)
+            return false;
+
+        SetQueryParams(user, new QueryParameter(QueryParameterType.UserId, friend.UserId));
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FriendMessage(Logger));
+        return true;
+    }
+
+    private async Task<bool> HandleBroadcastLink(UserContext userContext, UserModel user, IReadOnlyDictionary<string, string> parameters)
+    {
+        if (!parameters.TryGetValue(DeepLink.BroadcastIdKey, out var broadcastIdStr)
+            || !int.TryParse(broadcastIdStr, out var broadcastId))
+        {
+            return false;
+        }
+
+        if (!user.IsAdmin)
+        {
+            Logger.Warning("Broadcast link called, but [{id}] is not admin", user.UserId);
+            return true;
+        }
+
+        SetQueryParams(user, new QueryParameter(QueryParameterType.SetBroadcastTo, broadcastId));
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new BroadcastMessage(Logger));
+        return true;
+    }
+
+    private async Task<bool> HandleAdminUserLink(UserContext userContext, UserModel user, IReadOnlyDictionary<string, string> parameters)
+    {
+        if (!parameters.TryGetValue(DeepLink.UserKey, out var userIdStr)
+            || !int.TryParse(userIdStr, out var userId))
+        {
+            return false;
+        }
+
+        if (!user.IsAdmin)
+        {
+            Logger.Warning("Admin user link called, but [{id}] is not admin", user.UserId);
+            return true;
+        }
+
+        SetQueryParams(user, new QueryParameter(QueryParameterType.UserId, userId));
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new UserMessage(Logger));
+        return true;
+    }
+
+    private static void SetQueryParams(UserModel user, params QueryParameter[] parameters) =>
+        user.QueryParams = new QueryParameterCollection(parameters).ToString();
+
+    private static bool TryParseInviteLink(string actionText, out string subscribeId)
     {
         var parts = actionText.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 2 && Guid.TryParse(parts[1], out _))
@@ -90,70 +162,4 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         subscribeId = null;
         return false;
     }
-
-    private static bool TryParseShowWishAction(string actionText, out string userSubcribeId, out int wishId)
-    {
-        userSubcribeId = null;
-        wishId = -1;
-
-        var parts = actionText.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 2)
-        {
-            Dictionary<string, string> parameters = new();
-
-            var parametersTxt = parts[1].Split('_');
-            foreach (var parameter in parametersTxt)
-            {
-                var parameterKeyValue = parameter.Split('=');
-                if (parameterKeyValue.Length != 2)
-                    return false;
-
-                parameters.Add(parameterKeyValue[0], parameterKeyValue[1]);
-            }
-
-            if (parameters["a"] == "sw")
-            {
-                bool success = true;
-                success = parameters.TryGetValue("u", out userSubcribeId) && success;
-                Log.Warning("u = {userid}", userSubcribeId);
-                success = parameters.TryGetValue("w", out var wishIdStr) && success;
-                Log.Warning("w = {wishid}", wishIdStr);
-                success = int.TryParse(wishIdStr, out wishId) && success;
-
-                return success;
-            }
-        }
-
-        return false;
-    }
-
-    private static bool TryParseAdminShowUserAction(string actionText, out int userId)
-    {
-        userId = -1;
-
-        var parts = actionText.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 2)
-        {
-            Dictionary<string, string> parameters = new();
-
-            var parametersTxt = parts[1].Split('_');
-            foreach (var parameter in parametersTxt)
-            {
-                var parameterKeyValue = parameter.Split('=');
-                if (parameterKeyValue.Length != 2)
-                    return false;
-
-                parameters.Add(parameterKeyValue[0], parameterKeyValue[1]);
-            }
-
-            if (parameters["a"] == "asu")
-            {
-                userId = int.Parse(parameters["u"]);
-                return true;
-            }
-        }
-
-        return false;
-    }
 }
-

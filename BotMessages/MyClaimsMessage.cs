@@ -32,16 +32,18 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 
         var totalCount = claimedWishes.Count;
 
-        ListMessageUtils.AddListControls<MyClaimsQuery, MainMenuQuery>(Keyboard, parameters, totalCount, sender.ListPositions.ClaimPage, itemIndex =>
+        if (totalCount != 0)
+            Text.LineBreak().LineBreak();
+
+        TextListMessageUtils.AddListControls<MyClaimsQuery, MainMenuQuery>(Text, Keyboard, parameters, totalCount, sender.ListPositions.ClaimPage, itemIndex =>
         {
             var claimedWish = claimedWishes[itemIndex];
 
-            Keyboard.AddButton<ShowWishQuery>(
-                    $"{claimedWish.Owner.FirstName}: {claimedWish.Name}",
-                    new QueryParameter(QueryParameterType.UserId, claimedWish.OwnerId),
-                    new QueryParameter(QueryParameterType.WishId, claimedWish.WishId),
-                    QueryParameter.ReturnToMyClaims);
-        });
+            Text.Bold($"{itemIndex + 1}. ");
+            Text.InlineMention(claimedWish.Owner);
+            Text.Verbatim(": ");
+            Text.InlineUrl(claimedWish.Name, claimedWish.BuildLink(claimedWish.Owner.SubscribeId, returnToClaims: true));
+        }, buttonCaption: "Страница");
 
         return Task.CompletedTask;
     }
