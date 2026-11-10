@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Settings;
 
-[AllowedTypes(QueryParameterType.SetSettingsTo, QueryParameterType.RegenerateLink)]
+[AllowedTypes(QueryParameterType.SetSettingsTo)]
 public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -19,14 +19,6 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             var newSettingsEnum = (SettingsEnum)newSettingsNum;
             user.Settings.SetFromEnum(newSettingsEnum);
         }
-
-        if (parameters.Pop(QueryParameterType.RegenerateLink))
-        {
-            var newSubscribeId = Guid.NewGuid().ToString("N");
-            user.SubscribeId = newSubscribeId;
-        }
-
-        const string regenerateEmoji = "\U0001f501";
 
         const string enabledSpeaker = "\U0001f50a";
         const string mutedSpeaker = "\U0001f507";
@@ -55,7 +47,6 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
            $"Отправка уведомлений: {sendNotificationsEmoji}",
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.SendNotifications)));
 
-        Keyboard.NewRow().AddButton<ConfirmRegenerateLinkQuery>($"{regenerateEmoji} Изменить ссылку на вишлист");
         Keyboard.NewRow().AddButton<MainMenuQuery>("В главное меню");
 
         return Task.CompletedTask;

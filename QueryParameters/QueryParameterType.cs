@@ -14,7 +14,7 @@ public enum QueryParameterType
    ForceNewMessage = 0xC,
    SetPriceTo = 0xD,
    SetSettingsTo = 0xE,
-   RegenerateLink = 0xF,
+   // 0xF was RegenerateLink: перегенерация ссылки убрана
    ReturnToMyClaims = 0x10,
    // CleanDraft = 0x11, OBSOLETE
    SaveDraft = 0x12,
