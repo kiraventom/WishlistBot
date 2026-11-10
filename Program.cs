@@ -2,7 +2,10 @@
 using Serilog.Core;
 using Serilog.Events;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
+using WishlistBot.Model;
+using WishlistBot.Model.User;
 using WishlistBot.Listeners;
 using WishlistBot.Notification;
 using WishlistBot.BotMessages;
@@ -31,6 +34,12 @@ public static class Program
       var logger = InitLogger(projectDirPath);
 
       logger.Information("===== ENTRY POINT =====");
+
+      if (!TryMigrateDatabases(logger))
+      {
+         logger.Fatal("Couldn't apply database migrations, exiting");
+         return;
+      }
 
       if (!TryInitTelegramClient(logger, config.Token, out var client))
       {
@@ -98,6 +107,44 @@ public static class Program
       var configFilePath = Path.Combine(projectDirPath, "config.json");
       config = Config.Load(configFilePath);
       return config is not null;
+   }
+
+   private static bool TryMigrateDatabases(ILogger logger)
+   {
+      try
+      {
+         using var userContext = UserContext.Create();
+         Migrate(userContext, logger, "user database");
+
+         using var mediaStorageContext = MediaStorageContext.Create();
+         Migrate(mediaStorageContext, logger, "media storage database");
+
+         return true;
+      }
+      catch (Exception e)
+      {
+         logger.Fatal(e.ToString());
+         return false;
+      }
+   }
+
+   private static void Migrate(DbContext dbContext, ILogger logger, string description)
+   {
+      var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
+
+      if (pendingMigrations.Count == 0)
+      {
+         logger.Information("No pending migrations for the {description}", description);
+         return;
+      }
+
+      logger.Information(
+         "Applying {count} migration(s) to the {description}: {migrations}",
+         pendingMigrations.Count,
+         description,
+         string.Join(", ", pendingMigrations));
+
+      dbContext.Database.Migrate();
    }
 
    private static bool TryInitTelegramClient(ILogger logger, string token, out TelegramBotClient client)
