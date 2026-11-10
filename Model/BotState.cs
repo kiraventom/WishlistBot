@@ -14,8 +14,8 @@ public enum BotState
     ListenForBirthday = 0x5,
     ListerForProfileNotes = 0x6,
 
-    // Search
-    ListenForSearchQuery = 0x7,
+    // 0x7 is free: it was ListenForSearchQuery before the search was removed.
+    // The value is persisted in the database, so do not reuse it.
 
     // Admin
     ListenForBroadcast = -0x1

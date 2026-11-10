@@ -36,9 +36,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
            .AddButton<MySubscribersQuery>()
            .NewRow()
            .AddButton<EditProfileQuery>()
-           .AddButton<SettingsQuery>()
-           .NewRow()
-           .AddButton<SearchMenuQuery>();
+           .AddButton<SettingsQuery>();
 
         Text.Verbatim("Добро пожаловать в главное меню, ")
            .InlineMention(user)
