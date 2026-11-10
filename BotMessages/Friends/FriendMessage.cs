@@ -2,55 +2,68 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using WishlistBot.Model.User;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Subscription;
+using WishlistBot.Queries.Friends;
 using WishlistBot.QueryParameters;
 
-namespace WishlistBot.BotMessages.Subscription;
+namespace WishlistBot.BotMessages.Friends;
 
-[ChildMessage(typeof(MySubscribersMessage))]
-public class SubscriberMessage(ILogger logger) : UserBotMessage(logger)
+[ChildMessage(typeof(MyFriendsMessage))]
+public class FriendMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        var sender = userContext.Users.Include(u => u.Subscriptions).First(u => u.UserId == userId);
+        var sender = userContext.Users
+            .Include(u => u.Friends)
+            .Include(u => u.Profile)
+            .First(u => u.UserId == userId);
 
         parameters.Peek(QueryParameterType.UserId, out var targetId);
+
         var target = userContext.Users
             .Include(u => u.Wishes)
             .Include(u => u.Profile)
             .First(u => u.UserId == targetId);
 
+        var isSelf = sender.UserId == target.UserId;
+        var isFriend = sender.IsFriendOf(target.UserId);
+
         if (target.Wishes.Count != 0)
         {
             // Entering the wishlist from the profile always starts from the first page
             Keyboard
-               .AddButton<CompactListQuery>("Открыть вишлист", QueryParameter.ReturnToSubscriber,
+               .AddButton<CompactListQuery>("Открыть вишлист", QueryParameter.ReturnToProfile,
                     new QueryParameter(QueryParameterType.SetListPageTo, 0))
                .NewRow();
         }
 
-        var isSenderSubscribed = sender.Subscriptions.Any(s => s.TargetId == target.UserId);
-
-        if (isSenderSubscribed)
+        if (!isSelf)
         {
-            Keyboard.AddButton<ConfirmUnsubscribeQuery>("Отписаться");
-        }
-        else
-        {
-            Keyboard.AddButton<FinishSubscriptionQuery>("Подписаться");
+            if (isFriend)
+                Keyboard.AddButton<ConfirmRemoveFriendQuery>("Удалить из друзей");
+            else
+                Keyboard.AddButton<AddFriendQuery>();
         }
 
-        Keyboard.AddButton<ConfirmDeleteSubscriberQuery>();
+        const string link = "\U0001f517";
 
         Keyboard
            .NewRow()
-           .AddButton<MySubscribersQuery>("К моим подписчикам");
+           .AddCopyTextButton($"{link} Ссылка на вишлист", target.GetSubscribeLink())
+           .NewRow()
+           .AddButton<MyFriendsQuery>("К друзьям");
 
-        Text.Bold("Подписчик ")
-           .InlineMention(target)
-           .Bold(":");
+        if (isSelf)
+            Text.Bold("Это вы");
+        else if (isFriend)
+            Text.Bold("Друг ");
+        else
+            Text.Bold("Пользователь ");
 
-        // TODO Duplicating code here and in SubscriptionMessage
+        if (!isSelf)
+            Text.InlineMention(target);
+
+        Text.Bold(":");
+
         const string calendar = "\U0001f4c5 ";
         const string writingHand = "\u270d\ufe0f ";
         const string gift = "\U0001f381 ";
@@ -92,25 +105,25 @@ public class SubscriberMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         Text
-        .LineBreak()
-        .Verbatim(gift)
-        .Bold("Вишей в вишлисте: ")
-        .Monospace(target.Wishes.Count.ToString());
+           .LineBreak()
+           .Verbatim(gift)
+           .Bold("Вишей в вишлисте: ")
+           .Monospace(target.Wishes.Count.ToString());
 
         return Task.CompletedTask;
     }
 
-    private static string GetYearEndingDeclination(int number)
+    private static string GetYearEndingDeclination(int year)
     {
-        if (number == 0)
+        if (year == 0)
             return "ой";
 
-        var lastTwoDigits = number % 100;
+        var lastTwoDigits = year % 100;
 
         if (lastTwoDigits is >= 10 and <= 20)
             return "ый";
 
-        var lastDigit = number % 10;
+        var lastDigit = year % 10;
         return lastDigit switch
         {
             1 or 4 or 5 or 9 or 0 => "ый",

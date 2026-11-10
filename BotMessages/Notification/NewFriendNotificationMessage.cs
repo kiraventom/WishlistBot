@@ -1,23 +1,23 @@
 using Serilog;
 using WishlistBot.Notification;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Subscription;
+using WishlistBot.Queries.Friends;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Notification;
 
-public class NewSubscriberNotificationMessage : BotMessage, INotificationMessage
+public class NewFriendNotificationMessage : BotMessage, INotificationMessage
 {
     private readonly int _notificationSourceId;
 
-    public NewSubscriberNotificationMessage(ILogger logger, NotificationModel notification) : base(logger)
+    public NewFriendNotificationMessage(ILogger logger, NotificationModel notification) : base(logger)
     {
         _notificationSourceId = notification.SourceId;
     }
 
-    public NewSubscriberNotificationMessage(ILogger logger, int notificationSourceId) : base(logger)
+    public NewFriendNotificationMessage(ILogger logger, int notificationSourceId) : base(logger)
     {
         _notificationSourceId = notificationSourceId;
     }
@@ -25,20 +25,20 @@ public class NewSubscriberNotificationMessage : BotMessage, INotificationMessage
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
+
         var notificationTarget = userContext.Users
-           .Include(u => u.Subscribers)
-           .ThenInclude(s => s.Subscriber)
+           .Include(u => u.Friends).ThenInclude(f => f.Friend)
            .First(u => u.UserId == userId);
 
-        var subscribers = notificationTarget.Subscribers.Select(s => s.Subscriber).ToList();
+        var friends = notificationTarget.Friends.Select(f => f.Friend).ToList();
 
         // TODO Fix
-        subscribers.Sort((s0, s1) => s0.UserId.CompareTo(s1.UserId));
-        var subscriberIndex = subscribers.IndexOf(notificationSource);
-        var pageIndex = subscriberIndex / ListMessageUtils.ItemsPerPage;
+        friends.Sort((f0, f1) => f0.UserId.CompareTo(f1.UserId));
+        var friendIndex = friends.IndexOf(notificationSource);
+        var pageIndex = friendIndex / ListMessageUtils.ItemsPerPage;
 
         Keyboard
-           .AddButton<SubscriberQuery>("Перейти к подписчику",
+           .AddButton<FriendQuery>("Перейти к другу",
                                      new QueryParameter(QueryParameterType.UserId, notificationSource.UserId),
                                      new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
            .NewRow()
@@ -46,7 +46,7 @@ public class NewSubscriberNotificationMessage : BotMessage, INotificationMessage
 
         Text
            .InlineMention(notificationSource)
-           .Italic(" подписался на ваш вишлист!");
+           .Italic(" добавил вас в друзья!");
 
         return Task.CompletedTask;
     }

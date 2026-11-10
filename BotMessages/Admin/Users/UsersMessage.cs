@@ -17,8 +17,7 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
 
         var users = userContext.Users
             .Include(u => u.Wishes)
-            .Include(u => u.Subscribers)
-            .Include(u => u.Subscriptions)
+            .Include(u => u.Friends)
             .AsNoTracking()
             .ToList();
 
@@ -44,7 +43,6 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
         Text.Verbatim($" W: {user.Wishes.Count} (")
             .Spoiler(user.Wishes.Count(w => w.ClaimerId != null).ToString())
             .Verbatim(")");
-        Text.Verbatim($" S: {user.Subscribers.Count}");
-        Text.Verbatim($" S to: {user.Subscriptions.Count}");
+        Text.Verbatim($" F: {user.Friends.Count}");
     }
 }

@@ -17,8 +17,7 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
             .Include(u => u.CurrentWish)
             .Include(u => u.Profile)
             .Include(u => u.Settings)
-            .Include(u => u.Subscribers)
-            .Include(u => u.Subscriptions)
+            .Include(u => u.Friends)
             .AsNoTracking();
 
         var (sender, target) = GetSenderAndTarget(users, userId, parameters);
@@ -57,8 +56,7 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
         Text.Bold("Wishes: ").Monospace(target.Wishes.Count.ToString())
             .Verbatim(" (").Spoiler(target.Wishes.Count(w => w.ClaimerId != null).ToString()).Verbatim(" claimed)")
             .LineBreak();
-        Text.Bold("Subscriptions: ").Monospace(target.Subscriptions.Count.ToString()).LineBreak();
-        Text.Bold("Subscribers: ").Monospace(target.Subscribers.Count.ToString()).LineBreak();
+        Text.Bold("Friends: ").Monospace(target.Friends.Count.ToString()).LineBreak();
         Text.Bold("ClaimedWishes: ").Monospace(target.ClaimedWishes.Count.ToString()).LineBreak();
 
         var usersList = users.OrderBy(u => u.UserId).ToList();

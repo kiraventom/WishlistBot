@@ -9,7 +9,7 @@ public enum QueryParameterType
    SetListPageTo = 0x7,
    // ReadOnly = 0x8, OBSOLETE
    UserId = 0x9,
-   ReturnToSubscriber = 0xA,
+   ReturnToProfile = 0xA,
    ClaimWish = 0xB,
    ForceNewMessage = 0xC,
    SetPriceTo = 0xD,

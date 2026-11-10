@@ -32,11 +32,8 @@ public class UserModel
     [InverseProperty(nameof(WishModel.Owner))]
     public List<WishModel> Wishes { get; } = new();
 
-    [InverseProperty(nameof(SubscriptionModel.Subscriber))]
-    public List<SubscriptionModel> Subscriptions { get; } = new();
-
-    [InverseProperty(nameof(SubscriptionModel.Target))]
-    public List<SubscriptionModel> Subscribers { get; } = new();
+    [InverseProperty(nameof(FriendModel.User))]
+    public List<FriendModel> Friends { get; } = new();
 
     [InverseProperty(nameof(WishModel.Claimer))]
     public List<WishModel> ClaimedWishes { get; } = new();

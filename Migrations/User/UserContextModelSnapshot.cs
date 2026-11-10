@@ -41,6 +41,28 @@ namespace WishlistBot.Migrations.User
                     b.ToTable("Broadcasts");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.FriendModel", b =>
+                {
+                    b.Property<int>("FriendshipId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FriendId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("FriendshipId");
+
+                    b.HasIndex("FriendId");
+
+                    b.HasIndex("UserId", "FriendId")
+                        .IsUnique();
+
+                    b.ToTable("Friends");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.LinkModel", b =>
                 {
                     b.Property<int>("LinkId")
@@ -95,10 +117,7 @@ namespace WishlistBot.Migrations.User
                     b.Property<int?>("ClaimPageListPositionId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("SubscriberPageListPositionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("SubscriptionPageListPositionId")
+                    b.Property<int?>("FriendPageListPositionId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("UserId")
@@ -115,9 +134,7 @@ namespace WishlistBot.Migrations.User
 
                     b.HasIndex("ClaimPageListPositionId");
 
-                    b.HasIndex("SubscriberPageListPositionId");
-
-                    b.HasIndex("SubscriptionPageListPositionId");
+                    b.HasIndex("FriendPageListPositionId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -220,28 +237,6 @@ namespace WishlistBot.Migrations.User
                         .IsUnique();
 
                     b.ToTable("Settings");
-                });
-
-            modelBuilder.Entity("WishlistBot.Model.User.SubscriptionModel", b =>
-                {
-                    b.Property<int>("SubscriptionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SubscriberId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TargetId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("SubscriptionId");
-
-                    b.HasIndex("TargetId");
-
-                    b.HasIndex("SubscriberId", "TargetId")
-                        .IsUnique();
-
-                    b.ToTable("Subscriptions");
                 });
 
             modelBuilder.Entity("WishlistBot.Model.User.UserExtraModel", b =>
@@ -416,6 +411,25 @@ namespace WishlistBot.Migrations.User
                     b.ToTable("WishViewSettingsModel");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.FriendModel", b =>
+                {
+                    b.HasOne("WishlistBot.Model.User.UserModel", "Friend")
+                        .WithMany()
+                        .HasForeignKey("FriendId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WishlistBot.Model.User.UserModel", "User")
+                        .WithMany("Friends")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Friend");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.LinkModel", b =>
                 {
                     b.HasOne("WishlistBot.Model.User.WishDraftModel", "WishDraft")
@@ -447,13 +461,9 @@ namespace WishlistBot.Migrations.User
                         .WithMany()
                         .HasForeignKey("ClaimPageListPositionId");
 
-                    b.HasOne("WishlistBot.Model.User.ListPositionModel", "SubscriberPage")
+                    b.HasOne("WishlistBot.Model.User.ListPositionModel", "FriendPage")
                         .WithMany()
-                        .HasForeignKey("SubscriberPageListPositionId");
-
-                    b.HasOne("WishlistBot.Model.User.ListPositionModel", "SubscriptionPage")
-                        .WithMany()
-                        .HasForeignKey("SubscriptionPageListPositionId");
+                        .HasForeignKey("FriendPageListPositionId");
 
                     b.HasOne("WishlistBot.Model.User.UserModel", "User")
                         .WithOne("ListPositions")
@@ -471,9 +481,7 @@ namespace WishlistBot.Migrations.User
 
                     b.Navigation("ClaimPage");
 
-                    b.Navigation("SubscriberPage");
-
-                    b.Navigation("SubscriptionPage");
+                    b.Navigation("FriendPage");
 
                     b.Navigation("User");
 
@@ -530,25 +538,6 @@ namespace WishlistBot.Migrations.User
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("WishlistBot.Model.User.SubscriptionModel", b =>
-                {
-                    b.HasOne("WishlistBot.Model.User.UserModel", "Subscriber")
-                        .WithMany("Subscriptions")
-                        .HasForeignKey("SubscriberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WishlistBot.Model.User.UserModel", "Target")
-                        .WithMany("Subscribers")
-                        .HasForeignKey("TargetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Subscriber");
-
-                    b.Navigation("Target");
                 });
 
             modelBuilder.Entity("WishlistBot.Model.User.UserExtraModel", b =>
@@ -630,6 +619,8 @@ namespace WishlistBot.Migrations.User
 
                     b.Navigation("CurrentWish");
 
+                    b.Navigation("Friends");
+
                     b.Navigation("ListPositions")
                         .IsRequired();
 
@@ -640,10 +631,6 @@ namespace WishlistBot.Migrations.User
 
                     b.Navigation("Settings")
                         .IsRequired();
-
-                    b.Navigation("Subscribers");
-
-                    b.Navigation("Subscriptions");
 
                     b.Navigation("WishViewSettings");
 

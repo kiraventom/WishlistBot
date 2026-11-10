@@ -1,6 +1,6 @@
 using Serilog;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Subscription;
+using WishlistBot.Queries.Friends;
 using WishlistBot.Queries.Settings;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
@@ -32,8 +32,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 
         Keyboard
            .NewRow()
-           .AddButton<MySubscriptionsQuery>()
-           .AddButton<MySubscribersQuery>()
+           .AddButton<MyFriendsQuery>()
            .NewRow()
            .AddButton<EditProfileQuery>()
            .AddButton<SettingsQuery>();
@@ -55,10 +54,10 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
             Text.LineBreak();
 
         if (!user.Settings.ReceiveNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Получение уведомлений о вишах подписок: ").Verbatim(mutedSpeaker);
+            Text.LineBreak().ItalicBold($"{dot}Получение уведомлений о вишах друзей: ").Verbatim(mutedSpeaker);
 
         if (!user.Settings.SendNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Отправка уведомлений о вишах подписчикам: ").Verbatim(mutedSpeaker);
+            Text.LineBreak().ItalicBold($"{dot}Отправка уведомлений о вишах друзьям: ").Verbatim(mutedSpeaker);
 
         Text.LineBreak().LineBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
 
