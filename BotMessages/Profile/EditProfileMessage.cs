@@ -7,7 +7,6 @@ using WishlistBot.Queries.Profile;
 
 namespace WishlistBot.BotMessages.Profile;
 
-[AllowedTypes(QueryParameterType.ChangeProfileType)]
 public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -19,13 +18,6 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         const string writingHand = "\u270d\ufe0f ";
         const string downArrow = "\u2b07\ufe0f";
         const string link = "\U0001f517";
-        const string locked = "\U0001f512";
-        const string unlocked = "\U0001f513";
-
-        if (parameters.Pop(QueryParameterType.ChangeProfileType))
-        {
-            sender.Profile.IsPublic = !sender.Profile.IsPublic;
-        }
 
         // Invite link button
         Keyboard.AddShareButton($"{link} Отправить вишлист другу", 
@@ -36,14 +28,8 @@ $@"
 
         Keyboard.NewRow();
 
-        // Public/private
-        Text.Bold("Тип профиля: ").Italic(sender.Profile.IsPublic ? "Открытый" : "Закрытый").LineBreak();
-        Keyboard
-            .AddButton<ConfirmChangeProfileTypeQuery>(sender.Profile.IsPublic ? $"{locked} Закрыть профиль" : $"{unlocked} Открыть профиль")
-            .NewRow();
-
         // Birthday
-        Text.LineBreak().Verbatim(calendar);
+        Text.Verbatim(calendar);
 
         if (sender.Profile.Birthday is null)
         {

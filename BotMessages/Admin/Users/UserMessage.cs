@@ -51,8 +51,7 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
 
         Text.Bold("Profile: ").LineBreak()
             .Verbatim("\tBirthday: ").Monospace(target.Profile.Birthday?.ToShortDateString() ?? "null").LineBreak()
-            .Verbatim("\tNotes: ").Monospace(target.Profile.Notes ?? "null").LineBreak()
-            .Verbatim("\tIsPublic: ").Monospace(target.Profile.IsPublic.ToString()).LineBreak();
+            .Verbatim("\tNotes: ").Monospace(target.Profile.Notes ?? "null").LineBreak();
 
         // TODO Link to see lists
         Text.Bold("Wishes: ").Monospace(target.Wishes.Count.ToString())

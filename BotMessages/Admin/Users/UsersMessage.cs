@@ -17,7 +17,6 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
 
         var users = userContext.Users
             .Include(u => u.Wishes)
-            .Include(u => u.Profile)
             .Include(u => u.Subscribers)
             .Include(u => u.Subscriptions)
             .AsNoTracking()
@@ -40,12 +39,8 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
 
     private void AddUserText(UserContext userContext, UserModel user, int itemIndex)
     {
-        const string locked = "\U0001f512";
-        const string unlocked = "\U0001f513";
-
         Text.Bold($"{itemIndex + 1}. ");
         Text.InlineUrl(user.FirstName, $"t.me/{Config.Instance.Username}?start=a=asu_u={user.UserId}");
-        Text.Verbatim($" {(user.Profile.IsPublic ? unlocked : locked)}");
         Text.Verbatim($" W: {user.Wishes.Count} (")
             .Spoiler(user.Wishes.Count(w => w.ClaimerId != null).ToString())
             .Verbatim(")");

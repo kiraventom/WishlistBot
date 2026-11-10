@@ -18,7 +18,7 @@ public enum QueryParameterType
    ReturnToMyClaims = 0x10,
    // CleanDraft = 0x11, OBSOLETE
    SaveDraft = 0x12,
-   ChangeProfileType = 0x13,
+   // 0x13 was ChangeProfileType: профили больше не бывают приватными
    ChangeWishSortOrder = 0x14,
    ChangeWishSortProperty = 0x15,
    WishFilterToggleUnclaimed = 0x16,

@@ -15,7 +15,6 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
    public static QueryParameter CancelJob { get; } = new(QueryParameterType.CancelJob);
    public static QueryParameter RegenerateLink { get; } = new(QueryParameterType.RegenerateLink);
    public static QueryParameter SaveDraft { get; } = new(QueryParameterType.SaveDraft);
-   public static QueryParameter ChangeProfileType { get; } = new(QueryParameterType.ChangeProfileType);
    public static QueryParameter ChangeWishSortOrder { get; } = new(QueryParameterType.ChangeWishSortOrder);
    public static QueryParameter ChangeWishSortProperty { get; } = new(QueryParameterType.ChangeWishSortProperty);
    public static QueryParameter WishFilterToggleUnclaimed { get; } = new(QueryParameterType.WishFilterToggleUnclaimed);
