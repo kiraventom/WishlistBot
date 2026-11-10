@@ -48,10 +48,7 @@ public class WishModel
         return wish;
     }
 
-    public string BuildLink(string subscribeId, bool returnToClaims = false)
-    {
-        subscribeId = subscribeId[..20];
-        var claimsSuffix = returnToClaims ? "_c=1" : string.Empty;
-        return $"t.me/{Config.Instance.Username}?start=a=sw_u={subscribeId}_w={WishId}{claimsSuffix}"; }
+    public string BuildLink(string subscribeId, bool returnToClaims = false) =>
+        DeepLink.BuildWish(subscribeId[..20], WishId, returnToClaims);
 }
 

@@ -36,7 +36,7 @@ public static class UserModelExtensions
     /// Ссылка на профиль пользователя внутри бота (списки друзей, броней и т.п. рендерятся ссылками).
     /// </summary>
     public static string BuildFriendLink(this UserModel userModel) =>
-        $"t.me/{Config.Instance.Username}?start=a=fr_u={userModel.SubscribeId[..20]}";
+        DeepLink.BuildFriend(userModel.SubscribeId[..20]);
 }
 
 

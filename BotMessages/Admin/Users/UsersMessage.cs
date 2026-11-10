@@ -39,7 +39,7 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
     private void AddUserText(UserContext userContext, UserModel user, int itemIndex)
     {
         Text.Bold($"{itemIndex + 1}. ");
-        Text.InlineUrl(user.FirstName, $"t.me/{Config.Instance.Username}?start=a=asu_u={user.UserId}");
+        Text.InlineUrl(user.FirstName, DeepLink.BuildAdminUser(user.UserId));
         Text.Verbatim($" W: {user.Wishes.Count} (")
             .Spoiler(user.Wishes.Count(w => w.ClaimerId != null).ToString())
             .Verbatim(")");
