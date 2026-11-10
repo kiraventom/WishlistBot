@@ -25,10 +25,8 @@ public class ConfirmChangeProfileTypeMessage(ILogger logger) : BotMessage(logger
                 .Verbatim("Сейчас у вас ").Bold("открытый").Verbatim(" профиль.")
                 .LineBreak().LineBreak()
                 .Verbatim("\u00b7 Подписчики ").Bold("могут").Verbatim(" копировать ссылку на ваш вишлист")
-                .LineBreak()
-                .Verbatim("\u00b7 Вас ").Bold("можно").Verbatim(" найти через поиск")
                 .LineBreak().LineBreak()
-                .Verbatim("После закрытия профиля эти функции станут ").Bold("недоступны").Verbatim(".")
+                .Verbatim("После закрытия профиля эта функция станет ").Bold("недоступна").Verbatim(".")
                 .LineBreak()
                 .Italic("Закрыть профиль?");
         }
@@ -39,10 +37,8 @@ public class ConfirmChangeProfileTypeMessage(ILogger logger) : BotMessage(logger
                 .Verbatim("Сейчас у вас ").Bold("закрытый").Verbatim(" профиль.")
                 .LineBreak().LineBreak()
                 .Verbatim("\u00b7 Подписчики ").Bold("не могут").Verbatim(" копировать ссылку на ваш вишлист")
-                .LineBreak()
-                .Verbatim("\u00b7 Вас ").Bold("нельзя").Verbatim(" найти через поиск")
                 .LineBreak().LineBreak()
-                .Verbatim("После открытия профиля эти функции станут ").Bold("доступны").Verbatim(".")
+                .Verbatim("После открытия профиля эта функция станет ").Bold("доступна").Verbatim(".")
                 .LineBreak()
                 .Italic("Открыть профиль?");
         }
