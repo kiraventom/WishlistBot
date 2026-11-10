@@ -58,7 +58,6 @@ public class MessageFactory(ILogger logger)
          SettingsQuery => new SettingsMessage(logger),
          ConfirmRegenerateLinkQuery => new ConfirmRegenerateLinkMessage(logger),
          EditProfileQuery => new EditProfileMessage(logger),
-         ConfirmChangeProfileTypeQuery => new ConfirmChangeProfileTypeMessage(logger),
          SetProfileBirthdayQuery => new SetProfileBirthdayMessage(logger),
          SetProfileNotesQuery => new SetProfileNotesMessage(logger),
          _ => new InvalidMessage(logger),

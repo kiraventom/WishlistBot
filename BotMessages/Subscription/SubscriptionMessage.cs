@@ -41,14 +41,11 @@ public class SubscriptionMessage(ILogger logger) : UserBotMessage(logger)
                 .AddButton<FinishSubscriptionQuery>("Подписаться");
         }
 
-        if (target.Profile.IsPublic)
-        {
-            const string link = "\U0001f517";
+        const string link = "\U0001f517";
 
-            Keyboard
-               .NewRow()
-               .AddCopyTextButton($"{link} Ссылка на вишлист", target.GetSubscribeLink());
-        }
+        Keyboard
+           .NewRow()
+           .AddCopyTextButton($"{link} Ссылка на вишлист", target.GetSubscribeLink());
 
         Keyboard
            .NewRow()

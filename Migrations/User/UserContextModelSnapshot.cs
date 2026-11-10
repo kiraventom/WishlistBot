@@ -161,9 +161,6 @@ namespace WishlistBot.Migrations.User
                     b.Property<DateOnly?>("Birthday")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsPublic")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Notes")
                         .HasColumnType("TEXT");
 
