@@ -209,7 +209,7 @@ $@"
 
             // Return to the page of the claims list that contains this wish
             Keyboard.AddButton<MyClaimsQuery>("Назад",
-                new QueryParameter(QueryParameterType.SetListPageTo, Math.Max(index, 0) / ListMessageUtils.ItemsPerPage));
+                new QueryParameter(QueryParameterType.SetListPageTo, Math.Max(index, 0) / TextListMessageUtils.ItemsPerPage));
 
             if (index < totalCount - 1)
                 Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, claimedWishes[nextIndex].WishId));

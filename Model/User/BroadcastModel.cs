@@ -11,6 +11,9 @@ public class BroadcastModel
     public DateTime? DateTimeSent { get; set; }
     public bool Deleted { get; set; }
 
+    public string BuildLink() =>
+        $"t.me/{Config.Instance.Username}?start=a=br_i={BroadcastId}";
+
     public string GetShortText()
     {
         if (Text is null)

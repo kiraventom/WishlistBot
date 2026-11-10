@@ -31,6 +31,12 @@ public static class UserModelExtensions
     }
 
     public static string GetSubscribeLink(this UserModel userModel) => $"https://t.me/{Config.Instance.Username}?start={userModel.SubscribeId}";
+
+    /// <summary>
+    /// Ссылка на профиль пользователя внутри бота (списки друзей, броней и т.п. рендерятся ссылками).
+    /// </summary>
+    public static string BuildFriendLink(this UserModel userModel) =>
+        $"t.me/{Config.Instance.Username}?start=a=fr_u={userModel.SubscribeId[..20]}";
 }
 
 
