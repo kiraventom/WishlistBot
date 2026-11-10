@@ -7,7 +7,7 @@ using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Notification;
-using WishlistBot.BotMessages.Subscription;
+using WishlistBot.BotMessages.Friends;
 
 namespace WishlistBot.BotMessages;
 
@@ -61,12 +61,11 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
                 if (wish.ClaimerId is null)
                 {
                     wish.ClaimerId = userId;
-                    userContext.Entry(target).Collection(u => u.Subscribers).Load();
 
-                    // If claimer is not subscribed, subscribe him automatically
-                    if (target.Subscribers.All(s => s.SubscriberId != sender.UserId))
+                    // If claimer is not a friend of the wish owner, make them friends automatically
+                    if (!FriendshipManager.IsFriend(userContext, sender.UserId, target.UserId))
                     {
-                        await FinishSubscriptionMessage.PerformSubscription(Logger, userContext, sender, target);
+                        await AddFriendMessage.PerformAddFriend(Logger, userContext, sender, target);
                     }
                 }
                 // Unclaim wish claimed by sender
@@ -269,7 +268,7 @@ $@"
             Type = NotificationMessageType.NewWish
         };
 
-        await NotificationService.Instance.SendToSubscribers(newWishNotification, userContext);
+        await NotificationService.Instance.SendToFriends(newWishNotification, userContext);
 
         return newWish;
     }
@@ -325,7 +324,7 @@ $@"
 
             editWishNotification.SetExtraInt((int)wishPropertyType);
 
-            await NotificationService.Instance.SendToSubscribers(editWishNotification, userContext);
+            await NotificationService.Instance.SendToFriends(editWishNotification, userContext);
         }
 
         return editedWish;

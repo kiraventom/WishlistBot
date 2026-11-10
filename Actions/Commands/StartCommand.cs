@@ -1,7 +1,7 @@
 using Telegram.Bot;
 using Serilog;
 using WishlistBot.BotMessages;
-using WishlistBot.BotMessages.Subscription;
+using WishlistBot.BotMessages.Friends;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 using WishlistBot.BotMessages.Admin.Users;
@@ -19,26 +19,26 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         userContext.Entry(user).Reference(u => u.CurrentWish).Load();
         user.CurrentWish = null;
 
-        var isSubscribe = TryParseSubscribeId(actionText, out var subscribeId);
-        if (isSubscribe)
+        var isInviteLink = TryParseSubscribeId(actionText, out var subscribeId);
+        if (isInviteLink)
         {
-            var userToSubscribeTo = userContext.Users.FirstOrDefault(u => u.SubscribeId == subscribeId);
+            var userToAddAsFriend = userContext.Users.FirstOrDefault(u => u.SubscribeId == subscribeId);
 
-            if (userToSubscribeTo is null)
+            if (userToAddAsFriend is null)
             {
-                await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FailSubscriptionMessage(Logger), forceNewMessage: true);
+                await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FailFriendLinkMessage(Logger), forceNewMessage: true);
                 return;
             }
 
-            if (userToSubscribeTo == user)
+            if (userToAddAsFriend == user)
             {
                 await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
                 return;
             }
 
-            var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.UserId, userToSubscribeTo.UserId)]);
+            var collection = new QueryParameterCollection([new QueryParameter(QueryParameterType.UserId, userToAddAsFriend.UserId)]);
             user.QueryParams = collection.ToString();
-            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FinishSubscriptionMessage(Logger), forceNewMessage: true);
+            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new AddFriendMessage(Logger), forceNewMessage: true);
         }
         // TODO
         else if (TryParseShowWishAction(actionText, out var userSubscribeId, out var wishId) && userContext.Users.FirstOrDefault(u => u.SubscribeId.StartsWith(userSubscribeId)) is {} wishOwner)

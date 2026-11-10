@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.Model.User;
 
-public enum ListPosition { Wish, Subscriber, Subscription, Claim, AdminBroadcast, AdminUserPage }
+public enum ListPosition { Wish, Friend, Claim, AdminBroadcast, AdminUserPage }
 
 public class ListPositionsModel
 {
@@ -18,8 +18,7 @@ public class ListPositionsModel
     public UserModel User { get; set; }
 
     public ListPositionModel WishPage { get; set; } = new();
-    public ListPositionModel SubscriberPage { get; set; } = new();
-    public ListPositionModel SubscriptionPage { get; set; } = new();
+    public ListPositionModel FriendPage { get; set; } = new();
     public ListPositionModel ClaimPage { get; set; } = new();
     public ListPositionModel AdminBroadcastPage { get; set; } = new();
     public ListPositionModel AdminUserPage { get; set; } = new();
@@ -29,8 +28,7 @@ public class ListPositionsModel
         return position switch
         {
             ListPosition.Wish => WishPage,
-            ListPosition.Subscriber => SubscriberPage,
-            ListPosition.Subscription => SubscriptionPage,
+            ListPosition.Friend => FriendPage,
             ListPosition.Claim => ClaimPage,
             ListPosition.AdminBroadcast => AdminBroadcastPage,
             ListPosition.AdminUserPage => AdminUserPage,

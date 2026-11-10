@@ -1,11 +1,11 @@
 using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
-using WishlistBot.Queries.Subscription;
+using WishlistBot.Queries.Friends;
 using WishlistBot.Queries.Admin;
 using WishlistBot.Queries.Admin.Broadcasts;
 using WishlistBot.BotMessages.EditWish;
-using WishlistBot.BotMessages.Subscription;
+using WishlistBot.BotMessages.Friends;
 using WishlistBot.BotMessages.Admin;
 using WishlistBot.BotMessages.Admin.Broadcasts;
 using WishlistBot.BotMessages.Settings;
@@ -37,15 +37,11 @@ public class MessageFactory(ILogger logger)
          SetWishNameQuery => new SetWishNameMessage(logger),
          CompactListQuery => new CompactListMessage(logger),
          ShowWishQuery => new ShowWishMessage(logger),
-         MySubscriptionsQuery => new MySubscriptionsMessage(logger),
-         MySubscribersQuery => new MySubscribersMessage(logger),
-         ConfirmUnsubscribeQuery => new ConfirmUnsubscribeMessage(logger),
-         UnsubscribeQuery => new UnsubscribeMessage(logger),
-         FinishSubscriptionQuery => new FinishSubscriptionMessage(logger),
-         SubscriberQuery => new SubscriberMessage(logger),
-         SubscriptionQuery => new SubscriptionMessage(logger),
-         ConfirmDeleteSubscriberQuery => new ConfirmDeleteSubscriberMessage(logger),
-         DeleteSubscriberQuery => new DeleteSubscriberMessage(logger),
+         MyFriendsQuery => new MyFriendsMessage(logger),
+         ConfirmRemoveFriendQuery => new ConfirmRemoveFriendMessage(logger),
+         RemoveFriendQuery => new RemoveFriendMessage(logger),
+         AddFriendQuery => new AddFriendMessage(logger),
+         FriendQuery => new FriendMessage(logger),
          AdminMenuQuery => new AdminMenuMessage(logger),
          UsersQuery => new UsersMessage(logger),
          UserQuery => new UserMessage(logger),

@@ -28,22 +28,22 @@ public class NotificationService
         _inited = true;
     }
 
-    public Task SendToSubscribers(NotificationModel notification, UserContext userContext)
+    public Task SendToFriends(NotificationModel notification, UserContext userContext)
     {
         var notificationSource = userContext.Users
-            .Include(c => c.Subscribers)
+            .Include(c => c.Friends)
             .Include(c => c.Settings)
             .First(u => u.UserId == notification.SourceId);
 
         if (!notificationSource.Settings.SendNotifications)
             return Task.CompletedTask;
 
-        var recepients = notificationSource.Subscribers.Select(c => c.SubscriberId).ToList();
+        var recepients = notificationSource.Friends.Select(f => f.FriendId).ToList();
 
         userContext.Notifications.Add(notification);
         userContext.SaveChanges();
 
-        JobManager.Instance.StartJob($"Notification from {notificationSource.FirstName}", notification.NotificationId, recepients, TimeSpan.FromSeconds(1), /* TODO Fix */ (NotificationJobActionDelegate)SendToSubscriber);
+        JobManager.Instance.StartJob($"Notification from {notificationSource.FirstName}", notification.NotificationId, recepients, TimeSpan.FromSeconds(1), /* TODO Fix */ (NotificationJobActionDelegate)SendToRecepient);
         return Task.CompletedTask;
     }
 
@@ -61,7 +61,7 @@ public class NotificationService
         return message.MessageId;
     }
 
-    private async Task SendToSubscriber(ILogger logger, ITelegramBotClient client, UserContext userContext, int userId, int notificationId)
+    private async Task SendToRecepient(ILogger logger, ITelegramBotClient client, UserContext userContext, int userId, int notificationId)
     {
         var recepient = userContext.Users.Include(c => c.Settings).FirstOrDefault(u => u.UserId == userId);
         var notification = userContext.Notifications.First(n => n.NotificationId == notificationId);
@@ -69,7 +69,7 @@ public class NotificationService
         // TODO: NotificationFactory.cs?
         BotMessage botMessage = notification.Type switch
         {
-            NotificationMessageType.NewSubscriber => new NewSubscriberNotificationMessage(logger, notification),
+            NotificationMessageType.NewFriend => new NewFriendNotificationMessage(logger, notification),
             NotificationMessageType.NewWish => new NewWishNotificationMessage(logger, notification),
             NotificationMessageType.WishEdit => new EditWishNotificationMessage(logger, notification),
             NotificationMessageType.WishDelete => new DeleteWishNotificationMessage(logger, notification),

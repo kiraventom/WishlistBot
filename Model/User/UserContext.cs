@@ -9,7 +9,7 @@ public class UserContext : DbContext
     public DbSet<WishDraftModel> WishDrafts { get; set; }
     public DbSet<SettingsModel> Settings { get; set; }
     public DbSet<LinkModel> Links { get; set; }
-    public DbSet<SubscriptionModel> Subscriptions { get; set; }
+    public DbSet<FriendModel> Friends { get; set; }
     public DbSet<BroadcastModel> Broadcasts { get; set; }
     public DbSet<ReceivedBroadcastModel> ReceivedBroadcasts { get; set; }
     public DbSet<NotificationModel> Notifications { get; set; }

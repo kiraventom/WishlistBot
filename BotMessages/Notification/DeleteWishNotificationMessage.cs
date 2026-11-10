@@ -1,7 +1,7 @@
 using Serilog;
 using WishlistBot.Notification;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Subscription;
+using WishlistBot.Queries.Friends;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 
@@ -29,7 +29,7 @@ public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
 
         Keyboard
-            .AddButton<SubscriptionQuery>("Перейти к подписке",
+            .AddButton<FriendQuery>("Перейти к другу",
                     new QueryParameter(QueryParameterType.UserId, notificationSource.UserId))
             .NewRow()
             .AddButton<MainMenuQuery>("В главное меню");

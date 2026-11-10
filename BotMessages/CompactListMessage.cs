@@ -1,7 +1,7 @@
 using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.EditWish;
-using WishlistBot.Queries.Subscription;
+using WishlistBot.Queries.Friends;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 using WishlistBot.Model;
@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
-[AllowedListPositions(ListPosition.Wish, ListPosition.Subscriber, ListPosition.Subscription)]
-[AllowedTypes(QueryParameterType.ReturnToSubscriber, QueryParameterType.SetListPageTo, QueryParameterType.ChangeWishSortOrder, QueryParameterType.ChangeWishSortProperty, QueryParameterType.WishFilterToggleUnclaimed)]
+[AllowedListPositions(ListPosition.Wish, ListPosition.Friend)]
+[AllowedTypes(QueryParameterType.ReturnToProfile, QueryParameterType.SetListPageTo, QueryParameterType.ChangeWishSortOrder, QueryParameterType.ChangeWishSortProperty, QueryParameterType.WishFilterToggleUnclaimed)]
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -51,10 +51,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             Text.Bold("Вишлист пуст :(");
             if (isReadOnly)
             {
-                if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
-                    Keyboard.AddButton<SubscriberQuery>("Назад");
-                else
-                    Keyboard.AddButton<SubscriptionQuery>("Назад");
+                Keyboard.AddButton<FriendQuery>("Назад");
             }
             else
             {
@@ -139,9 +136,9 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty) 
                 .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
 
-            if (parameters.Peek(QueryParameterType.ReturnToSubscriber))
+            if (parameters.Peek(QueryParameterType.ReturnToProfile))
             {
-                TextListMessageUtils.AddListControls<CompactListQuery, SubscriberQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
+                TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
@@ -149,7 +146,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             }
             else
             {
-                TextListMessageUtils.AddListControls<CompactListQuery, SubscriptionQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
+                TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);

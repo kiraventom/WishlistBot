@@ -3,9 +3,9 @@ using WishlistBot.Queries;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 
-namespace WishlistBot.BotMessages.Subscription;
+namespace WishlistBot.BotMessages.Friends;
 
-public class FailSubscriptionMessage(ILogger logger) : BotMessage(logger)
+public class FailFriendLinkMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {

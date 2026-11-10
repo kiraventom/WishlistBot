@@ -47,6 +47,6 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 
         deleteWishNotification.SetExtraString(deletedWishName);
 
-        await NotificationService.Instance.SendToSubscribers(deleteWishNotification, userContext);
+        await NotificationService.Instance.SendToFriends(deleteWishNotification, userContext);
     }
 }
