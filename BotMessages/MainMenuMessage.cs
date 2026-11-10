@@ -19,8 +19,9 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
             .Include(u => u.ClaimedWishes)
             .Include(u => u.Settings).First(u => u.UserId == userId);
 
+        // Entering the wishlist from the main menu always starts from the first page
         Keyboard
-           .AddButton<CompactListQuery>($"{giftEmoji} Виши");
+           .AddButton<CompactListQuery>($"{giftEmoji} Виши", new QueryParameter(QueryParameterType.SetListPageTo, 0));
 
         if (user.ClaimedWishes.Any())
         {

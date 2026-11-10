@@ -1,4 +1,3 @@
-using Serilog;
 using WishlistBot.Keyboard;
 using WishlistBot.Model.User;
 using WishlistBot.Queries;
@@ -32,13 +31,11 @@ public static class TextListMessageUtils
 
           var pagesCount = GetPagesCount(totalCount);
 
-          // Can happen if the only item on the last page was removed
-          if (pagesCount != 0 && pageIndex >= pagesCount)
-              pageIndex = pagesCount - 1;
+          // Page can be out of range: the only item on the last page was removed,
+          // or the page came from a parameter of another list (see SetListPageTo)
+          pageIndex = Math.Clamp(pageIndex, 0, pagesCount - 1);
 
-          Log.Logger.Warning("listPos.Page before: {0}", listPosition.Page);
           listPosition.Page = pageIndex;
-          Log.Logger.Warning("listPos.Page after: {0}", listPosition.Page);
 
           for (var itemOnPageIndex = 0; itemOnPageIndex < ItemsPerPage; ++itemOnPageIndex)
           {

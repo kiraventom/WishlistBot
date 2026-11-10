@@ -24,9 +24,9 @@ public static class ListMessageUtils
 
           var pagesCount = (int)Math.Ceiling((double)totalCount / ItemsPerPage);
 
-          // Can happen if the only item on the last page was removed
-          if (pagesCount != 0 && pageIndex >= pagesCount)
-              pageIndex = pagesCount - 1;
+          // Page can be out of range: the only item on the last page was removed,
+          // or the page came from a parameter of another list (see SetListPageTo)
+          pageIndex = Math.Clamp(pageIndex, 0, pagesCount - 1);
 
           listPosition.Page = pageIndex;
 

@@ -22,8 +22,10 @@ public class SubscriberMessage(ILogger logger) : UserBotMessage(logger)
 
         if (target.Wishes.Count != 0)
         {
+            // Entering the wishlist from the profile always starts from the first page
             Keyboard
-               .AddButton<CompactListQuery>("Открыть вишлист", QueryParameter.ReturnToSubscriber)
+               .AddButton<CompactListQuery>("Открыть вишлист", QueryParameter.ReturnToSubscriber,
+                    new QueryParameter(QueryParameterType.SetListPageTo, 0))
                .NewRow();
         }
 
