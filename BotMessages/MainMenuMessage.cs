@@ -62,7 +62,8 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
         if (!user.Settings.ReceiveFriendWishNotifications
             || !user.Settings.SendNotifications
             || !user.Settings.BirthdayNotifications
-            || !user.Settings.WishlistCleanupNotifications)
+            || !user.Settings.WishlistCleanupNotifications
+            || !user.Settings.WishlistFillNotifications)
             Text.LineBreak();
 
         if (!user.Settings.ReceiveFriendWishNotifications)
@@ -76,6 +77,9 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 
         if (!user.Settings.WishlistCleanupNotifications)
             Text.LineBreak().ItalicBold($"{dot}Вы не получаете напоминание о чистке вишлиста ").Verbatim(mutedBell);
+
+        if (!user.Settings.WishlistFillNotifications)
+            Text.LineBreak().ItalicBold($"{dot}Вы не получаете напоминание заполнить вишлист ").Verbatim(mutedBell);
 
         Text.LineBreak().LineBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
 

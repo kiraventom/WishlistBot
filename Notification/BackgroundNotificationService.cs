@@ -96,6 +96,41 @@ public sealed class BackgroundNotificationService
         return sent;
     }
 
+    /// <summary>
+    /// Один тик напоминаний заполнить вишлист перед праздником. Возвращает число
+    /// отправленных напоминаний; отправка вынесена в делегат для тестов.
+    /// </summary>
+    public async Task<int> RunWishlistFillIfDue(DateTime now, Func<UserContext, WishlistFillReminder, Task> sendReminder)
+    {
+        if (!WishlistFillSchedule.IsRunTime(now))
+            return 0;
+
+        var today = DateOnly.FromDateTime(now);
+
+        if (GetLastRunDate(WishlistFillNotificationService.StateName) == today)
+            return 0;
+
+        var sent = 0;
+
+        using (var userContext = UserContext.Create())
+        {
+            foreach (var reminder in WishlistFillNotificationService.BuildReminders(userContext, today))
+            {
+                await sendReminder(userContext, reminder);
+                WishlistFillNotificationService.MarkReminded(userContext, reminder.UserId, reminder.Holiday.Date);
+                userContext.SaveChanges();
+                ++sent;
+            }
+        }
+
+        SetLastRunDate(WishlistFillNotificationService.StateName, today);
+
+        _logger?.Information(
+            "Wishlist fill reminder for {today}: sent {sent} reminder(s)", today, sent);
+
+        return sent;
+    }
+
     private async Task RunLoop()
     {
         while (true)
@@ -104,6 +139,7 @@ public sealed class BackgroundNotificationService
             {
                 await RunBirthdayDigestIfDue(DateTime.Now, SendDigest);
                 await RunWishlistCleanupIfDue(DateTime.Now, SendCleanupReminder);
+                await RunWishlistFillIfDue(DateTime.Now, SendFillReminder);
             }
             catch (Exception e)
             {
@@ -120,6 +156,10 @@ public sealed class BackgroundNotificationService
 
     private Task SendCleanupReminder(UserContext userContext, int userId) =>
         NotificationService.Instance.SendToUser(new WishlistCleanupMessage(_logger), userContext, userId);
+
+    private Task SendFillReminder(UserContext userContext, WishlistFillReminder reminder) =>
+        NotificationService.Instance.SendToUser(
+            new WishlistFillMessage(_logger, reminder.Holiday.Kind), userContext, reminder.UserId);
 
     private static DateOnly? GetLastRunDate(string stateName)
     {

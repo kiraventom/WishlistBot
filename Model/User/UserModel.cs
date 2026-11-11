@@ -31,6 +31,8 @@ public class UserModel
 
     public WishlistCleanupStateModel WishlistCleanupState { get; set; }
 
+    public WishlistFillStateModel WishlistFillState { get; set; }
+
     [InverseProperty(nameof(WishModel.Owner))]
     public List<WishModel> Wishes { get; } = new();
 

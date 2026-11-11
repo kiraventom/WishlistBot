@@ -46,6 +46,12 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             ? $"{enabledBell} Напоминать о чистке вишлиста после праздников"
             : $"{disabledBell} Не напоминать о чистке вишлиста после праздников";
 
+        var wishlistFillEmoji = user.Settings.WishlistFillNotifications ? enabledBell : disabledBell;
+
+        var wishlistFillText = user.Settings.WishlistFillNotifications
+            ? $"{enabledBell} Напоминать заполнить вишлист перед праздником"
+            : $"{disabledBell} Не напоминать заполнить вишлист перед праздником";
+
         Text
            .Bold("Настройки уведомлений")
            .LineBreak().LineBreak()
@@ -55,7 +61,9 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
            .LineBreak()
            .Verbatim(birthdayNotificationsText)
            .LineBreak()
-           .Verbatim(wishlistCleanupText);
+           .Verbatim(wishlistCleanupText)
+           .LineBreak()
+           .Verbatim(wishlistFillText);
 
         var settingsEnum = user.Settings.ToEnum();
 
@@ -82,6 +90,10 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
         Keyboard.NewRow().AddButton<SettingsQuery>(
            $"{wishlistCleanupEmoji} Чистка вишлиста",
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.WishlistCleanupNotifications)));
+
+        Keyboard.NewRow().AddButton<SettingsQuery>(
+           $"{wishlistFillEmoji} Заполнить вишлист",
+           new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.WishlistFillNotifications)));
 
         Keyboard.NewRow().AddButton<MainMenuQuery>("В главное меню");
 
