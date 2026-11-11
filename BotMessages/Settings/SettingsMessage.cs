@@ -51,12 +51,20 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
 
         var settingsEnum = user.Settings.ToEnum();
 
+        var receiveNotificationsButton = user.Settings.ReceiveNotifications
+            ? $"Присылать мне {receiveNotificationsEmoji}"
+            : $"Не присылать мне {receiveNotificationsEmoji}";
+
+        var sendNotificationsButton = user.Settings.SendNotifications
+            ? $"Отправлять друзьям {sendNotificationsEmoji}"
+            : $"Не отправлять друзьям {sendNotificationsEmoji}";
+
         Keyboard.AddButton<SettingsQuery>(
-           $"Мне: {receiveNotificationsEmoji}",
+           receiveNotificationsButton,
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.ReceiveNotifications)));
 
         Keyboard.NewRow().AddButton<SettingsQuery>(
-           $"Друзьям: {sendNotificationsEmoji}",
+           sendNotificationsButton,
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.SendNotifications)));
 
         Keyboard.NewRow().AddButton<SettingsQuery>(

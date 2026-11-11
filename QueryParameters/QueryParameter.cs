@@ -9,7 +9,7 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
 
    public static QueryParameter ForceNewWish { get; } = new(QueryParameterType.ForceNewWish);
    public static QueryParameter ReturnToMyClaims { get; } = new(QueryParameterType.ReturnToMyClaims);
-   public static QueryParameter ReturnToProfile { get; } = new(QueryParameterType.ReturnToProfile);
+   public static QueryParameter ReturnToFriends { get; } = new(QueryParameterType.ReturnToFriends);
    public static QueryParameter ClaimWish { get; } = new(QueryParameterType.ClaimWish);
    public static QueryParameter ForceNewMessage { get; } = new(QueryParameterType.ForceNewMessage);
    public static QueryParameter CancelJob { get; } = new(QueryParameterType.CancelJob);

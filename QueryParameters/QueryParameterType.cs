@@ -9,7 +9,7 @@ public enum QueryParameterType
    SetListPageTo = 0x7,
    // ReadOnly = 0x8, OBSOLETE
    UserId = 0x9,
-   ReturnToProfile = 0xA,
+   // 0xA was ReturnToProfile: возврат в профиль теперь поведение по умолчанию
    ClaimWish = 0xB,
    ForceNewMessage = 0xC,
    SetPriceTo = 0xD,
@@ -22,6 +22,7 @@ public enum QueryParameterType
    ChangeWishSortOrder = 0x14,
    ChangeWishSortProperty = 0x15,
    WishFilterToggleUnclaimed = 0x16,
+   ReturnToFriends = 0x17,
 
    // Admin
    SetBroadcastTo = -0x1,

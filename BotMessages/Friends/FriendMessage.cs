@@ -31,7 +31,7 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         {
             // Entering the wishlist from the profile always starts from the first page
             Keyboard
-               .AddButton<CompactListQuery>("Открыть вишлист", QueryParameter.ReturnToProfile,
+               .AddButton<CompactListQuery>("Открыть вишлист",
                     new QueryParameter(QueryParameterType.SetListPageTo, 0))
                .NewRow();
         }
@@ -53,16 +53,9 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
            .AddButton<MyFriendsQuery>("К друзьям");
 
         if (isSelf)
-            Text.Bold("Это вы");
-        else if (isFriend)
-            Text.Bold("Друг ");
+            Text.Bold("Это вы:");
         else
-            Text.Bold("Пользователь ");
-
-        if (!isSelf)
-            Text.InlineMention(target);
-
-        Text.Bold(":");
+            Text.InlineMention(target).Bold(":");
 
         const string calendar = "\U0001f4c5 ";
         const string writingHand = "\u270d\ufe0f ";

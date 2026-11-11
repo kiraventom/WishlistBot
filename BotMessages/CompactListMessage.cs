@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace WishlistBot.BotMessages;
 
 [AllowedListPositions(ListPosition.Wish, ListPosition.Friend)]
-[AllowedTypes(QueryParameterType.ReturnToProfile, QueryParameterType.SetListPageTo, QueryParameterType.ChangeWishSortOrder, QueryParameterType.ChangeWishSortProperty, QueryParameterType.WishFilterToggleUnclaimed)]
+[AllowedTypes(QueryParameterType.ReturnToFriends, QueryParameterType.SetListPageTo, QueryParameterType.ChangeWishSortOrder, QueryParameterType.ChangeWishSortProperty, QueryParameterType.WishFilterToggleUnclaimed)]
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
@@ -51,7 +51,10 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             Text.Bold("Вишлист пуст :(");
             if (isReadOnly)
             {
-                Keyboard.AddButton<FriendQuery>("Назад");
+                if (parameters.Peek(QueryParameterType.ReturnToFriends))
+                    Keyboard.AddButton<MyFriendsQuery>("Назад");
+                else
+                    Keyboard.AddButton<FriendQuery>("Назад");
             }
             else
             {
@@ -136,9 +139,10 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty) 
                 .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
 
-            if (parameters.Peek(QueryParameterType.ReturnToProfile))
+            // Пришли из списка друзей — туда и возвращаемся, иначе — в профиль друга
+            if (parameters.Peek(QueryParameterType.ReturnToFriends))
             {
-                TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
+                TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
