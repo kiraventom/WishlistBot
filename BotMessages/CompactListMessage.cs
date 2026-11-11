@@ -70,7 +70,9 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         var sortedWishes = targetUser.GetSortedWishes(wishViewSettings).ToList();
         var sortedCount = sortedWishes.Count;
 
-        var countText = totalCount == sortedCount ? $"{sortedCount}" : $"{sortedCount} из {totalCount}";
+        var countText = totalCount == sortedCount
+            ? $"{sortedCount} {PluralUtils.Wishes(sortedCount)}"
+            : $"{sortedCount} из {totalCount} {PluralUtils.WishesGenitive}";
 
         if (isReadOnly)
         {
@@ -81,7 +83,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             Text.Bold($"Ваши виши");
         }
 
-        Text.Bold($" ({countText} вишей)");
+        Text.Bold($" ({countText})");
 
         var sortPropertyText = wishViewSettings.SortProperty switch
         {
@@ -110,8 +112,11 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                   true => $"{descsendingEmoji}",
         };
 
-        Text.LineBreak()
-            .Italic("Сортировка: ").Verbatim(sortPropertyText);
+        // Сортировка и её кнопки не нужны, когда показывать нечего сортировать
+        var showSorting = sortedCount > 1;
+
+        if (showSorting)
+            Text.LineBreak().Italic("Сортировка: ").Verbatim(sortPropertyText);
 
         if (isReadOnly)
         {
@@ -135,9 +140,12 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             if (wishViewSettings.OnlyUnclaimed || sortedWishes.Any(sw => sw.ClaimerId != null))
                 Keyboard.AddButton<CompactListQuery>(toggleUnclaimedButton, QueryParameter.WishFilterToggleUnclaimed);
 
-            Keyboard
-                .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty) 
-                .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
+            if (showSorting)
+            {
+                Keyboard
+                    .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty)
+                    .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
+            }
 
             // Пришли из списка друзей — туда и возвращаемся, иначе — в профиль друга
             if (parameters.Peek(QueryParameterType.ReturnToFriends))
@@ -161,10 +169,13 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         {
             Text.LineBreak().LineBreak();
 
-            Keyboard
-                .NewRow()
-                .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty) 
-                .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
+            if (showSorting)
+            {
+                Keyboard
+                    .NewRow()
+                    .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty)
+                    .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
+            }
 
             Keyboard.NewRow()
                 .AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);

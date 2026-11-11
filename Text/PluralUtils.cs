@@ -25,6 +25,9 @@ public static class PluralUtils
 
     public static string Wishes(int count) => Ru(count, "виш", "виша", "вишей");
 
+    /// <summary>Родительный падеж множественного числа — для «2 из 3 вишей».</summary>
+    public static string WishesGenitive => "вишей";
+
     /// <summary>Окончание порядкового числительного: 21-ый, 22-ой, 23-ий.</summary>
     public static string YearsOrdinalEnding(int year)
     {
