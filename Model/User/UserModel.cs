@@ -29,6 +29,8 @@ public class UserModel
     [Required] public ProfileModel Profile { get; set; }
     [Required] public ListPositionsModel ListPositions { get; set; }
 
+    public WishlistCleanupStateModel WishlistCleanupState { get; set; }
+
     [InverseProperty(nameof(WishModel.Owner))]
     public List<WishModel> Wishes { get; } = new();
 

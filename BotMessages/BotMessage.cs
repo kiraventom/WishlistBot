@@ -22,6 +22,12 @@ public abstract class BotMessage(ILogger logger)
     public BotKeyboard Keyboard { get; } = new();
     public string PhotoFileId { get; protected set; }
 
+    /// <summary>
+    /// Короткий тост, который показывается вместо пустого ответа на нажатие кнопки
+    /// (всплывающая плашка сверху, без кнопки и без отдельного экрана).
+    /// </summary>
+    public string ToastText { get; protected set; }
+
     public bool ForceNewMessage { get; private set; }
 
     public async Task Init(UserContext userContext, UserModel user)

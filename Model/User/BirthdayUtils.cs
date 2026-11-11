@@ -61,7 +61,8 @@ public static class BirthdayUtils
             .ToList();
     }
 
-    private static DateOnly InYear(DateOnly birthday, int year)
+    /// <summary>День рождения в конкретном году (29 февраля в невисокосный год — 28-е).</summary>
+    public static DateOnly InYear(DateOnly birthday, int year)
     {
         var day = birthday.Day;
 

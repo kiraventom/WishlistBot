@@ -29,13 +29,14 @@ public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFa
       var queryId = user.LastQueryId;
       user.LastQueryId = null;
 
-      await Client.AnswerCallbackQuery(queryId);
-
       // We must pass parameters through DB, because sometimes we have to send message not after query action, but after message (see WishMessagesListener)
       user.QueryParams = parameters.ToString();
 
       var message = MessageFactory.Build(_query, userContext, queryId);
       await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, message);
+
+      // Отвечаем после сборки сообщения: экран может попросить короткий тост вместо пустого ответа
+      await Client.AnswerCallbackQuery(queryId, message?.ToastText);
    }
 
    public override bool IsMatch(string actionText)

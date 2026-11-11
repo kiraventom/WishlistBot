@@ -11,16 +11,20 @@ public class SettingsModel
     public UserModel User { get; set; }
 
     public bool SendNotifications { get; set; }
-    public bool ReceiveNotifications { get; set; }
+    public bool ReceiveFriendWishNotifications { get; set; }
 
     /// <summary>Напоминания о днях рождения друзей.</summary>
     public bool BirthdayNotifications { get; set; }
 
+    /// <summary>Напоминания о чистке вишлиста после праздников.</summary>
+    public bool WishlistCleanupNotifications { get; set; }
+
     public void SetFromEnum(SettingsEnum settingsEnum)
     {
         SendNotifications = settingsEnum.HasFlag(SettingsEnum.SendNotifications);
-        ReceiveNotifications = settingsEnum.HasFlag(SettingsEnum.ReceiveNotifications);
+        ReceiveFriendWishNotifications = settingsEnum.HasFlag(SettingsEnum.ReceiveFriendWishNotifications);
         BirthdayNotifications = settingsEnum.HasFlag(SettingsEnum.BirthdayNotifications);
+        WishlistCleanupNotifications = settingsEnum.HasFlag(SettingsEnum.WishlistCleanupNotifications);
     }
 
     public SettingsEnum ToEnum()
@@ -30,11 +34,14 @@ public class SettingsModel
         if (SendNotifications)
             settingsEnum |= SettingsEnum.SendNotifications;
 
-        if (ReceiveNotifications)
-            settingsEnum |= SettingsEnum.ReceiveNotifications;
+        if (ReceiveFriendWishNotifications)
+            settingsEnum |= SettingsEnum.ReceiveFriendWishNotifications;
 
         if (BirthdayNotifications)
             settingsEnum |= SettingsEnum.BirthdayNotifications;
+
+        if (WishlistCleanupNotifications)
+            settingsEnum |= SettingsEnum.WishlistCleanupNotifications;
 
         return settingsEnum;
     }
