@@ -19,12 +19,8 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         const string downArrow = "\u2b07\ufe0f";
         const string link = "\U0001f517";
 
-        // Invite link button
-        Keyboard.AddShareButton($"{link} Скопировать ссылку", 
-$@"
-
-Мой вишлист в Вишлист БОТ:
-{sender.GetSubscribeLink()}");
+        // Invite link button: копирует в буфер только саму ссылку
+        Keyboard.AddCopyTextButton($"{link} Скопировать ссылку", sender.GetSubscribeLink());
 
         Keyboard.NewRow();
 
