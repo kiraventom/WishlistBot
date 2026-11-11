@@ -7,6 +7,7 @@ using WishlistBot.Model.User;
 using WishlistBot.BotMessages.Admin.Users;
 using WishlistBot.BotMessages.Admin.Broadcasts;
 using WishlistBot.BotMessages.Settings;
+using WishlistBot.BotMessages.Profile;
 
 namespace WishlistBot.Actions.Commands;
 
@@ -37,6 +38,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                 DeepLink.Kind.Broadcast => await HandleBroadcastLink(userContext, user, parameters),
                 DeepLink.Kind.AdminUser => await HandleAdminUserLink(userContext, user, parameters),
                 DeepLink.Kind.Settings => await HandleSettingsLink(userContext, user),
+                DeepLink.Kind.Profile => await HandleProfileLink(userContext, user),
                 _ => false,
             };
 
@@ -171,6 +173,12 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
     private async Task<bool> HandleSettingsLink(UserContext userContext, UserModel user)
     {
         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new SettingsMessage(Logger));
+        return true;
+    }
+
+    private async Task<bool> HandleProfileLink(UserContext userContext, UserModel user)
+    {
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new EditProfileMessage(Logger));
         return true;
     }
 
