@@ -12,7 +12,7 @@ public static class TextListMessageUtils
 
    public static int GetPagesCount(int totalCount) => (int)Math.Ceiling((double)totalCount / ItemsPerPage);
 
-   public static void AddListControls<TListQuery, TParentQuery>(MessageText text, BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, ListPositionModel listPosition, Action<int> addLineAt, string buttonCaption = null)
+   public static void AddListControls<TListQuery, TParentQuery>(MessageText text, BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, IListPage listPosition, Action<int> addLineAt, string buttonCaption = null)
       where TListQuery : IQuery, new() where TParentQuery : IQuery, new()
       {
           buttonCaption = buttonCaption is null ? string.Empty : $"{buttonCaption} ";

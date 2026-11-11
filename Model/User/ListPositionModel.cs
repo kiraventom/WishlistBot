@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WishlistBot.Model.User;
 
-public class ListPositionModel
+public class ListPositionModel : IListPage
 {
     [Key]
     public int ListPositionId { get; set; }

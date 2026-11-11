@@ -86,7 +86,6 @@ public abstract class BotMessage(ILogger logger)
 
         var listPositions = user.ListPositions;
 
-        EnsureListPosition(userContext, listPositions, ListPosition.Wish);
         EnsureListPosition(userContext, listPositions, ListPosition.Friend);
         EnsureListPosition(userContext, listPositions, ListPosition.Claim);
         EnsureListPosition(userContext, listPositions, ListPosition.AdminBroadcast);
@@ -100,7 +99,6 @@ public abstract class BotMessage(ILogger logger)
     {
         switch (position)
         {
-            case ListPosition.Wish: EnsureReference(userContext, listPositions, l => l.WishPage); break;
             case ListPosition.Friend: EnsureReference(userContext, listPositions, l => l.FriendPage); break;
             case ListPosition.Claim: EnsureReference(userContext, listPositions, l => l.ClaimPage); break;
             case ListPosition.AdminBroadcast: EnsureReference(userContext, listPositions, l => l.AdminBroadcastPage); break;
