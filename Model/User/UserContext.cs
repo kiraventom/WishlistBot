@@ -14,6 +14,7 @@ public class UserContext : DbContext
     public DbSet<ReceivedBroadcastModel> ReceivedBroadcasts { get; set; }
     public DbSet<NotificationModel> Notifications { get; set; }
     public DbSet<UserExtraModel> UserExtra { get; set; }
+    public DbSet<ScheduledNotificationModel> ScheduledNotifications { get; set; }
 
     public UserContext(DbContextOptions<UserContext> options) : base(options)
     {
@@ -56,7 +57,7 @@ public class UserContext : DbContext
             userModel.Tag = username;
 
         if (userModel.Settings is null)
-            userModel.Settings = new SettingsModel() { ReceiveNotifications = true, SendNotifications = true };
+            userModel.Settings = new SettingsModel() { ReceiveNotifications = true, SendNotifications = true, BirthdayNotifications = true };
 
         if (userModel.Profile is null)
             userModel.Profile = new ProfileModel();

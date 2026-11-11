@@ -34,12 +34,20 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             ? $"{enabledBell} Сообщать друзьям об изменениях моего вишлиста"
             : $"{disabledBell} Не сообщать друзьям об изменениях моего вишлиста";
 
+        var birthdayNotificationsEmoji = user.Settings.BirthdayNotifications ? enabledBell : disabledBell;
+
+        var birthdayNotificationsText = user.Settings.BirthdayNotifications
+            ? $"{enabledBell} Напоминать о днях рождения друзей"
+            : $"{disabledBell} Не напоминать о днях рождения друзей";
+
         Text
            .Bold("Настройки уведомлений:")
            .LineBreak().LineBreak()
            .Verbatim(receiveNotificationsText)
            .LineBreak()
-           .Verbatim(sendNotificationsText);
+           .Verbatim(sendNotificationsText)
+           .LineBreak()
+           .Verbatim(birthdayNotificationsText);
 
         var settingsEnum = user.Settings.ToEnum();
 
@@ -50,6 +58,10 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
         Keyboard.NewRow().AddButton<SettingsQuery>(
            $"Друзьям: {sendNotificationsEmoji}",
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.SendNotifications)));
+
+        Keyboard.NewRow().AddButton<SettingsQuery>(
+           $"Дни рождения: {birthdayNotificationsEmoji}",
+           new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.BirthdayNotifications)));
 
         Keyboard.NewRow().AddButton<MainMenuQuery>("В главное меню");
 

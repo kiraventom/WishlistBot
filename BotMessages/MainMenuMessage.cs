@@ -51,7 +51,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
         const string mutedBell = "\U0001f515";
         const string dot = "⋅ ";
 
-        if (!user.Settings.ReceiveNotifications || !user.Settings.SendNotifications)
+        if (!user.Settings.ReceiveNotifications || !user.Settings.SendNotifications || !user.Settings.BirthdayNotifications)
             Text.LineBreak();
 
         if (!user.Settings.ReceiveNotifications)
@@ -59,6 +59,9 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 
         if (!user.Settings.SendNotifications)
             Text.LineBreak().ItalicBold($"{dot}Друзья не получают уведомления от вас ").Verbatim(mutedBell);
+
+        if (!user.Settings.BirthdayNotifications)
+            Text.LineBreak().ItalicBold($"{dot}Вы не получаете напоминания о днях рождения ").Verbatim(mutedBell);
 
         Text.LineBreak().LineBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
 

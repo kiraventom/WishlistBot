@@ -13,10 +13,14 @@ public class SettingsModel
     public bool SendNotifications { get; set; }
     public bool ReceiveNotifications { get; set; }
 
+    /// <summary>Напоминания о днях рождения друзей.</summary>
+    public bool BirthdayNotifications { get; set; }
+
     public void SetFromEnum(SettingsEnum settingsEnum)
     {
         SendNotifications = settingsEnum.HasFlag(SettingsEnum.SendNotifications);
         ReceiveNotifications = settingsEnum.HasFlag(SettingsEnum.ReceiveNotifications);
+        BirthdayNotifications = settingsEnum.HasFlag(SettingsEnum.BirthdayNotifications);
     }
 
     public SettingsEnum ToEnum()
@@ -28,6 +32,9 @@ public class SettingsModel
 
         if (ReceiveNotifications)
             settingsEnum |= SettingsEnum.ReceiveNotifications;
+
+        if (BirthdayNotifications)
+            settingsEnum |= SettingsEnum.BirthdayNotifications;
 
         return settingsEnum;
     }

@@ -216,10 +216,26 @@ namespace WishlistBot.Migrations.User
                     b.ToTable("ReceivedBroadcasts");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.ScheduledNotificationModel", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("LastRunDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("ScheduledNotifications");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.SettingsModel", b =>
                 {
                     b.Property<int>("SettingsId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("BirthdayNotifications")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("ReceiveNotifications")
