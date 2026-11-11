@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.Model.User;
 
-public class WishViewSettingsModel : IViewerTarget
+// Настройки просмотра чужого вишлиста: своя открытая страница, сортировка и фильтр
+// на каждую пару «зритель → чей вишлист».
+public class WishViewSettingsModel : IViewerTarget, IListPage
 {
     [Key] public int WishViewSettingsId { get; set; }
     public int TargetId { get; set; }
@@ -22,5 +24,7 @@ public class WishViewSettingsModel : IViewerTarget
     public SortProperty SortProperty { get; set; }
 
     public bool OnlyUnclaimed { get; set; }
+
+    public int Page { get; set; }
 }
 

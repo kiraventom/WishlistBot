@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
 
-[AllowedListPositions(ListPosition.Wish, ListPosition.Friend)]
+[AllowedListPositions(ListPosition.Friend)]
 [AllowedTypes(QueryParameterType.ReturnToFriends, QueryParameterType.SetListPageTo, QueryParameterType.ChangeWishSortOrder, QueryParameterType.ChangeWishSortProperty, QueryParameterType.WishFilterToggleUnclaimed)]
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
@@ -19,7 +19,6 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         const string plusEmoji = "\u2795";
 
         var users = userContext.Users
-            .Include(u => u.ListPositions).ThenInclude(l => l.WishPage)
             .Include(u => u.CurrentWish)
             .Include(u => u.Wishes).ThenInclude(w => w.Links)
             .Include(u => u.WishViewSettings);
@@ -150,7 +149,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             // Пришли из списка друзей — туда и возвращаемся, иначе — в профиль друга
             if (parameters.Peek(QueryParameterType.ReturnToFriends))
             {
-                TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
+                TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
@@ -158,7 +157,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             }
             else
             {
-                TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
+                TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
                 {
                     var wish = sortedWishes[itemIndex];
                     AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
@@ -182,7 +181,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
             sender.CurrentWish = null;
 
-            TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, sender.ListPositions.WishPage, itemIndex =>
+            TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
             {
                 var wish = sortedWishes[itemIndex];
                 AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);

@@ -18,6 +18,10 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
             .Include(u => u.Profile)
             .First(u => u.UserId == userId);
 
+        // Профиль — не список: страница, пришедшая из списка друзей, дальше не идёт,
+        // иначе она подменит запомненную страницу вишлиста
+        parameters.Pop(QueryParameterType.SetListPageTo);
+
         parameters.Peek(QueryParameterType.UserId, out var targetId);
 
         var target = userContext.Users
@@ -32,10 +36,9 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
 
         if (target.Wishes.Count != 0)
         {
-            // Entering the wishlist from the profile always starts from the first page
+            // Страницу не передаём: вишлист открывается на той, где зритель его оставил
             Keyboard
-               .AddButton<CompactListQuery>($"Открыть вишлист ({gift.Trim()} {target.Wishes.Count})",
-                    new QueryParameter(QueryParameterType.SetListPageTo, 0))
+               .AddButton<CompactListQuery>($"Открыть вишлист ({gift.Trim()} {target.Wishes.Count})")
                .NewRow();
         }
 
