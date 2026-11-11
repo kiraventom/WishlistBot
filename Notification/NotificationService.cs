@@ -73,6 +73,7 @@ public class NotificationService
             NotificationMessageType.NewWish => new NewWishNotificationMessage(logger, notification),
             NotificationMessageType.WishEdit => new EditWishNotificationMessage(logger, notification),
             NotificationMessageType.WishDelete => new DeleteWishNotificationMessage(logger, notification),
+            NotificationMessageType.WishPermanent => new WishPermanentNotificationMessage(logger, notification),
             _ => throw new NotSupportedException($"Unexpected notification message type '{notification.Type}'")
         };
 

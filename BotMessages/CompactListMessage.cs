@@ -136,7 +136,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
             Keyboard.NewRow();
 
-            if (wishViewSettings.OnlyUnclaimed || sortedWishes.Any(sw => sw.ClaimerId != null))
+            if (wishViewSettings.OnlyUnclaimed || sortedWishes.Any(sw => sw.HasVisibleClaim))
                 Keyboard.AddButton<CompactListQuery>(toggleUnclaimedButton, QueryParameter.WishFilterToggleUnclaimed);
 
             if (showSorting)
@@ -196,11 +196,15 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         Text.Bold($"{itemIndex + 1}. ");
 
         // If user isn't looking at its own wishes
-        if (wish.ClaimerId != null && isReadonly)
+        if (wish.HasVisibleClaim && isReadonly)
         {
             userContext.Entry(wish).Reference(w => w.Claimer).Load();
             Text.Bold("[").InlineMention(wish.Claimer, "БРОНЬ").Bold("] ");
         }
+
+        // Постоянный виш помечаем звёздочкой перед названием
+        if (wish.IsPermanent)
+            Text.Verbatim("\u2b50 ");
 
         // TODO strikethrough if claimed
         Text.InlineUrl(wish.Name, wish.BuildLink(subscribeId));

@@ -24,7 +24,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
         Keyboard
            .AddButton<CompactListQuery>($"{giftEmoji} Виши");
 
-        if (user.ClaimedWishes.Any())
+        if (user.ClaimedWishes.Any(wish => wish.HasVisibleClaim))
         {
             Keyboard
                 .NewRow()

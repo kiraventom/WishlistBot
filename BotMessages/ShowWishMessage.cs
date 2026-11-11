@@ -55,7 +55,10 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 
         if (readOnly)
         {
-            if (parameters.Pop(QueryParameterType.ClaimWish))
+            var claimRequested = parameters.Pop(QueryParameterType.ClaimWish);
+
+            // Постоянный виш бронировать нельзя: кнопок нет, а пришедший запрос игнорируем
+            if (!wish.IsPermanent && claimRequested)
             {
                 // Claim unclaimed wish
                 if (wish.ClaimerId is null)
@@ -79,7 +82,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
                 }
             }
 
-            if (wish.ClaimerId is not null)
+            if (!wish.IsPermanent && wish.ClaimerId is not null)
             {
                 var claimer = userContext.Users.FirstOrDefault(u => u.UserId == wish.ClaimerId);
                 if (claimer is not null)
@@ -113,7 +116,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             }
 
             // Checking ClaimerId in separate if because it can be reset when claimer was not found in database
-            if (wish.ClaimerId is null)
+            if (!wish.IsPermanent && wish.ClaimerId is null)
             {
                 Keyboard.AddButton<ShowWishQuery>("Забронировать", new QueryParameter(QueryParameterType.WishId, wishId), QueryParameter.ClaimWish)
                     .NewRow();
@@ -164,6 +167,9 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             var priceRangeString = MessageTextUtils.PriceToString(priceRange);
             Text.LineBreak().Bold("Цена: ").Monospace(priceRangeString);
         }
+
+        if (wish.IsPermanent)
+            Text.LineBreak().Verbatim($"Это постоянный виш, {target.FirstName} всегда ему обрадуется!");
 
         PhotoFileId = wish.FileId;
 
@@ -309,6 +315,9 @@ $@"
         if (draft.Original.FileId != draft.FileId)
             wishPropertyType |= WishPropertyType.Media;
 
+        // О смене типа виша сообщаем отдельно: только когда виш стал постоянным
+        var becamePermanent = draft.IsPermanent && !draft.Original.IsPermanent;
+
         DeleteWish(userContext, user, draft.Original);
         user.Wishes.Add(editedWish);
         userContext.SaveChanges();
@@ -325,6 +334,18 @@ $@"
             editWishNotification.SetExtraInt((int)wishPropertyType);
 
             await NotificationService.Instance.SendToFriends(editWishNotification, userContext);
+        }
+
+        if (becamePermanent)
+        {
+            var permanentNotification = new NotificationModel()
+            {
+                SourceId = user.UserId,
+                SubjectId = editedWish.WishId,
+                Type = NotificationMessageType.WishPermanent,
+            };
+
+            await NotificationService.Instance.SendToFriends(permanentNotification, userContext);
         }
 
         return editedWish;

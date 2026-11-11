@@ -54,6 +54,8 @@ public class MessageFactory(ILogger logger)
          DeleteBroadcastQuery => new DeleteBroadcastMessage(logger),
          FinishBroadcastQuery => new FinishBroadcastMessage(logger),
          SettingsQuery => new SettingsMessage(logger),
+         WishPermanenceQuery => new ConfirmWishPermanenceMessage(logger),
+         ConfirmWishPermanenceQuery => new EditWishMessage(logger),
          WishlistCleanupSnoozeQuery => new WishlistCleanupMessage(logger, snooze: true),
          EditProfileQuery => new EditProfileMessage(logger),
          SetProfileBirthdayQuery => new SetProfileBirthdayMessage(logger),
