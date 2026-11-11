@@ -13,7 +13,6 @@ public class JobManager
    public static JobManager Instance { get; } = new();
 
    private Dictionary<int, BroadcastJob> BroadcastJobs { get; } = new();
-   private Dictionary<int, NotificationJob> NotificationJobs { get; } = new();
 
    public void Init(ILogger logger, ITelegramBotClient client)
    {
@@ -28,25 +27,6 @@ public class JobManager
    // TODO: Fix this mess
    public bool IsBroadcastJobActive(int broadcastId) => BroadcastJobs.ContainsKey(broadcastId);
    public string GetActiveBroadcastJobName(int broadcastId) => BroadcastJobs[broadcastId].Name;
-
-   public void StartJob(string name, int notificationId, IReadOnlyCollection<int> itemIds, TimeSpan interval, NotificationJobActionDelegate action)
-   {
-      ArgumentNullException.ThrowIfNull(name);
-      ArgumentNullException.ThrowIfNull(action);
-
-      if (NotificationJobs.ContainsKey(notificationId))
-      {
-         throw new NotSupportedException($"Can't start two jobs on the same notification [{notificationId}]");
-      }
-
-      var job = new NotificationJob(notificationId, name, itemIds, interval, action);
-      NotificationJobs.Add(notificationId, job);
-
-      job.Finished += OnNotificationJobFinished;
-      job.Start(_logger, _client);
-
-      _logger.Information("Started job on notification [{notificationId}]", notificationId);
-   }
 
    public void StartJob(string name, int broadcastId, IReadOnlyCollection<int> itemIds, TimeSpan interval, BroadcastJobActionDelegate action)
    {
@@ -65,18 +45,6 @@ public class JobManager
       job.Start(_logger, _client);
 
       _logger.Information("Started job on broadcast [{broadcastId}]", broadcastId);
-   }
-
-   public void StopNotificationJob(int notificationId)
-   {
-      if (NotificationJobs.TryGetValue(notificationId, out var job))
-      {
-         job.Cancel();
-      }
-      else
-      {
-         _logger.Warning("Attempt to stop job that is not running, notificationId [{notificationId}]", notificationId);
-      }
    }
 
    public void StopBroadcastJob(int broadcastId)
@@ -104,22 +72,6 @@ public class JobManager
 
       job.Finished -= OnBroadcastJobFinished;
       BroadcastJobs.Remove(job.SubjectId);
-      job.Dispose();
-   }
-
-   private void OnNotificationJobFinished(Job job, TaskStatus status)
-   {
-      if (status != TaskStatus.RanToCompletion)
-      {
-         _logger.Error("Job linked to notification [{notificationId}] has finished with status '{status}'", job.SubjectId, status.ToString());
-      }
-      else
-      {
-         _logger.Information("Job linked to notification [{notificationId}] has finished with status '{status}'", job.SubjectId, status.ToString());
-      }
-
-      job.Finished -= OnNotificationJobFinished;
-      NotificationJobs.Remove(job.SubjectId);
       job.Dispose();
    }
 }

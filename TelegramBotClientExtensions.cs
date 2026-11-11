@@ -60,10 +60,13 @@ public static class TelegramBotClientExtensions
                 await MediaStorageManager.Instance.Store(photoFileId);
             }
 
-            var shouldSendNewMessage = 
-                userModel.LastBotMessageId < 0 
+            var shouldSendNewMessage =
+                userModel.LastBotMessageId < 0
                 || botMessage.ForceNewMessage
-                || forceNewMessage 
+                || forceNewMessage
+                // Между экраном и этим вводом приходило уведомление: экран остаётся выше него,
+                // поэтому отвечаем новым сообщением, чтобы в «All» ответ был внизу
+                || userModel.NotifiedSinceLastMessage
                 || userModel.ReceivedBroadcasts.Any(b => b.MessageId == userModel.LastBotMessageId);
 
             if (shouldSendNewMessage)
@@ -122,6 +125,7 @@ public static class TelegramBotClientExtensions
                     await ClearKeyboard(client, logger, userModel.TelegramId, lastBotMessageId);
 
                 userModel.LastBotMessageId = message.MessageId;
+                userModel.NotifiedSinceLastMessage = false;
             }
         }
         catch (Exception e)

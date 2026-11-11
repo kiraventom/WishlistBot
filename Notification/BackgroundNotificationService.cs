@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using WishlistBot.BotMessages.Notification;
 using WishlistBot.Model.User;
 
 namespace WishlistBot.Notification;
@@ -31,9 +30,9 @@ public sealed class BackgroundNotificationService
     }
 
     /// <summary>
-    /// Один тик планировщика. Возвращает число отправленных дайджестов (0 — если
-    /// не время или некому отправлять). Отправка вынесена в делегат, чтобы это
-    /// можно было тестировать без Telegram.
+    /// Один тик планировщика. Возвращает число поставленных в очередь дайджестов
+    /// (0 — если не время или некому отправлять). Постановка вынесена в делегат,
+    /// чтобы это можно было тестировать без Telegram.
     /// </summary>
     public async Task<int> RunBirthdayDigestIfDue(DateTime now, Func<UserContext, BirthdayDigest, Task> sendDigest)
     {
@@ -55,7 +54,7 @@ public sealed class BackgroundNotificationService
         SetLastRunDate(BirthdayNotificationService.StateName, today);
 
         _logger?.Information(
-            "Birthday digest for {today}: sent {sent} digest(s), nothing sent if no birthdays", today, sent);
+            "Birthday digest for {today}: queued {sent} digest(s), nothing queued if no birthdays", today, sent);
 
         return sent;
     }
@@ -91,7 +90,7 @@ public sealed class BackgroundNotificationService
         SetLastRunDate(WishlistCleanupNotificationService.StateName, today);
 
         _logger?.Information(
-            "Wishlist cleanup reminder for {today}: sent {sent} reminder(s)", today, sent);
+            "Wishlist cleanup reminder for {today}: queued {sent} reminder(s)", today, sent);
 
         return sent;
     }
@@ -126,7 +125,7 @@ public sealed class BackgroundNotificationService
         SetLastRunDate(WishlistFillNotificationService.StateName, today);
 
         _logger?.Information(
-            "Wishlist fill reminder for {today}: sent {sent} reminder(s)", today, sent);
+            "Wishlist fill reminder for {today}: queued {sent} reminder(s)", today, sent);
 
         return sent;
     }
@@ -150,16 +149,28 @@ public sealed class BackgroundNotificationService
         }
     }
 
-    private Task SendDigest(UserContext userContext, BirthdayDigest digest) =>
-        NotificationService.Instance.SendToUser(
-            new BirthdayListMessage(_logger, digest.Friends), userContext, digest.UserId);
+    // Рассылки только ставят уведомления в очередь: отправку делает
+    // NotificationDispatchService, когда получатель освободится.
 
-    private Task SendCleanupReminder(UserContext userContext, int userId) =>
-        NotificationService.Instance.SendToUser(new WishlistCleanupMessage(_logger), userContext, userId);
+    private Task SendDigest(UserContext userContext, BirthdayDigest digest)
+    {
+        NotificationService.Instance.EnqueueBirthdayDigest(
+            userContext, digest.UserId, digest.Friends.Select(friend => friend.Friend.UserId));
 
-    private Task SendFillReminder(UserContext userContext, WishlistFillReminder reminder) =>
-        NotificationService.Instance.SendToUser(
-            new WishlistFillMessage(_logger, reminder.Holiday.Kind), userContext, reminder.UserId);
+        return Task.CompletedTask;
+    }
+
+    private Task SendCleanupReminder(UserContext userContext, int userId)
+    {
+        NotificationService.Instance.EnqueueWishlistCleanup(userContext, userId);
+        return Task.CompletedTask;
+    }
+
+    private Task SendFillReminder(UserContext userContext, WishlistFillReminder reminder)
+    {
+        NotificationService.Instance.EnqueueWishlistFill(userContext, reminder.UserId, reminder.Holiday.Kind);
+        return Task.CompletedTask;
+    }
 
     private static DateOnly? GetLastRunDate(string stateName)
     {

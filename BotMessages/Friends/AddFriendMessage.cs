@@ -50,7 +50,6 @@ public class AddFriendMessage(ILogger logger) : UserBotMessage(logger)
     {
         FriendshipManager.AddFriend(userContext, user, friend);
 
-        var newFriendNotification = new NewFriendNotificationMessage(logger, user.UserId);
-        return NotificationService.Instance.SendToUser(newFriendNotification, userContext, friend.UserId);
+        return NotificationService.Instance.SendNewFriend(userContext, user, friend.UserId);
     }
 }

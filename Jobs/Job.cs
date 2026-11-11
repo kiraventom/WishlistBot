@@ -23,35 +23,6 @@ public class BroadcastJob : Job
     }
 }
 
-public class NotificationJob : Job
-{
-    private readonly int _notificationId;
-    private readonly NotificationJobActionDelegate _notificationAction;
-
-    public override int SubjectId => _notificationId;
-
-    public NotificationJob(int notificationId, string name, IReadOnlyCollection<int> itemIds, TimeSpan interval, NotificationJobActionDelegate action) : base(name, itemIds, interval)
-    {
-        _notificationId = notificationId;
-        _notificationAction = action;
-    }
-
-    protected override async Task Iterate(ILogger logger, ITelegramBotClient client, UserContext userContext, int itemId)
-    {
-        await _notificationAction.Invoke(logger, client, userContext, itemId, _notificationId);
-    }
-
-    public override void OnFinish()
-    {
-        using (var userContext = UserContext.Create())
-        {
-            var notification = userContext.Notifications.First(n => n.NotificationId == _notificationId);
-            userContext.Notifications.Remove(notification);
-            userContext.SaveChanges();
-        }
-    }
-}
-
 public abstract class Job
 {
     private readonly CancellationTokenSource _cts = new();

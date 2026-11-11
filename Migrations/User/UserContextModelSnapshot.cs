@@ -164,6 +164,36 @@ namespace WishlistBot.Migrations.User
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.PendingNotificationModel", b =>
+                {
+                    b.Property<int>("PendingNotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("NotificationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Payload")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RecepientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("PendingNotificationId");
+
+                    b.HasIndex("NotificationId");
+
+                    b.HasIndex("RecepientId");
+
+                    b.ToTable("PendingNotifications");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.ProfileModel", b =>
                 {
                     b.Property<int>("ProfileId")
@@ -294,11 +324,17 @@ namespace WishlistBot.Migrations.User
                     b.Property<bool>("IsAdmin")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("LastActivityAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("LastBotMessageId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("LastQueryId")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("NotifiedSinceLastMessage")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("QueryParams")
                         .HasColumnType("TEXT");
@@ -548,6 +584,24 @@ namespace WishlistBot.Migrations.User
                     b.Navigation("Source");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.PendingNotificationModel", b =>
+                {
+                    b.HasOne("WishlistBot.Model.User.NotificationModel", "Notification")
+                        .WithMany()
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("WishlistBot.Model.User.UserModel", "Recepient")
+                        .WithMany("PendingNotifications")
+                        .HasForeignKey("RecepientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notification");
+
+                    b.Navigation("Recepient");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.ProfileModel", b =>
                 {
                     b.HasOne("WishlistBot.Model.User.UserModel", "User")
@@ -694,6 +748,8 @@ namespace WishlistBot.Migrations.User
 
                     b.Navigation("ListPositions")
                         .IsRequired();
+
+                    b.Navigation("PendingNotifications");
 
                     b.Navigation("Profile")
                         .IsRequired();

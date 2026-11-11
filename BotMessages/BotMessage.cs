@@ -61,7 +61,22 @@ public abstract class BotMessage(ILogger logger)
         await InitInternal(userContext, user.UserId, parameters);
 
         if (isNotification)
+        {
+            // Кнопки уведомления (например, «В главное меню») должны работать, но не должны
+            // вытеснять кнопки текущего экрана.
+            var notificationQueries = Keyboard.EnumerateQueries().ToList();
+            if (notificationQueries.Count != 0)
+            {
+                var allowed = string.IsNullOrEmpty(user.AllowedQueries)
+                    ? notificationQueries
+                    : user.AllowedQueries.Split(';').Concat(notificationQueries).Distinct().ToList();
+
+                user.AllowedQueries = string.Join(';', allowed);
+            }
+
+            _isInited = true;
             return;
+        }
 
         // Parameters can change during message initialization
         user.QueryParams = parameters.ToString();
@@ -72,11 +87,20 @@ public abstract class BotMessage(ILogger logger)
     
     protected void DeleteWish(UserContext userContext, UserModel user, WishModel wishToDelete)
     {
-        var notification = userContext.Notifications.FirstOrDefault(n => n.SubjectId == wishToDelete.WishId);
+        // Уведомления про этот виш больше не актуальны: выбрасываем и записи-источники,
+        // и всё, что по ним уже лежит в очереди на отправку
+        var notifications = userContext.Notifications
+            .Where(n => n.SubjectId == wishToDelete.WishId)
+            .ToList();
 
-        if (notification is not null)
+        foreach (var notification in notifications)
         {
-            JobManager.Instance.StopNotificationJob(notification.NotificationId);
+            var pending = userContext.PendingNotifications
+                .Where(p => p.NotificationId == notification.NotificationId)
+                .ToList();
+
+            userContext.PendingNotifications.RemoveRange(pending);
+            userContext.Notifications.Remove(notification);
         }
 
         user.Wishes.Remove(wishToDelete);

@@ -59,6 +59,9 @@ public static class Program
 
       JobManager.Instance.Init(logger, client);
 
+      NotificationDispatchService.Instance.Init(logger, client);
+      NotificationDispatchService.Instance.Start(logger);
+
       BackgroundNotificationService.Instance.Start(logger);
 
       var messagesFactory = new MessageFactory(logger);

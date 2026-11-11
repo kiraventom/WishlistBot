@@ -68,10 +68,17 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
 
     private async Task<HandleResult> HandleMessageAsync(Message message, UserContext userContext)
     {
+        if (UpdateFilter.IsIgnorable(message))
+        {
+            logger.Debug("Ignoring service/bot message [{messageId}] in chat [{chatId}]", message.MessageId, message.Chat.Id);
+            return false;
+        }
+
         var sender = message.From!;
 
         var isNewUser = userContext.Users.All(u => u.TelegramId != sender.Id);
         var user = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
+        TouchActivity(user);
 
         logger.Information("Received message [{messageId}] with text '{text}' from user [{userId}] '{firstname}'{newUser}", message.MessageId, message.Text, user.UserId, user.FirstName, isNewUser ? " (new user)" : string.Empty);
 
@@ -101,6 +108,7 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
 
         var isNewUser = userContext.Users.All(u => u.TelegramId != sender.Id);
         var user = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
+        TouchActivity(user);
 
         logger.Information("Received callback query [{callbackQueryId}] with data '{data}' on message [{messageId}] from user [{userId}] '{firstname}'{newUser}", callbackQuery.Id, callbackQuery.Data, callbackQuery.Message?.MessageId, user.UserId, user.FirstName, isNewUser ? " (new user)" : string.Empty);
 
@@ -152,6 +160,12 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
         await action.ExecuteAsync(userContext, userModel, fullText);
         return new HandleResult { Success = true, Cleanup = action.ShouldCleanup(fullText) };
     }
+
+    /// <summary>
+    /// Любой ввод пользователя отодвигает уведомления: пока он работает в боте, они копятся
+    /// в очереди (см. <see cref="Notification.NotificationDispatchService"/>).
+    /// </summary>
+    private static void TouchActivity(UserModel user) => user.LastActivityAt = DateTime.UtcNow;
 
     private static Task OnError(ITelegramBotClient client, Exception exception, CancellationToken ct) => Task.CompletedTask;
 }
