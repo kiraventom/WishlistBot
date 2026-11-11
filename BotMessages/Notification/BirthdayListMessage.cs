@@ -1,4 +1,5 @@
 using Serilog;
+using WishlistBot.Notification;
 using WishlistBot.BotMessages.Friends;
 using WishlistBot.Model.User;
 using WishlistBot.Queries;
@@ -10,7 +11,7 @@ namespace WishlistBot.BotMessages.Notification;
 /// <summary>
 /// Дайджест дней рождения друзей — приходит 1 и 15 числа, одним списком.
 /// </summary>
-public class BirthdayListMessage(ILogger logger, IReadOnlyList<FriendBirthday> friends) : BotMessage(logger)
+public class BirthdayListMessage(ILogger logger, IReadOnlyList<FriendBirthday> friends) : BotMessage(logger), INotificationMessage
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {

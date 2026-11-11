@@ -11,7 +11,7 @@ namespace WishlistBot.BotMessages.Notification;
 /// Напоминание подготовить вишлист к празднику: приходит за 30 дней
 /// до Нового года или личного дня рождения.
 /// </summary>
-public class WishlistFillMessage(ILogger logger, WishlistHolidayKind kind) : BotMessage(logger)
+public class WishlistFillMessage(ILogger logger, WishlistHolidayKind kind) : BotMessage(logger), INotificationMessage
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {

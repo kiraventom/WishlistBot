@@ -12,7 +12,7 @@ namespace WishlistBot.BotMessages.Notification;
 /// Напоминание заглянуть в свой вишлист: после праздника там могли остаться
 /// забронированные виши, которые друзья уже подарили.
 /// </summary>
-public class WishlistCleanupMessage(ILogger logger, bool snooze = false) : BotMessage(logger)
+public class WishlistCleanupMessage(ILogger logger, bool snooze = false) : BotMessage(logger), INotificationMessage
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
