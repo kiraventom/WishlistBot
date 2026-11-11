@@ -34,10 +34,15 @@ public class UserContext : DbContext
     {
         var isNew = false;
 
+        // Все строки-спутники пользователя нужно загрузить: иначе проверки «is null»
+        // ниже создают их заново на каждом апдейте и EF пытается вставить дубликаты
+        // (PK у них — UserId, поэтому второй INSERT падает на UNIQUE constraint).
         var userModel = this.Users
             .Include(u => u.Settings)
             .Include(u => u.Profile)
             .Include(u => u.ListPositions)
+            .Include(u => u.WishlistCleanupState)
+            .Include(u => u.WishlistFillState)
             .FirstOrDefault(u => u.TelegramId == telegramId);
 
         if (userModel is null)
