@@ -40,7 +40,7 @@ public static class WishlistFillSchedule
     /// Если сроков наступило несколько (например, Новый год и день рождения рядом),
     /// берём тот, чей срок наступил раньше — напоминание будет про него.
     /// </summary>
-    public static WishlistHoliday? GetDueHoliday(DateOnly? birthday, DateOnly today)
+    public static WishlistHoliday GetDueHoliday(DateOnly? birthday, DateOnly today)
     {
         var holidays = new List<WishlistHoliday>
         {
