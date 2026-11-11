@@ -126,6 +126,9 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
             Text.LineBreak().Bold("Цена: ").Monospace(priceRangeString);
         }
 
+        if (wishDraft.IsPermanent)
+            Text.LineBreak().Verbatim("\u2b50 Постоянный виш");
+
         PhotoFileId = wishDraft.FileId;
 
         return Task.CompletedTask;
