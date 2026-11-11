@@ -40,24 +40,32 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             ? $"{enabledBell} Напоминать о днях рождения друзей"
             : $"{disabledBell} Не напоминать о днях рождения друзей";
 
+        var wishlistCleanupEmoji = user.Settings.WishlistCleanupNotifications ? enabledBell : disabledBell;
+
+        var wishlistCleanupText = user.Settings.WishlistCleanupNotifications
+            ? $"{enabledBell} Напоминать о чистке вишлиста после праздников"
+            : $"{disabledBell} Не напоминать о чистке вишлиста после праздников";
+
         Text
-           .Bold("Настройки уведомлений:")
+           .Bold("Настройки уведомлений")
            .LineBreak().LineBreak()
            .Verbatim(receiveNotificationsText)
            .LineBreak()
            .Verbatim(sendNotificationsText)
            .LineBreak()
-           .Verbatim(birthdayNotificationsText);
+           .Verbatim(birthdayNotificationsText)
+           .LineBreak()
+           .Verbatim(wishlistCleanupText);
 
         var settingsEnum = user.Settings.ToEnum();
 
         var receiveNotificationsButton = user.Settings.ReceiveNotifications
-            ? $"Присылать мне {receiveNotificationsEmoji}"
-            : $"Не присылать мне {receiveNotificationsEmoji}";
+            ? $"{receiveNotificationsEmoji} Присылать мне"
+            : $"{receiveNotificationsEmoji} Не присылать мне";
 
         var sendNotificationsButton = user.Settings.SendNotifications
-            ? $"Отправлять друзьям {sendNotificationsEmoji}"
-            : $"Не отправлять друзьям {sendNotificationsEmoji}";
+            ? $"{sendNotificationsEmoji} Отправлять друзьям"
+            : $"{sendNotificationsEmoji} Не отправлять друзьям";
 
         Keyboard.AddButton<SettingsQuery>(
            receiveNotificationsButton,
@@ -68,8 +76,12 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.SendNotifications)));
 
         Keyboard.NewRow().AddButton<SettingsQuery>(
-           $"Дни рождения: {birthdayNotificationsEmoji}",
+           $"{birthdayNotificationsEmoji} Дни рождения",
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.BirthdayNotifications)));
+
+        Keyboard.NewRow().AddButton<SettingsQuery>(
+           $"{wishlistCleanupEmoji} Чистка вишлиста",
+           new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.WishlistCleanupNotifications)));
 
         Keyboard.NewRow().AddButton<MainMenuQuery>("В главное меню");
 

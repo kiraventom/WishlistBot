@@ -16,11 +16,15 @@ public class SettingsModel
     /// <summary>Напоминания о днях рождения друзей.</summary>
     public bool BirthdayNotifications { get; set; }
 
+    /// <summary>Напоминания о чистке вишлиста после праздников.</summary>
+    public bool WishlistCleanupNotifications { get; set; }
+
     public void SetFromEnum(SettingsEnum settingsEnum)
     {
         SendNotifications = settingsEnum.HasFlag(SettingsEnum.SendNotifications);
         ReceiveNotifications = settingsEnum.HasFlag(SettingsEnum.ReceiveNotifications);
         BirthdayNotifications = settingsEnum.HasFlag(SettingsEnum.BirthdayNotifications);
+        WishlistCleanupNotifications = settingsEnum.HasFlag(SettingsEnum.WishlistCleanupNotifications);
     }
 
     public SettingsEnum ToEnum()
@@ -35,6 +39,9 @@ public class SettingsModel
 
         if (BirthdayNotifications)
             settingsEnum |= SettingsEnum.BirthdayNotifications;
+
+        if (WishlistCleanupNotifications)
+            settingsEnum |= SettingsEnum.WishlistCleanupNotifications;
 
         return settingsEnum;
     }

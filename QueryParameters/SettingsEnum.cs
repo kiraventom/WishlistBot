@@ -7,4 +7,5 @@ public enum SettingsEnum
    SendNotifications = 0x1,
    ReceiveNotifications = 0x2,
    BirthdayNotifications = 0x4,
+   WishlistCleanupNotifications = 0x8,
 }
