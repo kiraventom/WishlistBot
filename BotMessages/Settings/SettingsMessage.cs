@@ -20,22 +20,26 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             user.Settings.SetFromEnum(newSettingsEnum);
         }
 
-        const string enabledSpeaker = "\U0001f50a";
-        const string mutedSpeaker = "\U0001f507";
-        const string enabledStr = "Вкл.";
-        const string mutedStr = "Выкл.";
-        const string dot = "⋅ ";
+        const string enabledBell = "\U0001f514";
+        const string disabledBell = "\U0001f515";
 
-        var receiveNotificationsEmoji = user.Settings.ReceiveNotifications ? enabledSpeaker : mutedSpeaker;
-        var sendNotificationsEmoji = user.Settings.SendNotifications ? enabledSpeaker : mutedSpeaker;
+        var receiveNotificationsEmoji = user.Settings.ReceiveNotifications ? enabledBell : disabledBell;
+        var sendNotificationsEmoji = user.Settings.SendNotifications ? enabledBell : disabledBell;
 
-        var receiveNotificationsStr = user.Settings.ReceiveNotifications ? enabledStr : mutedStr;
-        var sendNotificationsStr = user.Settings.SendNotifications ? enabledStr : mutedStr;
+        var receiveNotificationsText = user.Settings.ReceiveNotifications
+            ? $"{enabledBell} Сообщать мне об изменениях вишлистов друзей"
+            : $"{disabledBell} Не сообщать мне об изменениях вишлистов друзей";
+
+        var sendNotificationsText = user.Settings.SendNotifications
+            ? $"{enabledBell} Сообщать друзьям об изменениях моего вишлиста"
+            : $"{disabledBell} Не сообщать друзьям об изменениях моего вишлиста";
 
         Text
-           .Bold("Настройки бота:")
-           .LineBreak().Bold(dot).Bold("Сообщать мне об изменениях вишлистов друзей: ").Verbatim(receiveNotificationsStr)
-           .LineBreak().Bold(dot).Bold("Сообщать друзьям об изменениях моего вишлиста: ").Verbatim(sendNotificationsStr);
+           .Bold("Настройки уведомлений:")
+           .LineBreak().LineBreak()
+           .Verbatim(receiveNotificationsText)
+           .LineBreak()
+           .Verbatim(sendNotificationsText);
 
         var settingsEnum = user.Settings.ToEnum();
 
