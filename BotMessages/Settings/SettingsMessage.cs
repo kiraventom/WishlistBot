@@ -41,7 +41,7 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             : $"{disabledBell} Не напоминать о днях рождения друзей";
 
         Text
-           .Bold("Настройки уведомлений:")
+           .Bold("Настройки уведомлений")
            .LineBreak().LineBreak()
            .Verbatim(receiveNotificationsText)
            .LineBreak()
@@ -52,12 +52,12 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
         var settingsEnum = user.Settings.ToEnum();
 
         var receiveNotificationsButton = user.Settings.ReceiveNotifications
-            ? $"Присылать мне {receiveNotificationsEmoji}"
-            : $"Не присылать мне {receiveNotificationsEmoji}";
+            ? $"{receiveNotificationsEmoji} Присылать мне"
+            : $"{receiveNotificationsEmoji} Не присылать мне";
 
         var sendNotificationsButton = user.Settings.SendNotifications
-            ? $"Отправлять друзьям {sendNotificationsEmoji}"
-            : $"Не отправлять друзьям {sendNotificationsEmoji}";
+            ? $"{sendNotificationsEmoji} Отправлять друзьям"
+            : $"{sendNotificationsEmoji} Не отправлять друзьям";
 
         Keyboard.AddButton<SettingsQuery>(
            receiveNotificationsButton,
@@ -68,7 +68,7 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.SendNotifications)));
 
         Keyboard.NewRow().AddButton<SettingsQuery>(
-           $"Дни рождения: {birthdayNotificationsEmoji}",
+           $"{birthdayNotificationsEmoji} Дни рождения",
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.BirthdayNotifications)));
 
         Keyboard.NewRow().AddButton<MainMenuQuery>("В главное меню");
