@@ -48,7 +48,7 @@ public class NewFriendNotificationMessage : BotMessage, INotificationMessage
            .InlineMention(notificationSource)
            .Italic(" добавил вас в друзья!");
 
-        Text.AddDisableNotificationsLink();
+        Text.AddNotificationsSettingsLink();
 
         return Task.CompletedTask;
     }

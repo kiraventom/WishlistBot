@@ -90,7 +90,7 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
            .ItalicBold(editedWish.Name)
            .Italic("'!");
 
-        Text.AddDisableNotificationsLink();
+        Text.AddNotificationsSettingsLink();
 
         return Task.CompletedTask;
     }

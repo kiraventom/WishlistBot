@@ -40,7 +40,7 @@ public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
             .ItalicBold(_oldWishName)
             .Italic("'!");
 
-        Text.AddDisableNotificationsLink();
+        Text.AddNotificationsSettingsLink();
 
         return Task.CompletedTask;
     }

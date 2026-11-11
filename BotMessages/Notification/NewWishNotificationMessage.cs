@@ -60,7 +60,7 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
            .ItalicBold(newWish.Name)
            .Italic("'!");
 
-        Text.AddDisableNotificationsLink();
+        Text.AddNotificationsSettingsLink();
 
         return Task.CompletedTask;
     }
