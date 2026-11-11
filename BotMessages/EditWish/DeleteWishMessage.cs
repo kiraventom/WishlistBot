@@ -24,6 +24,8 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 
         var deletedWish = user.Wishes.FirstOrDefault(w => w.WishId == wishId);
         var deletedWishName = deletedWish?.Name;
+        // Кому сообщить об удалении: только забронировавшему (у постоянного виша бронь скрыта)
+        var deletedWishRecipientId = deletedWish?.ClaimNotificationRecipientId;
         if (deletedWish is null)
         {
             Logger.Error("Can't delete wish {id} from user {userId}, not found", wishId, user.UserId);
@@ -47,6 +49,6 @@ public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 
         deleteWishNotification.SetExtraString(deletedWishName);
 
-        await NotificationService.Instance.SendToFriends(deleteWishNotification, userContext);
+        await NotificationService.Instance.SendToClaimer(deleteWishNotification, userContext, deletedWishRecipientId);
     }
 }

@@ -33,6 +33,13 @@ public class WishModel
     [NotMapped]
     public bool HasVisibleClaim => !IsPermanent && ClaimerId is not null;
 
+    /// <summary>
+    /// Кому уходит уведомление об изменении или удалении виша: только тому, кто его
+    /// забронировал. У постоянного виша бронь скрыта, поэтому не уведомляем никого.
+    /// </summary>
+    [NotMapped]
+    public int? ClaimNotificationRecipientId => IsPermanent ? null : ClaimerId;
+
     [InverseProperty(nameof(LinkModel.Wish))]
     public List<LinkModel> Links { get; } = new();
     [Required] public int Order { get; set; }

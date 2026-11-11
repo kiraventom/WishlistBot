@@ -333,7 +333,8 @@ $@"
 
             editWishNotification.SetExtraInt((int)wishPropertyType);
 
-            await NotificationService.Instance.SendToFriends(editWishNotification, userContext);
+            // Об изменении виша знает только тот, кто его забронировал
+            await NotificationService.Instance.SendToClaimer(editWishNotification, userContext, editedWish.ClaimNotificationRecipientId);
         }
 
         if (becamePermanent)
