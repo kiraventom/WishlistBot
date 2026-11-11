@@ -8,6 +8,7 @@ using WishlistBot.Text;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
 using WishlistBot.Jobs;
+using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages;
 
@@ -35,13 +36,22 @@ public abstract class BotMessage(ILogger logger)
         if (_isInited)
             return;
 
-        if (!QueryParameterCollection.TryParse(user.QueryParams, out var parameters))
+        // Уведомление живёт своей жизнью: оно не должно сбрасывать состояние экрана,
+        // в котором пользователь сейчас находится (ввод, параметры, разрешённые кнопки,
+        // страницы списков). Иначе одно уведомление ломает текущий экран.
+        var isNotification = this is INotificationMessage;
+
+        QueryParameterCollection parameters;
+        if (isNotification || !QueryParameterCollection.TryParse(user.QueryParams, out parameters))
             parameters = new QueryParameterCollection();
 
-        user.BotState = BotState.Default;
+        if (!isNotification)
+            user.BotState = BotState.Default;
 
         FilterParameters(parameters, AllowedTypes);
-        FilterPositions(userContext, user);
+
+        if (!isNotification)
+            FilterPositions(userContext, user);
 
         if (parameters.Pop(QueryParameterType.ForceNewMessage))
             ForceNewMessage = true;
@@ -49,6 +59,9 @@ public abstract class BotMessage(ILogger logger)
         Keyboard.InitCommonParameters(parameters);
 
         await InitInternal(userContext, user.UserId, parameters);
+
+        if (isNotification)
+            return;
 
         // Parameters can change during message initialization
         user.QueryParams = parameters.ToString();

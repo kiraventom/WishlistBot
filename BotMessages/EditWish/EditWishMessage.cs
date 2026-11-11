@@ -26,11 +26,16 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
         var isEditing = parameters.Peek(QueryParameterType.WishId, out var wishId);
         if (isEditing) // Editing
         {
-            if (user.CurrentWish is null)
+            // Черновик принадлежит конкретному вишу: если остался чужой (прерванное
+            // редактирование другого виша или новая правка после уведомления),
+            // его выбрасываем, иначе правки уедут не в тот виш.
+            if (user.CurrentWish is null || user.CurrentWish.OriginalId != wishId)
             {
+                if (user.CurrentWish is not null)
+                    userContext.WishDrafts.Remove(user.CurrentWish);
+
                 var wish = user.Wishes.First(w => w.WishId == wishId);
-                var draft = WishDraftModel.FromWish(wish);
-                user.CurrentWish = draft;
+                user.CurrentWish = WishDraftModel.FromWish(wish);
             }
         }
 

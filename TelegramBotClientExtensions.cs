@@ -114,10 +114,15 @@ public static class TelegramBotClientExtensions
                 logger.Information("Edited [{messageId}] for [{userId}] to '{text}'", userModel.LastBotMessageId, userModel.UserId, text);
             }
 
-            if (userModel.LastBotMessageId is int lastBotMessageId && lastBotMessageId != message.MessageId)
-                await ClearKeyboard(client, logger, userModel.TelegramId, lastBotMessageId);
+            // Уведомление не владеет интерфейсом: экран остаётся тем же, его клавиатуру
+            // не гасим, а LastBotMessageId продолжает указывать на сообщение-интерфейс.
+            if (botMessage is not INotificationMessage)
+            {
+                if (userModel.LastBotMessageId is int lastBotMessageId && lastBotMessageId != message.MessageId)
+                    await ClearKeyboard(client, logger, userModel.TelegramId, lastBotMessageId);
 
-            userModel.LastBotMessageId = message.MessageId;
+                userModel.LastBotMessageId = message.MessageId;
+            }
         }
         catch (Exception e)
         {
