@@ -31,7 +31,7 @@ public class WishlistCleanupMessage(ILogger logger, bool snooze = false) : BotMe
         Keyboard.AddButton<CompactListQuery>("\U0001f381 Открыть вишлист");
 
         if (!WishlistCleanupNotificationService.IsSnoozed(userContext, userId))
-            Keyboard.AddButton<WishlistCleanupSnoozeQuery>();
+            Keyboard.NewRow().AddButton<WishlistCleanupSnoozeQuery>();
 
         Keyboard.NewRow().AddButton<MainMenuQuery>("Закрыть");
 
