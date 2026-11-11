@@ -66,14 +66,20 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         const string calendar = "\U0001f4c5 ";
         const string writingHand = "\u270d\ufe0f ";
 
-        if (target.Profile.Birthday != null)
+        // Плашка показывается всегда: иначе у профиля без заметок и ДР получается
+        // слишком узкое сообщение и кнопки не помещаются в один ряд
+        Text
+            .LineBreak()
+            .Verbatim(calendar)
+            .Bold("Дата рождения: ");
+
+        if (target.Profile.Birthday is not { } birthday)
         {
-            var birthday = target.Profile.Birthday.Value;
-            Text
-                .LineBreak()
-                .Verbatim(calendar)
-                .Bold("Дата рождения: ")
-                .Monospace(birthday.ToString("dd.MM.yyyy"));
+            Text.Verbatim("не указана");
+        }
+        else
+        {
+            Text.Monospace(birthday.ToString("dd.MM.yyyy"));
 
             var today = DateOnly.FromDateTime(DateTime.Now);
             var nextBirthday = BirthdayUtils.GetNextBirthday(birthday, today);
