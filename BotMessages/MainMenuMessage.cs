@@ -48,17 +48,17 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
                 .Verbatim("🏆").Bold("ПОЛЬЗОВАТЕЛЬ #100").Verbatim("🏆");
         }
 
-        const string mutedSpeaker = "\U0001f507";
+        const string mutedBell = "\U0001f515";
         const string dot = "⋅ ";
 
         if (!user.Settings.ReceiveNotifications || !user.Settings.SendNotifications)
             Text.LineBreak();
 
         if (!user.Settings.ReceiveNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Вы не получаете уведомления от друзей ").Verbatim(mutedSpeaker);
+            Text.LineBreak().ItalicBold($"{dot}Вы не получаете уведомления от друзей ").Verbatim(mutedBell);
 
         if (!user.Settings.SendNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Друзья не получают уведомления от вас ").Verbatim(mutedSpeaker);
+            Text.LineBreak().ItalicBold($"{dot}Друзья не получают уведомления от вас ").Verbatim(mutedBell);
 
         Text.LineBreak().LineBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
 

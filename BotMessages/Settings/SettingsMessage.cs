@@ -20,21 +20,19 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             user.Settings.SetFromEnum(newSettingsEnum);
         }
 
-        const string enabledSpeaker = "\U0001f50a";
-        const string mutedSpeaker = "\U0001f507";
-        const string enabledMark = "\u2705";
-        const string disabledMark = "\u274c";
+        const string enabledBell = "\U0001f514";
+        const string disabledBell = "\U0001f515";
 
-        var receiveNotificationsEmoji = user.Settings.ReceiveNotifications ? enabledSpeaker : mutedSpeaker;
-        var sendNotificationsEmoji = user.Settings.SendNotifications ? enabledSpeaker : mutedSpeaker;
+        var receiveNotificationsEmoji = user.Settings.ReceiveNotifications ? enabledBell : disabledBell;
+        var sendNotificationsEmoji = user.Settings.SendNotifications ? enabledBell : disabledBell;
 
         var receiveNotificationsText = user.Settings.ReceiveNotifications
-            ? $"{enabledMark} Сообщать мне об изменениях вишлистов друзей"
-            : $"{disabledMark} Не сообщать мне об изменениях вишлистов друзей";
+            ? $"{enabledBell} Сообщать мне об изменениях вишлистов друзей"
+            : $"{disabledBell} Не сообщать мне об изменениях вишлистов друзей";
 
         var sendNotificationsText = user.Settings.SendNotifications
-            ? $"{enabledMark} Сообщать друзьям об изменениях моего вишлиста"
-            : $"{disabledMark} Не сообщать друзьям об изменениях моего вишлиста";
+            ? $"{enabledBell} Сообщать друзьям об изменениях моего вишлиста"
+            : $"{disabledBell} Не сообщать друзьям об изменениях моего вишлиста";
 
         Text
            .Bold("Настройки уведомлений:")
