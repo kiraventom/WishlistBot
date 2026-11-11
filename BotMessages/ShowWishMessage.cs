@@ -169,7 +169,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         if (wish.IsPermanent)
-            Text.LineBreak().Verbatim($"Это постоянный виш, {target.FirstName} всегда ему обрадуется!");
+            Text.LineBreak().Verbatim($"\u2b50 Постоянный виш: {target.FirstName} всегда ему обрадуется!");
 
         PhotoFileId = wish.FileId;
 
