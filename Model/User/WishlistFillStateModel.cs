@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace WishlistBot.Model.User;
 
 /// <summary>
-/// Состояние напоминаний заполнить вишлист перед праздником: о каком празднике
-/// пользователю уже напомнили. Одна строка на пользователя, создаётся лениво.
+/// Состояние напоминаний заполнить вишлист перед праздником: когда напоминали
+/// в последний раз. Одна строка на пользователя, создаётся лениво.
 /// </summary>
 public class WishlistFillStateModel
 {
@@ -16,6 +16,6 @@ public class WishlistFillStateModel
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public UserModel User { get; set; }
 
-    /// <summary>Дата праздника, о котором уже напомнили.</summary>
-    public DateOnly? LastReminderHoliday { get; set; }
+    /// <summary>Дата последнего отправленного напоминания.</summary>
+    public DateOnly? LastReminderDate { get; set; }
 }

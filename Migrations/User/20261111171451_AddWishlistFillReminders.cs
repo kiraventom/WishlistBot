@@ -11,12 +11,12 @@ namespace WishlistBot.Migrations.User
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Напоминания включены по умолчанию — как и остальные уведомления
             migrationBuilder.AddColumn<bool>(
                 name: "WishlistFillNotifications",
                 table: "Settings",
                 type: "INTEGER",
                 nullable: false,
+                // Напоминания включены по умолчанию — как и остальные уведомления
                 defaultValue: true);
 
             migrationBuilder.CreateTable(
@@ -24,7 +24,7 @@ namespace WishlistBot.Migrations.User
                 columns: table => new
                 {
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
-                    LastReminderHoliday = table.Column<DateOnly>(type: "TEXT", nullable: true)
+                    LastReminderDate = table.Column<DateOnly>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

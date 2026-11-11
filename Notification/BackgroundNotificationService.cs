@@ -117,7 +117,7 @@ public sealed class BackgroundNotificationService
             foreach (var reminder in WishlistFillNotificationService.BuildReminders(userContext, today))
             {
                 await sendReminder(userContext, reminder);
-                WishlistFillNotificationService.MarkReminded(userContext, reminder.UserId, reminder.Holiday.Date);
+                WishlistFillNotificationService.MarkReminded(userContext, reminder.UserId, today);
                 userContext.SaveChanges();
                 ++sent;
             }

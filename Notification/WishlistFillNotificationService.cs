@@ -28,11 +28,15 @@ public static class WishlistFillNotificationService
 
         foreach (var user in users)
         {
-            if (WishlistFillSchedule.GetUpcomingHoliday(user.Profile?.Birthday, today) is not { } holiday)
+            if (WishlistFillSchedule.GetDueHoliday(user.Profile?.Birthday, today) is not { } holiday)
                 continue;
 
-            // О празднике напоминаем один раз — отметка хранит его дату
-            if (user.WishlistFillState?.LastReminderHoliday == holiday.Date)
+            // Один раз за окно и не чаще раза в 30 дней — даже если прошлое напоминание
+            // было про другой праздник
+            if (!WishlistFillSchedule.IsDue(
+                    user.Profile?.Birthday,
+                    today,
+                    user.WishlistFillState?.LastReminderDate))
                 continue;
 
             reminders.Add(new WishlistFillReminder(user.UserId, holiday));
@@ -41,8 +45,8 @@ public static class WishlistFillNotificationService
         return reminders;
     }
 
-    /// <summary>Отмечает, о каком празднике уже напомнили.</summary>
-    public static void MarkReminded(UserContext userContext, int userId, DateOnly holiday)
+    /// <summary>Отмечает, когда напомнили в последний раз.</summary>
+    public static void MarkReminded(UserContext userContext, int userId, DateOnly today)
     {
         var state = userContext.WishlistFillStates.FirstOrDefault(s => s.UserId == userId);
 
@@ -52,6 +56,6 @@ public static class WishlistFillNotificationService
             userContext.WishlistFillStates.Add(state);
         }
 
-        state.LastReminderHoliday = holiday;
+        state.LastReminderDate = today;
     }
 }

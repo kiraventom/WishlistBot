@@ -11,7 +11,7 @@ using WishlistBot.Model.User;
 namespace WishlistBot.Migrations.User
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20261111165835_AddWishlistFillReminders")]
+    [Migration("20261111171451_AddWishlistFillReminders")]
     partial class AddWishlistFillReminders
     {
         /// <inheritdoc />
@@ -455,7 +455,7 @@ namespace WishlistBot.Migrations.User
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateOnly?>("LastReminderHoliday")
+                    b.Property<DateOnly?>("LastReminderDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("UserId");

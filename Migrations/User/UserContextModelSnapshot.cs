@@ -452,7 +452,7 @@ namespace WishlistBot.Migrations.User
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateOnly?>("LastReminderHoliday")
+                    b.Property<DateOnly?>("LastReminderDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("UserId");
