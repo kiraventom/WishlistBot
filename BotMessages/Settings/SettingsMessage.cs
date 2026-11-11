@@ -22,20 +22,26 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
 
         const string enabledSpeaker = "\U0001f50a";
         const string mutedSpeaker = "\U0001f507";
-        const string enabledStr = "Вкл.";
-        const string mutedStr = "Выкл.";
-        const string dot = "⋅ ";
+        const string enabledMark = "\u2705";
+        const string disabledMark = "\u274c";
 
         var receiveNotificationsEmoji = user.Settings.ReceiveNotifications ? enabledSpeaker : mutedSpeaker;
         var sendNotificationsEmoji = user.Settings.SendNotifications ? enabledSpeaker : mutedSpeaker;
 
-        var receiveNotificationsStr = user.Settings.ReceiveNotifications ? enabledStr : mutedStr;
-        var sendNotificationsStr = user.Settings.SendNotifications ? enabledStr : mutedStr;
+        var receiveNotificationsText = user.Settings.ReceiveNotifications
+            ? $"{enabledMark} Сообщать мне об изменениях вишлистов друзей"
+            : $"{disabledMark} Не сообщать мне об изменениях вишлистов друзей";
+
+        var sendNotificationsText = user.Settings.SendNotifications
+            ? $"{enabledMark} Сообщать друзьям об изменениях моего вишлиста"
+            : $"{disabledMark} Не сообщать друзьям об изменениях моего вишлиста";
 
         Text
-           .Bold("Настройки бота:")
-           .LineBreak().Bold(dot).Bold("Сообщать мне об изменениях вишлистов друзей: ").Verbatim(receiveNotificationsStr)
-           .LineBreak().Bold(dot).Bold("Сообщать друзьям об изменениях моего вишлиста: ").Verbatim(sendNotificationsStr);
+           .Bold("Настройки уведомлений:")
+           .LineBreak().LineBreak()
+           .Verbatim(receiveNotificationsText)
+           .LineBreak()
+           .Verbatim(sendNotificationsText);
 
         var settingsEnum = user.Settings.ToEnum();
 
