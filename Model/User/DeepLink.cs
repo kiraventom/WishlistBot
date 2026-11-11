@@ -22,6 +22,7 @@ public static class DeepLink
         Broadcast,
         AdminUser,
         Settings,
+        Wishlist,
     }
 
     /// <summary>
@@ -53,6 +54,10 @@ public static class DeepLink
 
     public static string BuildFriend(string subscribeId) =>
         BuildLink(BuildPayload(Kind.Friend, (UserKey, subscribeId)));
+
+    /// <summary>Ссылка сразу на вишлист друга (список вишей), минуя экран профиля.</summary>
+    public static string BuildWishlist(string subscribeId) =>
+        BuildLink(BuildPayload(Kind.Wishlist, (UserKey, subscribeId)));
 
     public static string BuildBroadcast(int broadcastId) =>
         BuildLink(BuildPayload(Kind.Broadcast, (BroadcastIdKey, broadcastId.ToString())));
@@ -115,6 +120,7 @@ public static class DeepLink
         Kind.Broadcast => "br",
         Kind.AdminUser => "asu",
         Kind.Settings => "st",
+        Kind.Wishlist => "wl",
         _ => throw new NotSupportedException($"Unknown deep link kind '{kind}'"),
     };
 

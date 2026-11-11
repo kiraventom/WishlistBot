@@ -15,10 +15,12 @@ public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
     {
         var user = userContext.Users
             .Include(u => u.ListPositions).ThenInclude(l => l.FriendPage)
-            .Include(u => u.Friends).ThenInclude(f => f.Friend)
+            .Include(u => u.Friends).ThenInclude(f => f.Friend).ThenInclude(friend => friend.Profile)
+            .Include(u => u.Friends).ThenInclude(f => f.Friend).ThenInclude(friend => friend.Wishes)
             .First(u => u.UserId == userId);
 
-        var friends = user.Friends.OrderBy(f => f.FriendshipId).ToList();
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var friends = BirthdayUtils.SortByUpcomingBirthday(user.Friends.Select(f => f.Friend), today);
         var totalCount = friends.Count;
 
         if (totalCount == 0)
@@ -41,10 +43,7 @@ public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
 
         TextListMessageUtils.AddListControls<MyFriendsQuery, MainMenuQuery>(Text, Keyboard, parameters, totalCount, user.ListPositions.FriendPage, itemIndex =>
         {
-            var friend = friends[itemIndex].Friend;
-
-            Text.Bold($"{itemIndex + 1}. ");
-            Text.InlineUrl(friend.FirstName, friend.BuildFriendLink());
+            FriendBirthdayLine.Append(Text, itemIndex + 1, friends[itemIndex]);
         }, buttonCaption: "Страница");
 
         return Task.CompletedTask;

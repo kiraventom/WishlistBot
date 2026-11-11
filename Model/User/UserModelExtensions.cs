@@ -37,6 +37,10 @@ public static class UserModelExtensions
     /// </summary>
     public static string BuildFriendLink(this UserModel userModel) =>
         DeepLink.BuildFriend(userModel.SubscribeId[..20]);
+
+    /// <summary>Ссылка сразу на вишлист пользователя.</summary>
+    public static string BuildWishlistLink(this UserModel userModel) =>
+        DeepLink.BuildWishlist(userModel.SubscribeId[..20]);
 }
 
 

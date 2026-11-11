@@ -33,6 +33,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             {
                 DeepLink.Kind.Wish => await HandleWishLink(userContext, user, parameters),
                 DeepLink.Kind.Friend => await HandleFriendLink(userContext, user, parameters),
+                DeepLink.Kind.Wishlist => await HandleWishlistLink(userContext, user, parameters),
                 DeepLink.Kind.Broadcast => await HandleBroadcastLink(userContext, user, parameters),
                 DeepLink.Kind.AdminUser => await HandleAdminUserLink(userContext, user, parameters),
                 DeepLink.Kind.Settings => await HandleSettingsLink(userContext, user),
@@ -108,6 +109,23 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
 
         SetQueryParams(user, new QueryParameter(QueryParameterType.UserId, friend.UserId));
         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FriendMessage(Logger));
+        return true;
+    }
+
+    private async Task<bool> HandleWishlistLink(UserContext userContext, UserModel user, IReadOnlyDictionary<string, string> parameters)
+    {
+        if (!parameters.TryGetValue(DeepLink.UserKey, out var wishlistOwnerSubscribeId))
+            return false;
+
+        var wishlistOwner = userContext.Users.FirstOrDefault(u => u.SubscribeId.StartsWith(wishlistOwnerSubscribeId));
+        if (wishlistOwner is null)
+            return false;
+
+        SetQueryParams(user,
+            new QueryParameter(QueryParameterType.UserId, wishlistOwner.UserId),
+            new QueryParameter(QueryParameterType.SetListPageTo, 0));
+
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new CompactListMessage(Logger));
         return true;
     }
 
