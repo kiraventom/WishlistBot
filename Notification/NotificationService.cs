@@ -47,6 +47,29 @@ public class NotificationService
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Уведомление об изменении/удалении виша — только забронировавшему.
+    /// Если брони нет (или виш постоянный), не отправляем никому и не создаём запись в очереди.
+    /// </summary>
+    public Task SendToClaimer(NotificationModel notification, UserContext userContext, int? recepientId)
+    {
+        if (recepientId is not { } claimerId)
+            return Task.CompletedTask;
+
+        var notificationSource = userContext.Users
+            .Include(c => c.Settings)
+            .First(u => u.UserId == notification.SourceId);
+
+        if (!notificationSource.Settings.SendNotifications)
+            return Task.CompletedTask;
+
+        userContext.Notifications.Add(notification);
+        userContext.SaveChanges();
+
+        JobManager.Instance.StartJob($"Notification from {notificationSource.FirstName}", notification.NotificationId, [claimerId], TimeSpan.FromSeconds(1), /* TODO Fix */ (NotificationJobActionDelegate)SendToRecepient);
+        return Task.CompletedTask;
+    }
+
     public async Task SendToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
     {
         var notificationRecepient = userContext.Users.Include(u => u.Settings).First(u => u.UserId == notificationRecepientId);
