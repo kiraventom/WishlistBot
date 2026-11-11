@@ -6,6 +6,7 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 using WishlistBot.BotMessages.Admin.Users;
 using WishlistBot.BotMessages.Admin.Broadcasts;
+using WishlistBot.BotMessages.Settings;
 
 namespace WishlistBot.Actions.Commands;
 
@@ -34,6 +35,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                 DeepLink.Kind.Friend => await HandleFriendLink(userContext, user, parameters),
                 DeepLink.Kind.Broadcast => await HandleBroadcastLink(userContext, user, parameters),
                 DeepLink.Kind.AdminUser => await HandleAdminUserLink(userContext, user, parameters),
+                DeepLink.Kind.Settings => await HandleSettingsLink(userContext, user),
                 _ => false,
             };
 
@@ -144,6 +146,12 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
 
         SetQueryParams(user, new QueryParameter(QueryParameterType.UserId, userId));
         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new UserMessage(Logger));
+        return true;
+    }
+
+    private async Task<bool> HandleSettingsLink(UserContext userContext, UserModel user)
+    {
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new SettingsMessage(Logger));
         return true;
     }
 

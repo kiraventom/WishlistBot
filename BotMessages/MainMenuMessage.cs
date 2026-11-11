@@ -55,10 +55,10 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
             Text.LineBreak();
 
         if (!user.Settings.ReceiveNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Получение уведомлений о вишах друзей: ").Verbatim(mutedSpeaker);
+            Text.LineBreak().ItalicBold($"{dot}Вы не получаете уведомления от друзей ").Verbatim(mutedSpeaker);
 
         if (!user.Settings.SendNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Отправка уведомлений о вишах друзьям: ").Verbatim(mutedSpeaker);
+            Text.LineBreak().ItalicBold($"{dot}Друзья не получают уведомления от вас ").Verbatim(mutedSpeaker);
 
         Text.LineBreak().LineBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
 

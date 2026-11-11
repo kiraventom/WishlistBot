@@ -34,17 +34,17 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
 
         Text
            .Bold("Настройки бота:")
-           .LineBreak().Bold(dot).Bold("Получение уведомлений: ").Verbatim(receiveNotificationsStr)
-           .LineBreak().Bold(dot).Bold("Отправка уведомлений: ").Verbatim(sendNotificationsStr);
+           .LineBreak().Bold(dot).Bold("Сообщать мне об изменениях вишлистов друзей: ").Verbatim(receiveNotificationsStr)
+           .LineBreak().Bold(dot).Bold("Сообщать друзьям об изменениях моего вишлиста: ").Verbatim(sendNotificationsStr);
 
         var settingsEnum = user.Settings.ToEnum();
 
         Keyboard.AddButton<SettingsQuery>(
-           $"Получение уведомлений: {receiveNotificationsEmoji}",
+           $"Мне: {receiveNotificationsEmoji}",
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.ReceiveNotifications)));
 
         Keyboard.NewRow().AddButton<SettingsQuery>(
-           $"Отправка уведомлений: {sendNotificationsEmoji}",
+           $"Друзьям: {sendNotificationsEmoji}",
            new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.SendNotifications)));
 
         Keyboard.NewRow().AddButton<MainMenuQuery>("В главное меню");

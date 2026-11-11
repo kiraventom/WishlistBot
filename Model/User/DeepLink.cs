@@ -21,6 +21,7 @@ public static class DeepLink
         Friend,
         Broadcast,
         AdminUser,
+        Settings,
     }
 
     /// <summary>
@@ -58,6 +59,9 @@ public static class DeepLink
 
     public static string BuildAdminUser(int userId) =>
         BuildLink(BuildPayload(Kind.AdminUser, (UserKey, userId.ToString())));
+
+    /// <summary>Ссылка на экран настроек — из уведомлений, чтобы можно было отписаться.</summary>
+    public static string BuildSettings() => BuildLink(BuildPayload(Kind.Settings));
 
     /// <summary>
     /// Разбирает текст команды <c>/start a=...</c> на действие и параметры.
@@ -110,6 +114,7 @@ public static class DeepLink
         Kind.Friend => "fr",
         Kind.Broadcast => "br",
         Kind.AdminUser => "asu",
+        Kind.Settings => "st",
         _ => throw new NotSupportedException($"Unknown deep link kind '{kind}'"),
     };
 
