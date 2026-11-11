@@ -30,7 +30,7 @@ public static class WishlistCleanupNotificationService
         {
             // Забронированные виши в своём вишлисте — то, что друзья, скорее всего, уже подарили.
             // Пользователю это число не показываем, оно нужно только как признак «есть что чистить».
-            if (!user.Wishes.Any(wish => wish.ClaimerId is not null))
+            if (!user.Wishes.Any(wish => wish.HasVisibleClaim))
                 continue;
 
             var state = user.WishlistCleanupState;

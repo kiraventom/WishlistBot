@@ -12,12 +12,12 @@ public static class UserModelExtensions
 
         return property switch
         {
-            SortProperty.Default when descending && onlyUnclaimed => userModel.Wishes.Where(w => w.ClaimerId == null).OrderByDescending(w => w.Order),
-            SortProperty.Price when descending && onlyUnclaimed => userModel.Wishes.Where(w => w.ClaimerId == null).OrderByDescending(w => ((int)w.PriceRange)),
+            SortProperty.Default when descending && onlyUnclaimed => userModel.Wishes.Where(w => w.ClaimerId == null || w.IsPermanent).OrderByDescending(w => w.Order),
+            SortProperty.Price when descending && onlyUnclaimed => userModel.Wishes.Where(w => w.ClaimerId == null || w.IsPermanent).OrderByDescending(w => ((int)w.PriceRange)),
             SortProperty.Default when descending => userModel.Wishes.OrderByDescending(w => w.Order),
             SortProperty.Price when descending => userModel.Wishes.OrderByDescending(w => ((int)w.PriceRange)),
-            SortProperty.Default when onlyUnclaimed => userModel.Wishes.Where(w => w.ClaimerId == null).OrderBy(w => w.Order),
-            SortProperty.Price when onlyUnclaimed => userModel.Wishes.Where(w => w.ClaimerId == null).OrderBy(w => ((int)w.PriceRange)),
+            SortProperty.Default when onlyUnclaimed => userModel.Wishes.Where(w => w.ClaimerId == null || w.IsPermanent).OrderBy(w => w.Order),
+            SortProperty.Price when onlyUnclaimed => userModel.Wishes.Where(w => w.ClaimerId == null || w.IsPermanent).OrderBy(w => ((int)w.PriceRange)),
             SortProperty.Default => userModel.Wishes.OrderBy(w => w.Order),
             SortProperty.Price => userModel.Wishes.OrderBy(w => ((int)w.PriceRange)),
             _ => userModel.Wishes.OrderByDescending(w => w.Order)
@@ -26,8 +26,10 @@ public static class UserModelExtensions
 
     public static List<WishModel> GetSortedClaimedWishes(this UserModel userModel)
     {
-        userModel.ClaimedWishes.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
-        return userModel.ClaimedWishes;
+        // Брони постоянных вишей в базе остаются, но в «Моих бронях» не показываются
+        var claims = userModel.ClaimedWishes.Where(wish => wish.HasVisibleClaim).ToList();
+        claims.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
+        return claims;
     }
 
     public static string GetSubscribeLink(this UserModel userModel) => $"https://t.me/{Config.Instance.Username}?start={userModel.SubscribeId}";

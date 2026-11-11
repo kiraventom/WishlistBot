@@ -54,7 +54,7 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
 
         // TODO Link to see lists
         Text.Bold("Wishes: ").Monospace(target.Wishes.Count.ToString())
-            .Verbatim(" (").Spoiler(target.Wishes.Count(w => w.ClaimerId != null).ToString()).Verbatim(" claimed)")
+            .Verbatim(" (").Spoiler(target.Wishes.Count(w => w.HasVisibleClaim).ToString()).Verbatim(" claimed)")
             .LineBreak();
         Text.Bold("Friends: ").Monospace(target.Friends.Count.ToString()).LineBreak();
         Text.Bold("ClaimedWishes: ").Monospace(target.ClaimedWishes.Count.ToString()).LineBreak();

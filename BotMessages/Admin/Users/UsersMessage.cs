@@ -41,7 +41,7 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
         Text.Bold($"{itemIndex + 1}. ");
         Text.InlineUrl(user.FirstName, DeepLink.BuildAdminUser(user.UserId));
         Text.Verbatim($" W: {user.Wishes.Count} (")
-            .Spoiler(user.Wishes.Count(w => w.ClaimerId != null).ToString())
+            .Spoiler(user.Wishes.Count(w => w.HasVisibleClaim).ToString())
             .Verbatim(")");
         Text.Verbatim($" F: {user.Friends.Count}");
     }

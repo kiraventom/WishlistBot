@@ -23,6 +23,16 @@ public class WishModel
     public string FileId { get; set; }
     public Price PriceRange { get; set; }
 
+    /// <summary>
+    /// Постоянный виш — подарок, которому владелец рад всегда: его нельзя забронировать,
+    /// а старая бронь (если была) остаётся в базе, но нигде не показывается.
+    /// </summary>
+    public bool IsPermanent { get; set; }
+
+    /// <summary>Бронь, которую видно пользователям: у постоянного виша бронь скрыта.</summary>
+    [NotMapped]
+    public bool HasVisibleClaim => !IsPermanent && ClaimerId is not null;
+
     [InverseProperty(nameof(LinkModel.Wish))]
     public List<LinkModel> Links { get; } = new();
     [Required] public int Order { get; set; }
@@ -37,6 +47,7 @@ public class WishModel
             Description = draft.Description,
             FileId = draft.FileId,
             PriceRange = draft.PriceRange,
+            IsPermanent = draft.IsPermanent,
         };
 
         if (draft.Original is not null)

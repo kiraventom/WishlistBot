@@ -15,7 +15,7 @@ namespace WishlistBot.Migrations.User
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.15");
 
             modelBuilder.Entity("WishlistBot.Model.User.BroadcastModel", b =>
                 {
@@ -336,6 +336,9 @@ namespace WishlistBot.Migrations.User
                     b.Property<string>("FileId")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsPermanent")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -375,6 +378,9 @@ namespace WishlistBot.Migrations.User
 
                     b.Property<string>("FileId")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPermanent")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()

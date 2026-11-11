@@ -23,6 +23,7 @@ public enum QueryParameterType
    ChangeWishSortProperty = 0x15,
    WishFilterToggleUnclaimed = 0x16,
    ReturnToFriends = 0x17,
+   ToggleWishPermanence = 0x18,
 
    // Admin
    SetBroadcastTo = -0x1,

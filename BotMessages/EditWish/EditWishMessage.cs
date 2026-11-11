@@ -9,23 +9,13 @@ using WishlistBot.Queries;
 
 namespace WishlistBot.BotMessages.EditWish;
 
-[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo)]
+[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo, QueryParameterType.ToggleWishPermanence)]
 [ChildMessage(typeof(CompactListMessage))]
 // TODO Separate to NewWish and EditWish
 public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        Keyboard
-           .AddButton<SetWishNameQuery>()
-           .AddButton<SetWishDescriptionQuery>()
-           .NewRow()
-           .AddButton<SetWishMediaQuery>()
-           .AddButton<SetWishLinksQuery>()
-           .NewRow()
-           .AddButton<SetWishPriceQuery>()
-           .NewRow();
-
         var user = userContext.Users
             .Include(u => u.CurrentWish)
             .ThenInclude(w => w.Links)
@@ -42,7 +32,28 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
                 var draft = WishDraftModel.FromWish(wish);
                 user.CurrentWish = draft;
             }
+        }
 
+        var wishDraft = user.CurrentWish;
+
+        // Тип виша переключается отдельным экраном подтверждения
+        if (parameters.Pop(QueryParameterType.ToggleWishPermanence))
+            wishDraft.IsPermanent = !wishDraft.IsPermanent;
+
+        Keyboard
+           .AddButton<SetWishNameQuery>()
+           .AddButton<SetWishDescriptionQuery>()
+           .NewRow()
+           .AddButton<SetWishMediaQuery>()
+           .AddButton<SetWishLinksQuery>()
+           .NewRow()
+           .AddButton<SetWishPriceQuery>()
+           .NewRow()
+           .AddButton<WishPermanenceQuery>(wishDraft.IsPermanent ? "Сделать обычным" : null)
+           .NewRow();
+
+        if (isEditing)
+        {
             Keyboard.AddButton<ConfirmDeleteWishQuery>(new QueryParameter(QueryParameterType.WishId, wishId));
             Keyboard.NewRow();
             Keyboard.AddButton<ShowWishQuery>("Готово", QueryParameter.SaveDraft, new QueryParameter(QueryParameterType.WishId, wishId));
@@ -53,8 +64,6 @@ public class EditWishMessage(ILogger logger) : UserBotMessage(logger)
             Keyboard.AddButton<ShowWishQuery>("Готово", QueryParameter.SaveDraft);
             Keyboard.AddButton<CompactListQuery>("Отмена");
         }
-
-        var wishDraft = user.CurrentWish;
 
         if (parameters.Pop(QueryParameterType.SetPriceTo, out var priceValue))
         {
