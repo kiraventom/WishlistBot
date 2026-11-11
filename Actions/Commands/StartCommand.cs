@@ -123,7 +123,8 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
 
         SetQueryParams(user,
             new QueryParameter(QueryParameterType.UserId, wishlistOwner.UserId),
-            new QueryParameter(QueryParameterType.SetListPageTo, 0));
+            new QueryParameter(QueryParameterType.SetListPageTo, 0),
+            QueryParameter.ReturnToFriends);
 
         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new CompactListMessage(Logger));
         return true;
