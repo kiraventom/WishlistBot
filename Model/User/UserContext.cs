@@ -13,6 +13,7 @@ public class UserContext : DbContext
     public DbSet<BroadcastModel> Broadcasts { get; set; }
     public DbSet<ReceivedBroadcastModel> ReceivedBroadcasts { get; set; }
     public DbSet<NotificationModel> Notifications { get; set; }
+    public DbSet<PendingNotificationModel> PendingNotifications { get; set; }
     public DbSet<UserExtraModel> UserExtra { get; set; }
     public DbSet<ScheduledNotificationModel> ScheduledNotifications { get; set; }
     public DbSet<WishlistCleanupStateModel> WishlistCleanupStates { get; set; }
@@ -106,6 +107,7 @@ public class UserContext : DbContext
         modelBuilder.Entity<WishModel>().Property(e => e.PriceRange).HasConversion<int>();
         modelBuilder.Entity<WishDraftModel>().Property(e => e.PriceRange).HasConversion<int>();
         modelBuilder.Entity<NotificationModel>().Property(e => e.Type).HasConversion<int>();
+        modelBuilder.Entity<PendingNotificationModel>().Property(e => e.Type).HasConversion<int>();
         modelBuilder.Entity<WishViewSettingsModel>().Property(e => e.SortProperty).HasConversion<int>();
 
         modelBuilder.Entity<UserModel>()
@@ -130,6 +132,18 @@ public class UserContext : DbContext
             .HasOne(e => e.WishlistCleanupState)
             .WithOne(e => e.User)
             .HasForeignKey<WishlistCleanupStateModel>(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PendingNotificationModel>()
+            .HasOne(e => e.Recepient)
+            .WithMany(e => e.PendingNotifications)
+            .HasForeignKey(e => e.RecepientId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PendingNotificationModel>()
+            .HasOne(e => e.Notification)
+            .WithMany()
+            .HasForeignKey(e => e.NotificationId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<UserModel>()

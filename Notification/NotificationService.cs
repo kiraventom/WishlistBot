@@ -1,13 +1,19 @@
+using System.Globalization;
 using Serilog;
 using Telegram.Bot;
 using WishlistBot.BotMessages;
-using WishlistBot.Jobs;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
-using WishlistBot.BotMessages.Notification;
 
 namespace WishlistBot.Notification;
 
+/// <summary>
+/// Постановка уведомлений в очередь.
+///
+/// Здесь ничего не отправляется: уведомление кладётся в <see cref="PendingNotificationModel"/>
+/// и ждёт, пока получатель освободится — рассылкой занимается
+/// <see cref="NotificationDispatchService"/>.
+/// </summary>
 public class NotificationService
 {
     private bool _inited;
@@ -40,10 +46,7 @@ public class NotificationService
 
         var recepients = notificationSource.Friends.Select(f => f.FriendId).ToList();
 
-        userContext.Notifications.Add(notification);
-        userContext.SaveChanges();
-
-        JobManager.Instance.StartJob($"Notification from {notificationSource.FirstName}", notification.NotificationId, recepients, TimeSpan.FromSeconds(1), /* TODO Fix */ (NotificationJobActionDelegate)SendToRecepient);
+        EnqueueNotification(userContext, notification, recepients);
         return Task.CompletedTask;
     }
 
@@ -63,19 +66,28 @@ public class NotificationService
         if (!notificationSource.Settings.SendNotifications)
             return Task.CompletedTask;
 
-        userContext.Notifications.Add(notification);
-        userContext.SaveChanges();
-
-        JobManager.Instance.StartJob($"Notification from {notificationSource.FirstName}", notification.NotificationId, [claimerId], TimeSpan.FromSeconds(1), /* TODO Fix */ (NotificationJobActionDelegate)SendToRecepient);
+        EnqueueNotification(userContext, notification, [claimerId]);
         return Task.CompletedTask;
     }
 
-    public async Task SendToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
+    /// <summary>«Добавил вас в друзья» — единственное событие без записи в <see cref="NotificationModel"/>.</summary>
+    public Task SendNewFriend(UserContext userContext, UserModel source, int recepientId)
     {
-        var notificationRecepient = userContext.Users.Include(u => u.Settings).First(u => u.UserId == notificationRecepientId);
-        if (notificationRecepient.Settings.ReceiveFriendWishNotifications)
-            await _client.SendOrEditBotMessage(_logger, userContext, notificationRecepientId, notification, forceNewMessage: true);
+        EnqueuePending(userContext, recepientId, PendingNotificationType.NewFriend, payload: source.UserId.ToString(CultureInfo.InvariantCulture));
+        return Task.CompletedTask;
     }
+
+    /// <summary>Дайджест дней рождения: в очереди лежат id друзей, из которых он собирается.</summary>
+    public void EnqueueBirthdayDigest(UserContext userContext, int recepientId, IEnumerable<int> friendIds) =>
+        EnqueuePending(userContext, recepientId, PendingNotificationType.BirthdayDigest,
+            payload: string.Join(',', friendIds));
+
+    public void EnqueueWishlistCleanup(UserContext userContext, int recepientId) =>
+        EnqueuePending(userContext, recepientId, PendingNotificationType.WishlistCleanup);
+
+    public void EnqueueWishlistFill(UserContext userContext, int recepientId, WishlistHolidayKind kind) =>
+        EnqueuePending(userContext, recepientId, PendingNotificationType.WishlistFill,
+            payload: ((int)kind).ToString(CultureInfo.InvariantCulture));
 
     public async Task<int> BroadcastToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
     {
@@ -84,23 +96,51 @@ public class NotificationService
         return message.MessageId;
     }
 
-    private async Task SendToRecepient(ILogger logger, ITelegramBotClient client, UserContext userContext, int userId, int notificationId)
+    /// <summary>
+    /// Событие друзей: одна запись-источник и по строке очереди на каждого получателя.
+    /// </summary>
+    private static void EnqueueNotification(UserContext userContext, NotificationModel notification, IReadOnlyCollection<int> recepientIds)
     {
-        var recepient = userContext.Users.Include(c => c.Settings).FirstOrDefault(u => u.UserId == userId);
-        var notification = userContext.Notifications.First(n => n.NotificationId == notificationId);
+        if (recepientIds.Count == 0)
+            return;
 
-        // TODO: NotificationFactory.cs?
-        BotMessage botMessage = notification.Type switch
+        userContext.Notifications.Add(notification);
+        userContext.SaveChanges();
+
+        foreach (var recepientId in recepientIds)
         {
-            NotificationMessageType.NewFriend => new NewFriendNotificationMessage(logger, notification),
-            NotificationMessageType.NewWish => new NewWishNotificationMessage(logger, notification),
-            NotificationMessageType.WishEdit => new EditWishNotificationMessage(logger, notification),
-            NotificationMessageType.WishDelete => new DeleteWishNotificationMessage(logger, notification),
-            NotificationMessageType.WishPermanent => new WishPermanentNotificationMessage(logger, notification),
-            _ => throw new NotSupportedException($"Unexpected notification message type '{notification.Type}'")
-        };
+            userContext.PendingNotifications.Add(new PendingNotificationModel
+            {
+                RecepientId = recepientId,
+                Type = ToPendingType(notification.Type),
+                NotificationId = notification.NotificationId,
+                CreatedAt = DateTime.UtcNow,
+            });
+        }
 
-        if (recepient.Settings.ReceiveFriendWishNotifications)
-            await _client.SendOrEditBotMessage(_logger, userContext, userId, botMessage, forceNewMessage: true);
+        userContext.SaveChanges();
     }
+
+    private static void EnqueuePending(UserContext userContext, int recepientId, PendingNotificationType type, string payload = null)
+    {
+        userContext.PendingNotifications.Add(new PendingNotificationModel
+        {
+            RecepientId = recepientId,
+            Type = type,
+            Payload = payload,
+            CreatedAt = DateTime.UtcNow,
+        });
+
+        userContext.SaveChanges();
+    }
+
+    private static PendingNotificationType ToPendingType(NotificationMessageType type) => type switch
+    {
+        NotificationMessageType.NewFriend => PendingNotificationType.NewFriend,
+        NotificationMessageType.NewWish => PendingNotificationType.NewWish,
+        NotificationMessageType.WishEdit => PendingNotificationType.WishEdit,
+        NotificationMessageType.WishDelete => PendingNotificationType.WishDelete,
+        NotificationMessageType.WishPermanent => PendingNotificationType.WishPermanent,
+        _ => throw new NotSupportedException($"Unexpected notification type '{type}'"),
+    };
 }
