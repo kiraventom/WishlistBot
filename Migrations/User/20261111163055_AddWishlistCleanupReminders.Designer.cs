@@ -11,7 +11,7 @@ using WishlistBot.Model.User;
 namespace WishlistBot.Migrations.User
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20261111160642_AddWishlistCleanupReminders")]
+    [Migration("20261111163055_AddWishlistCleanupReminders")]
     partial class AddWishlistCleanupReminders
     {
         /// <inheritdoc />
@@ -126,9 +126,6 @@ namespace WishlistBot.Migrations.User
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("WishPageListPositionId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("ListPositionsId");
 
                     b.HasIndex("AdminBroadcastPageListPositionId");
@@ -141,8 +138,6 @@ namespace WishlistBot.Migrations.User
 
                     b.HasIndex("UserId")
                         .IsUnique();
-
-                    b.HasIndex("WishPageListPositionId");
 
                     b.ToTable("ListPositionsModel");
                 });
@@ -241,7 +236,7 @@ namespace WishlistBot.Migrations.User
                     b.Property<bool>("BirthdayNotifications")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("ReceiveNotifications")
+                    b.Property<bool>("ReceiveFriendWishNotifications")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("SendNotifications")
@@ -415,6 +410,9 @@ namespace WishlistBot.Migrations.User
                     b.Property<bool>("OnlyUnclaimed")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Page")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("SortProperty")
                         .HasColumnType("INTEGER");
 
@@ -509,10 +507,6 @@ namespace WishlistBot.Migrations.User
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WishlistBot.Model.User.ListPositionModel", "WishPage")
-                        .WithMany()
-                        .HasForeignKey("WishPageListPositionId");
-
                     b.Navigation("AdminBroadcastPage");
 
                     b.Navigation("AdminUserPage");
@@ -522,8 +516,6 @@ namespace WishlistBot.Migrations.User
                     b.Navigation("FriendPage");
 
                     b.Navigation("User");
-
-                    b.Navigation("WishPage");
                 });
 
             modelBuilder.Entity("WishlistBot.Model.User.NotificationModel", b =>

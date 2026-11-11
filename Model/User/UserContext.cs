@@ -60,7 +60,7 @@ public class UserContext : DbContext
         if (userModel.Settings is null)
             userModel.Settings = new SettingsModel()
             {
-                ReceiveNotifications = true,
+                ReceiveFriendWishNotifications = true,
                 SendNotifications = true,
                 BirthdayNotifications = true,
                 WishlistCleanupNotifications = true

@@ -46,7 +46,7 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
         Text.Bold("CurrentWish: ").Monospace(target.CurrentWish?.Name ?? "null").LineBreak();
         Text.Bold("Settings: ").LineBreak()
             .Verbatim("\tSend: ").Monospace(target.Settings.SendNotifications.ToString()).LineBreak()
-            .Verbatim("\tReceive: ").Monospace(target.Settings.ReceiveNotifications.ToString()).LineBreak();
+            .Verbatim("\tReceive: ").Monospace(target.Settings.ReceiveFriendWishNotifications.ToString()).LineBreak();
 
         Text.Bold("Profile: ").LineBreak()
             .Verbatim("\tBirthday: ").Monospace(target.Profile.Birthday?.ToShortDateString() ?? "null").LineBreak()

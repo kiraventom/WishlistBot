@@ -3,36 +3,34 @@ using WishlistBot.Model.User;
 
 namespace WishlistBot.Notification;
 
-/// <summary>Кому напоминать о чистке вишлиста и сколько вишей там забронировано.</summary>
-public sealed record WishlistCleanupReminder(int UserId, int ClaimedWishesCount);
-
 /// <summary>
-/// Собирает напоминания о чистке вишлиста: у кого после праздника прошёл срок,
-/// в своём вишлисте остались забронированные виши и включены напоминания.
+/// Собирает получателей напоминания о чистке вишлиста: у кого после праздника
+/// прошёл срок, в своём вишлисте остались забронированные виши и включены
+/// напоминания о чистке. Учитывается только собственный переключатель этой
+/// рассылки — настройки про виши друзей на неё не влияют.
 /// </summary>
 public static class WishlistCleanupNotificationService
 {
     /// <summary>Имя записи в <see cref="ScheduledNotificationModel"/>.</summary>
     public const string StateName = "wishlist_cleanup";
 
-    public static List<WishlistCleanupReminder> BuildReminders(UserContext userContext, DateOnly today)
+    public static List<int> BuildReminders(UserContext userContext, DateOnly today)
     {
         var users = userContext.Users
             .Include(u => u.Settings)
             .Include(u => u.Profile)
             .Include(u => u.Wishes)
             .Include(u => u.WishlistCleanupState)
-            .Where(u => u.Settings.WishlistCleanupNotifications && u.Settings.ReceiveNotifications)
+            .Where(u => u.Settings.WishlistCleanupNotifications)
             .ToList();
 
-        var reminders = new List<WishlistCleanupReminder>();
+        var reminders = new List<int>();
 
         foreach (var user in users)
         {
-            // Забронированные виши в своём вишлисте — то, что друзья, скорее всего, уже подарили
-            var claimedWishesCount = user.Wishes.Count(wish => wish.ClaimerId is not null);
-
-            if (claimedWishesCount == 0)
+            // Забронированные виши в своём вишлисте — то, что друзья, скорее всего, уже подарили.
+            // Пользователю это число не показываем, оно нужно только как признак «есть что чистить».
+            if (!user.Wishes.Any(wish => wish.ClaimerId is not null))
                 continue;
 
             var state = user.WishlistCleanupState;
@@ -44,7 +42,7 @@ public static class WishlistCleanupNotificationService
                     state?.NextReminderDate))
                 continue;
 
-            reminders.Add(new WishlistCleanupReminder(user.UserId, claimedWishesCount));
+            reminders.Add(user.UserId);
         }
 
         return reminders;
@@ -65,6 +63,14 @@ public static class WishlistCleanupNotificationService
         var state = GetOrCreateState(userContext, userId);
 
         state.NextReminderDate = today.AddDays(1);
+    }
+
+    /// <summary>Отложено ли напоминание на будущее — по этому признаку прячем кнопку.</summary>
+    public static bool IsSnoozed(UserContext userContext, int userId)
+    {
+        var state = userContext.WishlistCleanupStates.FirstOrDefault(s => s.UserId == userId);
+
+        return state?.NextReminderDate is not null;
     }
 
     private static WishlistCleanupStateModel GetOrCreateState(UserContext userContext, int userId)

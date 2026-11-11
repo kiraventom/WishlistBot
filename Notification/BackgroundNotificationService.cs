@@ -65,7 +65,7 @@ public sealed class BackgroundNotificationService
     /// напоминаний. Отправка вынесена в делегат, чтобы это можно было тестировать
     /// без Telegram; отметка об отправке пишется в том же контексте.
     /// </summary>
-    public async Task<int> RunWishlistCleanupIfDue(DateTime now, Func<UserContext, WishlistCleanupReminder, Task> sendReminder)
+    public async Task<int> RunWishlistCleanupIfDue(DateTime now, Func<UserContext, int, Task> sendReminder)
     {
         if (!WishlistCleanupSchedule.IsRunTime(now))
             return 0;
@@ -79,10 +79,10 @@ public sealed class BackgroundNotificationService
 
         using (var userContext = UserContext.Create())
         {
-            foreach (var reminder in WishlistCleanupNotificationService.BuildReminders(userContext, today))
+            foreach (var userId in WishlistCleanupNotificationService.BuildReminders(userContext, today))
             {
-                await sendReminder(userContext, reminder);
-                WishlistCleanupNotificationService.MarkReminded(userContext, reminder.UserId, today);
+                await sendReminder(userContext, userId);
+                WishlistCleanupNotificationService.MarkReminded(userContext, userId, today);
                 userContext.SaveChanges();
                 ++sent;
             }
@@ -118,9 +118,8 @@ public sealed class BackgroundNotificationService
         NotificationService.Instance.SendToUser(
             new BirthdayListMessage(_logger, digest.Friends), userContext, digest.UserId);
 
-    private Task SendCleanupReminder(UserContext userContext, WishlistCleanupReminder reminder) =>
-        NotificationService.Instance.SendToUser(
-            new WishlistCleanupMessage(_logger, reminder.ClaimedWishesCount), userContext, reminder.UserId);
+    private Task SendCleanupReminder(UserContext userContext, int userId) =>
+        NotificationService.Instance.SendToUser(new WishlistCleanupMessage(_logger), userContext, userId);
 
     private static DateOnly? GetLastRunDate(string stateName)
     {

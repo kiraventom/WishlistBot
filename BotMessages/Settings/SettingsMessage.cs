@@ -23,10 +23,10 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
         const string enabledBell = "\U0001f514";
         const string disabledBell = "\U0001f515";
 
-        var receiveNotificationsEmoji = user.Settings.ReceiveNotifications ? enabledBell : disabledBell;
+        var receiveFriendWishEmoji = user.Settings.ReceiveFriendWishNotifications ? enabledBell : disabledBell;
         var sendNotificationsEmoji = user.Settings.SendNotifications ? enabledBell : disabledBell;
 
-        var receiveNotificationsText = user.Settings.ReceiveNotifications
+        var receiveFriendWishText = user.Settings.ReceiveFriendWishNotifications
             ? $"{enabledBell} Сообщать мне об изменениях вишлистов друзей"
             : $"{disabledBell} Не сообщать мне об изменениях вишлистов друзей";
 
@@ -49,7 +49,7 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
         Text
            .Bold("Настройки уведомлений")
            .LineBreak().LineBreak()
-           .Verbatim(receiveNotificationsText)
+           .Verbatim(receiveFriendWishText)
            .LineBreak()
            .Verbatim(sendNotificationsText)
            .LineBreak()
@@ -59,17 +59,17 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
 
         var settingsEnum = user.Settings.ToEnum();
 
-        var receiveNotificationsButton = user.Settings.ReceiveNotifications
-            ? $"{receiveNotificationsEmoji} Присылать мне"
-            : $"{receiveNotificationsEmoji} Не присылать мне";
+        var receiveFriendWishButton = user.Settings.ReceiveFriendWishNotifications
+            ? $"{receiveFriendWishEmoji} Присылать мне"
+            : $"{receiveFriendWishEmoji} Не присылать мне";
 
         var sendNotificationsButton = user.Settings.SendNotifications
             ? $"{sendNotificationsEmoji} Отправлять друзьям"
             : $"{sendNotificationsEmoji} Не отправлять друзьям";
 
         Keyboard.AddButton<SettingsQuery>(
-           receiveNotificationsButton,
-           new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.ReceiveNotifications)));
+           receiveFriendWishButton,
+           new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ SettingsEnum.ReceiveFriendWishNotifications)));
 
         Keyboard.NewRow().AddButton<SettingsQuery>(
            sendNotificationsButton,

@@ -59,13 +59,13 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
                 .InlineUrl("\U0001f4c5 Можно указать дату дня рождения", DeepLink.BuildProfile());
         }
 
-        if (!user.Settings.ReceiveNotifications
+        if (!user.Settings.ReceiveFriendWishNotifications
             || !user.Settings.SendNotifications
             || !user.Settings.BirthdayNotifications
             || !user.Settings.WishlistCleanupNotifications)
             Text.LineBreak();
 
-        if (!user.Settings.ReceiveNotifications)
+        if (!user.Settings.ReceiveFriendWishNotifications)
             Text.LineBreak().ItalicBold($"{dot}Вы не получаете уведомления от друзей ").Verbatim(mutedBell);
 
         if (!user.Settings.SendNotifications)

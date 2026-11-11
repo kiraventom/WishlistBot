@@ -11,7 +11,13 @@ namespace WishlistBot.Migrations.User
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Напоминания включены по умолчанию — как и остальные уведомления
+            // Переименование существующей настройки: она всегда отвечала только за виши друзей
+            migrationBuilder.RenameColumn(
+                name: "ReceiveNotifications",
+                table: "Settings",
+                newName: "ReceiveFriendWishNotifications");
+
+            // Новый переключатель включён по умолчанию — как и остальные уведомления
             migrationBuilder.AddColumn<bool>(
                 name: "WishlistCleanupNotifications",
                 table: "Settings",
@@ -48,6 +54,11 @@ namespace WishlistBot.Migrations.User
             migrationBuilder.DropColumn(
                 name: "WishlistCleanupNotifications",
                 table: "Settings");
+
+            migrationBuilder.RenameColumn(
+                name: "ReceiveFriendWishNotifications",
+                table: "Settings",
+                newName: "ReceiveNotifications");
         }
     }
 }

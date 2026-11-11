@@ -233,7 +233,7 @@ namespace WishlistBot.Migrations.User
                     b.Property<bool>("BirthdayNotifications")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("ReceiveNotifications")
+                    b.Property<bool>("ReceiveFriendWishNotifications")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("SendNotifications")

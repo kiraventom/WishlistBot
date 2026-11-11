@@ -50,7 +50,7 @@ public class NotificationService
     public async Task SendToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
     {
         var notificationRecepient = userContext.Users.Include(u => u.Settings).First(u => u.UserId == notificationRecepientId);
-        if (notificationRecepient.Settings.ReceiveNotifications)
+        if (notificationRecepient.Settings.ReceiveFriendWishNotifications)
             await _client.SendOrEditBotMessage(_logger, userContext, notificationRecepientId, notification, forceNewMessage: true);
     }
 
@@ -76,7 +76,7 @@ public class NotificationService
             _ => throw new NotSupportedException($"Unexpected notification message type '{notification.Type}'")
         };
 
-        if (recepient.Settings.ReceiveNotifications)
+        if (recepient.Settings.ReceiveFriendWishNotifications)
             await _client.SendOrEditBotMessage(_logger, userContext, userId, botMessage, forceNewMessage: true);
     }
 }
