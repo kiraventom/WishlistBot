@@ -14,7 +14,7 @@ public class ConfirmDeleteWishMessage(ILogger logger) : BotMessage(logger)
         Keyboard
            .AddButton<DeleteWishQuery>()
            .NewRow()
-           .AddButton<EditWishQuery>("Отмена \u274c");
+           .AddButton<EditWishQuery>("\u274c Отмена");
 
         var user = userContext.Users.Include(u => u.CurrentWish).AsNoTracking().First(u => u.UserId == userId);
         if (user.CurrentWish.ClaimerId is not null)

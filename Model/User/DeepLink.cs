@@ -23,6 +23,7 @@ public static class DeepLink
         AdminUser,
         Settings,
         Wishlist,
+        Profile,
     }
 
     /// <summary>
@@ -67,6 +68,9 @@ public static class DeepLink
 
     /// <summary>Ссылка на экран настроек — из уведомлений, чтобы можно было отписаться.</summary>
     public static string BuildSettings() => BuildLink(BuildPayload(Kind.Settings));
+
+    /// <summary>Ссылка на свой профиль (экран редактирования даты рождения и заметок).</summary>
+    public static string BuildProfile() => BuildLink(BuildPayload(Kind.Profile));
 
     /// <summary>
     /// Разбирает текст команды <c>/start a=...</c> на действие и параметры.
@@ -121,6 +125,7 @@ public static class DeepLink
         Kind.AdminUser => "asu",
         Kind.Settings => "st",
         Kind.Wishlist => "wl",
+        Kind.Profile => "pf",
         _ => throw new NotSupportedException($"Unknown deep link kind '{kind}'"),
     };
 

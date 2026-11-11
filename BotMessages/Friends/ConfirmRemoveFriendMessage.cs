@@ -14,7 +14,7 @@ public class ConfirmRemoveFriendMessage(ILogger logger) : UserBotMessage(logger)
         Keyboard
            .AddButton<RemoveFriendQuery>()
            .NewRow()
-           .AddButton<FriendQuery>("Отмена \u274c");
+           .AddButton<FriendQuery>("\u274c Отмена");
 
         parameters.Peek(QueryParameterType.UserId, out var friendId);
         var friend = userContext.Users.AsNoTracking().First(u => u.UserId == friendId);

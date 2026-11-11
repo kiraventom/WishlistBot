@@ -56,6 +56,7 @@ public static class BirthdayUtils
 
         return result
             .OrderBy(friend => friend.NextBirthday ?? DateOnly.MaxValue)
+            .ThenByDescending(friend => friend.WishesCount)
             .ThenBy(friend => friend.Friend.FirstName)
             .ToList();
     }

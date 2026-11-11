@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using WishlistBot.Model.User;
+using WishlistBot.Text;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Friends;
 using WishlistBot.QueryParameters;
@@ -27,11 +28,13 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         var isSelf = sender.UserId == target.UserId;
         var isFriend = sender.IsFriendOf(target.UserId);
 
+        const string gift = "\U0001f381 ";
+
         if (target.Wishes.Count != 0)
         {
             // Entering the wishlist from the profile always starts from the first page
             Keyboard
-               .AddButton<CompactListQuery>("Открыть вишлист",
+               .AddButton<CompactListQuery>($"Открыть вишлист ({gift.Trim()} {target.Wishes.Count})",
                     new QueryParameter(QueryParameterType.SetListPageTo, 0))
                .NewRow();
         }
@@ -52,14 +55,16 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
            .NewRow()
            .AddButton<MyFriendsQuery>("К друзьям");
 
+        // имя отбивается пустой строкой; пустую строку даёт LineBreak первой секции ниже
         if (isSelf)
-            Text.Bold("Это вы:");
+            Text.Bold("Это вы");
         else
-            Text.InlineMention(target).Bold(":");
+            Text.InlineMention(target);
+
+        Text.LineBreak();
 
         const string calendar = "\U0001f4c5 ";
         const string writingHand = "\u270d\ufe0f ";
-        const string gift = "\U0001f381 ";
 
         if (target.Profile.Birthday != null)
         {
@@ -70,18 +75,13 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
                 .Bold("Дата рождения: ")
                 .Monospace(birthday.ToString("dd.MM.yyyy"));
 
-            var today = DateTime.Now;
-            var nextBirthday = new DateTime(today.Year, birthday.Month, birthday.Day);
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nextBirthday = BirthdayUtils.GetNextBirthday(birthday, today);
+            var daysBeforeBirthday = BirthdayUtils.GetDaysUntil(nextBirthday, today);
+            var nextAge = BirthdayUtils.GetAge(birthday, nextBirthday);
 
-            if (nextBirthday < today)
-                nextBirthday = nextBirthday.AddYears(1);
-
-            var daysBeforeBirthday = (int)Math.Round(nextBirthday.Subtract(today).TotalDays);
-            var nextAge = nextBirthday.Year - birthday.Year;
-
-            var ageEnding = GetYearEndingDeclination(nextAge);
-            var days = GetDaysDeclinated(daysBeforeBirthday);
-            Text.Italic($" ({nextAge}-{ageEnding} ДР через {daysBeforeBirthday} {days})");
+            Text.Italic($" ({nextAge}-{PluralUtils.YearsOrdinalEnding(nextAge)} ДР через " +
+                        $"{daysBeforeBirthday} {PluralUtils.Days(daysBeforeBirthday)})");
         }
 
         if (target.Profile.Notes != null)
@@ -97,48 +97,16 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
             Text.Quote(notes);
         }
 
-        Text
-           .LineBreak()
-           .Verbatim(gift)
-           .Bold("Вишей в вишлисте: ")
-           .Monospace(target.Wishes.Count.ToString());
+        // Если виши есть — их количество показано на кнопке «Открыть вишлист»
+        if (target.Wishes.Count == 0)
+        {
+            Text
+               .LineBreak()
+               .Verbatim(gift)
+               .Bold("Вишей в вишлисте: ")
+               .Monospace(target.Wishes.Count.ToString());
+        }
 
         return Task.CompletedTask;
-    }
-
-    private static string GetYearEndingDeclination(int year)
-    {
-        if (year == 0)
-            return "ой";
-
-        var lastTwoDigits = year % 100;
-
-        if (lastTwoDigits is >= 10 and <= 20)
-            return "ый";
-
-        var lastDigit = year % 10;
-        return lastDigit switch
-        {
-            1 or 4 or 5 or 9 or 0 => "ый",
-            2 or 6 or 7 or 8 => "ой",
-            3 => "ий",
-            _ => throw new NotSupportedException("This won't happen lol")
-        };
-    }
-
-    private static string GetDaysDeclinated(int days)
-    {
-        var lastTwoDigits = days % 100;
-
-        if (lastTwoDigits is >= 10 and <= 20)
-            return "дней";
-
-        var lastDigit = days % 10;
-        return lastDigit switch
-        {
-            1 => "день",
-            2 or 3 or 4 => "дня",
-            _ => "дней"
-        };
     }
 }

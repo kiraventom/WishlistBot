@@ -20,7 +20,7 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         const string link = "\U0001f517";
 
         // Invite link button
-        Keyboard.AddShareButton($"{link} Отправить вишлист другу", 
+        Keyboard.AddShareButton($"{link} Скопировать ссылку", 
 $@"
 
 Мой вишлист в Вишлист БОТ:
@@ -34,12 +34,12 @@ $@"
         if (sender.Profile.Birthday is null)
         {
             Text.Italic("Дата рождения не установлена");
-            Keyboard.AddButton<SetProfileBirthdayQuery>("Установить дату рождения");
+            Keyboard.AddButton<SetProfileBirthdayQuery>("\U0001f4c5 Установить дату рождения");
         }
         else
         {
             Text.Bold("Дата рождения: ").Monospace(sender.Profile.Birthday.Value.ToString("dd.MM.yyyy"));
-            Keyboard.AddButton<SetProfileBirthdayQuery>("Изменить дату рождения");
+            Keyboard.AddButton<SetProfileBirthdayQuery>("\U0001f4c5 Изменить дату рождения");
         }
 
         Keyboard.NewRow();
@@ -50,12 +50,12 @@ $@"
         if (string.IsNullOrWhiteSpace(sender.Profile.Notes))
         {
             Text.Italic("Заметки пусты. Здесь можно указать размер одежды, общие интересы, пожелания или просто написать какую-то чушь");
-            Keyboard.AddButton<SetProfileNotesQuery>("Добавить заметки");
+            Keyboard.AddButton<SetProfileNotesQuery>("\u270f\ufe0f Добавить заметки");
         }
         else
         {
             Text.Bold("Заметки: ").LineBreak().ExpandableQuote(sender.Profile.Notes);
-            Keyboard.AddButton<SetProfileNotesQuery>("Изменить заметки");
+            Keyboard.AddButton<SetProfileNotesQuery>("\u270f\ufe0f Изменить заметки");
         }
 
         Keyboard.NewRow().AddButton<MainMenuQuery>("Назад");

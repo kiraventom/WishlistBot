@@ -17,6 +17,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 
         var user = userContext.Users
             .Include(u => u.ClaimedWishes)
+            .Include(u => u.Profile)
             .Include(u => u.Settings).First(u => u.UserId == userId);
 
         // Entering the wishlist from the main menu always starts from the first page
@@ -50,6 +51,13 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 
         const string mutedBell = "\U0001f515";
         const string dot = "⋅ ";
+
+        // Подсказка про день рождения — выше статусов уведомлений и отбита строкой
+        if (user.Profile.Birthday is null)
+        {
+            Text.LineBreak().LineBreak()
+                .InlineUrl("\U0001f4c5 Можно указать дату дня рождения", DeepLink.BuildProfile());
+        }
 
         if (!user.Settings.ReceiveNotifications || !user.Settings.SendNotifications || !user.Settings.BirthdayNotifications)
             Text.LineBreak();
