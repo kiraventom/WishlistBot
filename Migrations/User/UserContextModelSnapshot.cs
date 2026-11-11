@@ -245,6 +245,9 @@ namespace WishlistBot.Migrations.User
                     b.Property<bool>("WishlistCleanupNotifications")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("WishlistFillNotifications")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("SettingsId");
 
                     b.HasIndex("UserId")
@@ -442,6 +445,19 @@ namespace WishlistBot.Migrations.User
                     b.HasKey("UserId");
 
                     b.ToTable("WishlistCleanupStates");
+                });
+
+            modelBuilder.Entity("WishlistBot.Model.User.WishlistFillStateModel", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("LastReminderDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("WishlistFillStates");
                 });
 
             modelBuilder.Entity("WishlistBot.Model.User.FriendModel", b =>
@@ -651,6 +667,17 @@ namespace WishlistBot.Migrations.User
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.WishlistFillStateModel", b =>
+                {
+                    b.HasOne("WishlistBot.Model.User.UserModel", "User")
+                        .WithOne("WishlistFillState")
+                        .HasForeignKey("WishlistBot.Model.User.WishlistFillStateModel", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.UserModel", b =>
                 {
                     b.Navigation("ClaimedWishes");
@@ -675,6 +702,8 @@ namespace WishlistBot.Migrations.User
                     b.Navigation("Wishes");
 
                     b.Navigation("WishlistCleanupState");
+
+                    b.Navigation("WishlistFillState");
                 });
 
             modelBuilder.Entity("WishlistBot.Model.User.WishDraftModel", b =>

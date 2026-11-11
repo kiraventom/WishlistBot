@@ -16,6 +16,7 @@ public class UserContext : DbContext
     public DbSet<UserExtraModel> UserExtra { get; set; }
     public DbSet<ScheduledNotificationModel> ScheduledNotifications { get; set; }
     public DbSet<WishlistCleanupStateModel> WishlistCleanupStates { get; set; }
+    public DbSet<WishlistFillStateModel> WishlistFillStates { get; set; }
 
     public UserContext(DbContextOptions<UserContext> options) : base(options)
     {
@@ -63,7 +64,8 @@ public class UserContext : DbContext
                 ReceiveFriendWishNotifications = true,
                 SendNotifications = true,
                 BirthdayNotifications = true,
-                WishlistCleanupNotifications = true
+                WishlistCleanupNotifications = true,
+                WishlistFillNotifications = true
             };
 
         if (userModel.Profile is null)
@@ -74,6 +76,9 @@ public class UserContext : DbContext
 
         if (userModel.WishlistCleanupState is null)
             userModel.WishlistCleanupState = new WishlistCleanupStateModel();
+
+        if (userModel.WishlistFillState is null)
+            userModel.WishlistFillState = new WishlistFillStateModel();
 
         if (isNew)
         {
@@ -120,6 +125,12 @@ public class UserContext : DbContext
             .HasOne(e => e.WishlistCleanupState)
             .WithOne(e => e.User)
             .HasForeignKey<WishlistCleanupStateModel>(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserModel>()
+            .HasOne(e => e.WishlistFillState)
+            .WithOne(e => e.User)
+            .HasForeignKey<WishlistFillStateModel>(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
