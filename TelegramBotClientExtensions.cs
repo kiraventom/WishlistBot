@@ -13,7 +13,12 @@ namespace WishlistBot;
 // TODO Move code to BotMessageSender; replace Client in BotMessage with BotMessageSender; make MediaStorageManager not singleton
 public static class TelegramBotClientExtensions
 {
-    public static async Task<Message> SendOrEditBotMessage(this ITelegramBotClient client, ILogger logger, UserContext userContext, int userId, BotMessage botMessage, bool forceNewMessage = false)
+    /// <param name="messageThreadId">
+    /// Тред (топик) для отправки: если задан, сообщение всегда уходит новым в этот тред
+    /// и никогда не редактирует текущий экран.
+    /// </param>
+    /// <param name="throwOnError">Пробросить исключение вместо «проглотить и вернуть null».</param>
+    public static async Task<Message> SendOrEditBotMessage(this ITelegramBotClient client, ILogger logger, UserContext userContext, int userId, BotMessage botMessage, bool forceNewMessage = false, int? messageThreadId = null, bool throwOnError = false)
     {
         var userModel = userContext.Users.First(u => u.UserId == userId);
 
@@ -60,22 +65,25 @@ public static class TelegramBotClientExtensions
                 await MediaStorageManager.Instance.Store(photoFileId);
             }
 
-            var shouldSendNewMessage = 
-                userModel.LastBotMessageId < 0 
+            var shouldSendNewMessage =
+                messageThreadId is not null
+                || botMessage is INotificationMessage
+                || userModel.NotifiedSinceLastMessage
+                || userModel.LastBotMessageId < 0
                 || botMessage.ForceNewMessage
-                || forceNewMessage 
+                || forceNewMessage
                 || userModel.ReceivedBroadcasts.Any(b => b.MessageId == userModel.LastBotMessageId);
 
             if (shouldSendNewMessage)
             {
                 if (photoFileId is null)
                 {
-                    message = await client.SendMessage(chatId: userModel.TelegramId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: LinkPreviewOptions.Disabled);
+                    message = await client.SendMessage(chatId: userModel.TelegramId, messageThreadId: messageThreadId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: LinkPreviewOptions.Disabled);
                 }
                 else
                 {
                     var photo = InputFile.FromFileId(photoFileId);
-                    message = await client.SendPhoto(chatId: userModel.TelegramId, photo: photo, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+                    message = await client.SendPhoto(chatId: userModel.TelegramId, messageThreadId: messageThreadId, photo: photo, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
                 }
 
                 logger.Information("Sent '{text}' to [{id}] with inline keyboard, messageId [{messageId}]", text, userModel.UserId, message.MessageId);
@@ -116,16 +124,26 @@ public static class TelegramBotClientExtensions
 
             // Уведомление не владеет интерфейсом: экран остаётся тем же, его клавиатуру
             // не гасим, а LastBotMessageId продолжает указывать на сообщение-интерфейс.
-            if (botMessage is not INotificationMessage)
+            if (botMessage is INotificationMessage)
+            {
+                // Уведомление не владеет интерфейсом и не трогает LastBotMessageId;
+                // флаг «было уведомление» выставляет NotificationService, у которого
+                // есть свой SaveChanges
+            }
+            else
             {
                 if (userModel.LastBotMessageId is int lastBotMessageId && lastBotMessageId != message.MessageId)
                     await ClearKeyboard(client, logger, userModel.TelegramId, lastBotMessageId);
 
                 userModel.LastBotMessageId = message.MessageId;
+                userModel.NotifiedSinceLastMessage = false;
             }
         }
         catch (Exception e)
         {
+            if (throwOnError)
+                throw;
+
             logger.Fatal(e.ToString());
             return null;
         }

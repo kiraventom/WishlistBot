@@ -300,6 +300,12 @@ namespace WishlistBot.Migrations.User
                     b.Property<string>("LastQueryId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("NotificationTopicId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotifiedSinceLastMessage")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("QueryParams")
                         .HasColumnType("TEXT");
 

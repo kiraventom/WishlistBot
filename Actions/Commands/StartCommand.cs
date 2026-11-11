@@ -39,6 +39,8 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                 DeepLink.Kind.AdminUser => await HandleAdminUserLink(userContext, user, parameters),
                 DeepLink.Kind.Settings => await HandleSettingsLink(userContext, user),
                 DeepLink.Kind.Profile => await HandleProfileLink(userContext, user),
+                DeepLink.Kind.MainMenu => await HandleMainMenuLink(userContext, user),
+                DeepLink.Kind.Friends => await HandleFriendsLink(userContext, user),
                 _ => false,
             };
 
@@ -179,6 +181,20 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
     private async Task<bool> HandleProfileLink(UserContext userContext, UserModel user)
     {
         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new EditProfileMessage(Logger));
+        return true;
+    }
+
+    private async Task<bool> HandleMainMenuLink(UserContext userContext, UserModel user)
+    {
+        SetQueryParams(user);
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
+        return true;
+    }
+
+    private async Task<bool> HandleFriendsLink(UserContext userContext, UserModel user)
+    {
+        SetQueryParams(user);
+        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MyFriendsMessage(Logger), forceNewMessage: true);
         return true;
     }
 

@@ -30,10 +30,10 @@ public class BirthdayListMessage(ILogger logger, IReadOnlyList<FriendBirthday> f
 
         Text.AddNotificationsSettingsLink();
 
-        Keyboard
-            .AddButton<MyFriendsQuery>("К друзьям")
-            .NewRow()
-            .AddButton<MainMenuQuery>("В главное меню");
+        Text.LineBreak()
+            .InlineUrl("К друзьям", DeepLink.BuildFriends())
+            .LineBreak()
+            .InlineUrl("В главное меню", DeepLink.BuildMainMenu());
 
         return Task.CompletedTask;
     }

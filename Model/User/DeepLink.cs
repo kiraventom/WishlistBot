@@ -24,6 +24,8 @@ public static class DeepLink
         Settings,
         Wishlist,
         Profile,
+        MainMenu,
+        Friends,
     }
 
     /// <summary>
@@ -71,6 +73,12 @@ public static class DeepLink
 
     /// <summary>Ссылка на свой профиль (экран редактирования даты рождения и заметок).</summary>
     public static string BuildProfile() => BuildLink(BuildPayload(Kind.Profile));
+
+    /// <summary>Ссылка на главное меню.</summary>
+    public static string BuildMainMenu() => BuildLink(BuildPayload(Kind.MainMenu));
+
+    /// <summary>Ссылка на список друзей.</summary>
+    public static string BuildFriends() => BuildLink(BuildPayload(Kind.Friends));
 
     /// <summary>
     /// Разбирает текст команды <c>/start a=...</c> на действие и параметры.
@@ -126,6 +134,8 @@ public static class DeepLink
         Kind.Settings => "st",
         Kind.Wishlist => "wl",
         Kind.Profile => "pf",
+        Kind.MainMenu => "mm",
+        Kind.Friends => "fl",
         _ => throw new NotSupportedException($"Unknown deep link kind '{kind}'"),
     };
 

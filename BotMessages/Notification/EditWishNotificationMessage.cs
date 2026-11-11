@@ -33,33 +33,10 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
         var editedWish = userContext.Wishes.First(w => w.WishId == _editedWishId);
 
-        var sender = userContext.Users
-            .Include(u => u.WishViewSettings)
-            .First(u => u.UserId == userId);
-
-        var wishViewSettings = sender.GetOrCreateViewerTarget<WishViewSettingsModel>(_notificationSourceId);
-
-        // TODO ToList() here is not very cool
-        var wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
-        var wishIndex = wishes.IndexOf(editedWish);
-        //
-        // TODO: Make this prettier, DRY
-        if (wishIndex == -1)
-        {
-            wishViewSettings.OnlyUnclaimed = false;
-            wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
-            wishIndex = wishes.IndexOf(editedWish);
-        }
-
-        var pageIndex = wishIndex / TextListMessageUtils.ItemsPerPage;
-
-        Keyboard
-           .AddButton<ShowWishQuery>("Перейти к вишу",
-                                     new QueryParameter(QueryParameterType.UserId, notificationSource.UserId),
-                                     new QueryParameter(QueryParameterType.WishId, editedWish.WishId),
-                                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
-           .NewRow()
-           .AddButton<MainMenuQuery>("В главное меню");
+        Text.LineBreak().LineBreak()
+            .InlineUrl("Перейти к вишу", DeepLink.BuildWish(notificationSource.SubscribeId[..20], editedWish.WishId))
+            .LineBreak()
+            .InlineUrl("В главное меню", DeepLink.BuildMainMenu());
 
         var changedItemsNames = new List<string>();
 

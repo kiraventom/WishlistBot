@@ -28,11 +28,10 @@ public class DeleteWishNotificationMessage : BotMessage, INotificationMessage
     {
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
 
-        Keyboard
-            .AddButton<FriendQuery>("Перейти к другу",
-                    new QueryParameter(QueryParameterType.UserId, notificationSource.UserId))
-            .NewRow()
-            .AddButton<MainMenuQuery>("В главное меню");
+        Text.LineBreak().LineBreak()
+            .InlineUrl("Перейти к другу", DeepLink.BuildFriend(notificationSource.SubscribeId[..20]))
+            .LineBreak()
+            .InlineUrl("В главное меню", DeepLink.BuildMainMenu());
 
         Text
             .InlineMention(notificationSource)

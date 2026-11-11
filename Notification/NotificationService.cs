@@ -10,6 +10,9 @@ namespace WishlistBot.Notification;
 
 public class NotificationService
 {
+    /// <summary>Название топика, куда складываются уведомления.</summary>
+    private const string NotificationTopicName = "\U0001f514 Уведомления";
+
     private bool _inited;
 
     private ILogger _logger;
@@ -73,9 +76,114 @@ public class NotificationService
     public async Task SendToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
     {
         var notificationRecepient = userContext.Users.Include(u => u.Settings).First(u => u.UserId == notificationRecepientId);
-        if (notificationRecepient.Settings.ReceiveFriendWishNotifications)
-            await _client.SendOrEditBotMessage(_logger, userContext, notificationRecepientId, notification, forceNewMessage: true);
+        if (!notificationRecepient.Settings.ReceiveFriendWishNotifications)
+            return;
+
+        await SendToNotificationTopic(notification, userContext, notificationRecepient);
     }
+
+    /// <summary>
+    /// Отправка уведомления в топик «Уведомления». Топик создаётся лениво; если
+    /// пользователь его удалил (или закрыл) — пересоздаём и пробуем ещё раз. Если топики
+    /// недоступны вовсе (например, у бота выключена настройка в BotFather) — уведомление
+    /// уходит в основной чат, чтобы не потеряться.
+    /// </summary>
+    private async Task SendToNotificationTopic(BotMessage notification, UserContext userContext, UserModel recepient)
+    {
+        int? threadId = null;
+
+        try
+        {
+            threadId = await EnsureNotificationTopic(userContext, recepient);
+
+            await _client.SendOrEditBotMessage(_logger, userContext, recepient.UserId, notification,
+                forceNewMessage: true, messageThreadId: threadId, throwOnError: true);
+
+            NotifyDelivered(userContext, recepient);
+
+            return;
+        }
+        catch (Exception e) when (threadId is not null && IsTopicUnavailable(e))
+        {
+            _logger?.Warning("Notification topic [{threadId}] of user [{userId}] is gone: {error}",
+                threadId, recepient.UserId, e.Message);
+
+            recepient.NotificationTopicId = null;
+            userContext.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            _logger?.Error("Failed to send notification into the topic of user [{userId}]: {error}",
+                recepient.UserId, e.Message);
+        }
+
+        // топик удалён или недоступен — пробуем ещё раз с новым топиком,
+        // а если и это не выходит, отправляем в основной чат
+        try
+        {
+            var newThreadId = await EnsureNotificationTopic(userContext, recepient);
+
+            await _client.SendOrEditBotMessage(_logger, userContext, recepient.UserId, notification,
+                forceNewMessage: true, messageThreadId: newThreadId, throwOnError: true);
+
+            NotifyDelivered(userContext, recepient);
+        }
+        catch (Exception e)
+        {
+            _logger?.Warning("Can't deliver notification of user [{userId}] into a topic ({error}), sending to the main chat",
+                recepient.UserId, e.Message);
+
+            // последний шанс: основной чат. Ошибку не пробрасываем — уведомление не должно
+            // ломать апдейт или фоновую задачу
+            try
+            {
+                await _client.SendOrEditBotMessage(_logger, userContext, recepient.UserId, notification, forceNewMessage: true);
+
+                NotifyDelivered(userContext, recepient);
+            }
+            catch (Exception fallbackError)
+            {
+                _logger?.Error("Failed to deliver notification of user [{userId}] at all: {error}",
+                    recepient.UserId, fallbackError.Message);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Помечает, что с последнего экрана пользователю приходило уведомление: следующий
+    /// экран уйдёт новым сообщением и в ленте «All» окажется под уведомлением.
+    /// </summary>
+    private static void NotifyDelivered(UserContext userContext, UserModel recepient)
+    {
+        recepient.NotifiedSinceLastMessage = true;
+        userContext.SaveChanges();
+    }
+
+    /// <summary>Возвращает id топика уведомлений, создавая его при необходимости.</summary>
+    private async Task<int> EnsureNotificationTopic(UserContext userContext, UserModel user)
+    {
+        if (user.NotificationTopicId is { } existing)
+            return existing;
+
+        var topic = await _client.CreateForumTopic(chatId: user.TelegramId, name: NotificationTopicName);
+
+        user.NotificationTopicId = topic.MessageThreadId;
+        userContext.SaveChanges();
+
+        _logger?.Information("Created notification topic [{threadId}] for user [{userId}]",
+            topic.MessageThreadId, user.UserId);
+
+        return topic.MessageThreadId;
+    }
+
+    /// <summary>
+    /// Ошибка означает, что топика больше нет (пользователь удалил его) или он закрыт.
+    /// Telegram отвечает разными формулировками ("message thread not found",
+    /// "TOPIC_ID_INVALID"), поэтому смотрим на текст.
+    /// </summary>
+    private static bool IsTopicUnavailable(Exception exception) =>
+        exception.Message.Contains("thread", StringComparison.OrdinalIgnoreCase)
+        || exception.Message.Contains("topic", StringComparison.OrdinalIgnoreCase);
 
     public async Task<int> BroadcastToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
     {
@@ -101,6 +209,6 @@ public class NotificationService
         };
 
         if (recepient.Settings.ReceiveFriendWishNotifications)
-            await _client.SendOrEditBotMessage(_logger, userContext, userId, botMessage, forceNewMessage: true);
+            await SendToNotificationTopic(botMessage, userContext, recepient);
     }
 }

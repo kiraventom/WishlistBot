@@ -68,12 +68,26 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
 
     private async Task<HandleResult> HandleMessageAsync(Message message, UserContext userContext)
     {
+        if (UpdateFilter.IsIgnorable(message))
+        {
+            logger.Debug("Ignoring service/bot message [{messageId}] in chat [{chatId}]", message.MessageId, message.Chat.Id);
+            return false;
+        }
+
         var sender = message.From!;
 
         var isNewUser = userContext.Users.All(u => u.TelegramId != sender.Id);
         var user = userContext.GetOrAddUser(sender.Id, sender.FirstName, sender.Username);
 
         logger.Information("Received message [{messageId}] with text '{text}' from user [{userId}] '{firstname}'{newUser}", message.MessageId, message.Text, user.UserId, user.FirstName, isNewUser ? " (new user)" : string.Empty);
+
+        // В топик уведомлений писать бессмысленно: бот его только рассылает
+        if (user.NotificationTopicId is { } notificationTopicId && message.MessageThreadId == notificationTopicId)
+        {
+            logger.Information("Ignoring message [{messageId}] in the notifications topic [{threadId}] of user [{userId}]", message.MessageId, notificationTopicId, user.UserId);
+            return false;
+        }
+
 
         // First handle commands, so /start will always work even if listener is active
         var botCommand = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);

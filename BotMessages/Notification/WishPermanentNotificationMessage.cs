@@ -39,12 +39,10 @@ public class WishPermanentNotificationMessage : BotMessage, INotificationMessage
 
         Text.AddNotificationsSettingsLink();
 
-        Keyboard
-           .AddButton<ShowWishQuery>("Перейти к вишу",
-                                     new QueryParameter(QueryParameterType.UserId, notificationSource.UserId),
-                                     new QueryParameter(QueryParameterType.WishId, wish.WishId))
-           .NewRow()
-           .AddButton<MainMenuQuery>("В главное меню");
+        Text.LineBreak().LineBreak()
+            .InlineUrl("Перейти к вишу", DeepLink.BuildWish(notificationSource.SubscribeId[..20], wish.WishId))
+            .LineBreak()
+            .InlineUrl("В главное меню", DeepLink.BuildMainMenu());
 
         return Task.CompletedTask;
     }

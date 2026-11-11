@@ -19,11 +19,14 @@ public class WishlistFillMessage(ILogger logger, WishlistHolidayKind kind) : Bot
             ? "Уже скоро ваш день рождения! Самое время заполнить вишлист"
             : "Уже скоро Новый Год! Самое время заполнить вишлист");
 
+        var user = userContext.Users.First(u => u.UserId == userId);
+
+        Text.LineBreak()
+            .InlineUrl("\U0001f381 Открыть вишлист", DeepLink.BuildWishlist(user.SubscribeId[..20]))
+            .LineBreak()
+            .InlineUrl("Закрыть", DeepLink.BuildMainMenu());
+
         Text.AddNotificationsSettingsLink();
-
-        Keyboard.AddButton<CompactListQuery>("\U0001f381 Открыть вишлист");
-
-        Keyboard.NewRow().AddButton<MainMenuQuery>("Закрыть");
 
         return Task.CompletedTask;
     }

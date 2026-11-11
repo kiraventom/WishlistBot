@@ -24,16 +24,20 @@ public class WishlistCleanupMessage(ILogger logger, bool snooze = false) : BotMe
             ToastText = $"Напоминание придет завтра в {WishlistCleanupSchedule.RunTime:hh\\:mm}";
         }
 
+        var user = userContext.Users.First(u => u.UserId == userId);
+
         Text.Verbatim("Возможно, в вашем вишлисте есть что-то, что вам уже подарили. Взглянете?");
+
+        Text.LineBreak()
+            .InlineUrl("\U0001f381 Открыть вишлист", DeepLink.BuildWishlist(user.SubscribeId[..20]))
+            .LineBreak()
+            .InlineUrl("Закрыть", DeepLink.BuildMainMenu());
 
         Text.AddNotificationsSettingsLink();
 
-        Keyboard.AddButton<CompactListQuery>("\U0001f381 Открыть вишлист");
-
+        // «Напомнить завтра» — действие, а не переход: остаётся кнопкой
         if (!WishlistCleanupNotificationService.IsSnoozed(userContext, userId))
             Keyboard.NewRow().AddButton<WishlistCleanupSnoozeQuery>();
-
-        Keyboard.NewRow().AddButton<MainMenuQuery>("Закрыть");
 
         return Task.CompletedTask;
     }

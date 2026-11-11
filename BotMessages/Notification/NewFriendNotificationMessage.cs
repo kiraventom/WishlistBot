@@ -26,23 +26,10 @@ public class NewFriendNotificationMessage : BotMessage, INotificationMessage
     {
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
 
-        var notificationTarget = userContext.Users
-           .Include(u => u.Friends).ThenInclude(f => f.Friend)
-           .First(u => u.UserId == userId);
-
-        var friends = notificationTarget.Friends.Select(f => f.Friend).ToList();
-
-        // TODO Fix
-        friends.Sort((f0, f1) => f0.UserId.CompareTo(f1.UserId));
-        var friendIndex = friends.IndexOf(notificationSource);
-        var pageIndex = friendIndex / TextListMessageUtils.ItemsPerPage;
-
-        Keyboard
-           .AddButton<FriendQuery>("Перейти к другу",
-                                     new QueryParameter(QueryParameterType.UserId, notificationSource.UserId),
-                                     new QueryParameter(QueryParameterType.SetListPageTo, pageIndex))
-           .NewRow()
-           .AddButton<MainMenuQuery>("В главное меню");
+        Text.LineBreak().LineBreak()
+            .InlineUrl("Перейти к другу", DeepLink.BuildFriend(notificationSource.SubscribeId[..20]))
+            .LineBreak()
+            .InlineUrl("В главное меню", DeepLink.BuildMainMenu());
 
         Text
            .InlineMention(notificationSource)

@@ -61,7 +61,21 @@ public abstract class BotMessage(ILogger logger)
         await InitInternal(userContext, user.UserId, parameters);
 
         if (isNotification)
+        {
+            // Кнопки уведомления (например, «Напомнить завтра») должны работать,
+            // но не должны вытеснять кнопки текущего экрана.
+            var notificationQueries = Keyboard.EnumerateQueries().ToList();
+            if (notificationQueries.Count != 0)
+            {
+                var allowed = string.IsNullOrEmpty(user.AllowedQueries)
+                    ? notificationQueries
+                    : user.AllowedQueries.Split(';').Concat(notificationQueries).Distinct().ToList();
+
+                user.AllowedQueries = string.Join(';', allowed);
+            }
+
             return;
+        }
 
         // Parameters can change during message initialization
         user.QueryParams = parameters.ToString();

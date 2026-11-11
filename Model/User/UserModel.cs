@@ -18,6 +18,20 @@ public class UserModel
 
     public BotState BotState { get; set; }
     public string LastQueryId { get; set; }
+
+    /// <summary>
+    /// Тред (топик) в приватном чате, куда бот складывает уведомления. Создаётся
+    /// лениво при первом уведомлении; если пользователь удалил топик — обнуляется
+    /// и создаётся заново.
+    /// </summary>
+    public int? NotificationTopicId { get; set; }
+
+    /// <summary>
+    /// С момента последнего сообщения-интерфейса приходило уведомление. Тогда
+    /// следующий экран отправляем новым сообщением: в ленте «All» он окажется под
+    /// уведомлением, а не над ним (старый экран остаётся выше и его не видно).
+    /// </summary>
+    public bool NotifiedSinceLastMessage { get; set; }
     public int? LastBotMessageId { get; set; }
     public string QueryParams { get; set; }
     public string AllowedQueries { get; set; }
