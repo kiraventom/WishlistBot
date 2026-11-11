@@ -5,7 +5,7 @@ namespace WishlistBot.BotMessages.Notification;
 
 public static class NotificationMessageUtils
 {
-    private const string NotificationsSettingsText = "настроить уведомления";
+    private const string NotificationsSettingsText = "[\u2699\ufe0f Настроить уведомления]";
 
     /// <summary>
     /// Последняя строка уведомления: ссылка на экран настроек уведомлений.
