@@ -45,7 +45,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         {
             Text.Italic("Виш не найден! Вероятно, он был удалён");
             Keyboard
-                .AddButton<CompactListQuery>($"К другим вишам {target.FirstName}", new QueryParameter(QueryParameterType.SetListPageTo, 0))
+                .AddButton<CompactListQuery>($"К другим вишам {target.FirstName}")
                 .NewRow()
                 .AddButton<MainMenuQuery>("В главное меню");
             return;

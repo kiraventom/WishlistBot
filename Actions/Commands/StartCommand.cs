@@ -123,9 +123,9 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         if (wishlistOwner is null)
             return false;
 
+        // Страницу не передаём: вишлист открывается на той, где зритель его оставил
         SetQueryParams(user,
             new QueryParameter(QueryParameterType.UserId, wishlistOwner.UserId),
-            new QueryParameter(QueryParameterType.SetListPageTo, 0),
             QueryParameter.ReturnToFriends);
 
         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new CompactListMessage(Logger));
