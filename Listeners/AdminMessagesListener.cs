@@ -29,7 +29,7 @@ public class AdminMessagesListener(ILogger logger, BotMessageSender sender) : IL
     private async Task HandleBroadcastAsync(UserContext userContext, Message message, UserModel user)
     {
         var text = message.Text ?? message.Caption;
-        var photo = message.Photo?.LastOrDefault();
+        var photo = message.Photo.Largest();
 
         if (string.IsNullOrEmpty(text))
         {

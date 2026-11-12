@@ -85,8 +85,8 @@ public class WishMessagesListener(ILogger logger, BotMessageSender sender) : ILi
 
     private async Task HandleSettingWishMediaAsync(Message message, UserContext userContext, UserModel user)
     {
-        // PhotoSize идут от меньшего к большему: берём самый крупный, из него и делаем блоб
-        var photo = message.Photo?.LastOrDefault();
+        // Размеры сравниваем по площади: порядок в апдейте Telegram не гарантирован
+        var photo = message.Photo.Largest();
         if (photo is null)
         {
             logger.Warning("Received message with no photo, ignoring");

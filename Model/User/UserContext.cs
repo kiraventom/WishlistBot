@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.Media;
 
 namespace WishlistBot.Model.User;
 
@@ -21,6 +22,29 @@ public class UserContext : DbContext
 
     public UserContext(DbContextOptions<UserContext> options) : base(options)
     {
+    }
+
+    /// <summary>
+    /// Удаление виша или выброс черновика освобождает ключ картинки. Собираем такие ключи
+    /// здесь и после коммита апдейта проверяем, не ссылается ли на них кто-то ещё:
+    /// внутри транзакции удалённые строки ещё видны, и проверка соврала бы.
+    /// </summary>
+    public override int SaveChanges()
+    {
+        // Черновик, отвязанный от пользователя (CurrentWish = null), становится Deleted
+        // только после DetectChanges — без него освобождённые ключи потеряются
+        ChangeTracker.DetectChanges();
+
+        var releasedMediaKeys = ChangeTracker.Entries<WishModel>()
+            .Where(entry => entry.State == EntityState.Deleted)
+            .Select(entry => entry.Entity.MediaKey)
+            .Concat(ChangeTracker.Entries<WishDraftModel>()
+                .Where(entry => entry.State == EntityState.Deleted)
+                .Select(entry => entry.Entity.MediaKey));
+
+        MediaStorage.ReleaseLater(releasedMediaKeys);
+
+        return base.SaveChanges();
     }
 
     public static UserContext Create()

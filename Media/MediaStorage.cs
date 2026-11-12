@@ -24,6 +24,16 @@ public class MediaStorage
     private ITelegramBotClient _client;
     private long _storageChannelId;
 
+    /// <summary>
+    /// Ключи, которые апдейт освободил (удалили виш или выбросили черновик). Проверяются
+    /// после коммита: до него удалённые строки ещё видны в базе, и проверка «никто больше
+    /// не ссылается» соврала бы.
+    /// </summary>
+    private static readonly List<string> _releasedKeys = [];
+
+    /// <summary>Только что загруженные картинки: их надо скачать и сжать сразу после коммита.</summary>
+    private static readonly List<string> _uploadedKeys = [];
+
     public static MediaStorage Instance { get; } = new();
 
     public void Init(ILogger logger, ITelegramBotClient client, long storageChannelId)
@@ -39,7 +49,8 @@ public class MediaStorage
 
     /// <summary>
     /// Регистрирует присланное пользователем фото и возвращает ключ, который можно положить
-    /// в виш/черновик/рассылку. Сам файл скачает и сожмёт <see cref="MediaImportService"/>.
+    /// в виш/черновик/рассылку. Сам файл скачивается и сжимается сразу после коммита
+    /// апдейта — см. <see cref="FlushAsync"/>.
     /// </summary>
     public Task<string> RegisterAsync(PhotoSize photo)
     {
@@ -66,7 +77,114 @@ public class MediaStorage
             storageContext.SaveChanges();
         }
 
+        if (mediaItem?.Data is null)
+            MarkForImport(fileId);
+
         return Task.FromResult(fileId);
+    }
+
+    /// <summary>Просит сохранить блоб сразу после коммита апдейта.</summary>
+    public static void MarkForImport(string key)
+    {
+        if (!string.IsNullOrEmpty(key) && !_uploadedKeys.Contains(key))
+            _uploadedKeys.Add(key);
+    }
+
+    /// <summary>Запоминает ключ, который апдейт мог освободить (см. <see cref="FlushAsync"/>).</summary>
+    public static void ReleaseLater(IEnumerable<string> keys)
+    {
+        foreach (var key in keys)
+            if (!string.IsNullOrEmpty(key) && !_releasedKeys.Contains(key))
+                _releasedKeys.Add(key);
+    }
+
+    /// <summary>
+    /// Доделывает то, что нельзя делать внутри транзакции апдейта: скачивает и сжимает
+    /// только что загруженные картинки и убирает блобы, на которые больше никто не ссылается.
+    /// </summary>
+    public async Task FlushAsync()
+    {
+        foreach (var key in TakeQueued(_uploadedKeys))
+        {
+            var imported = await ImportByKeyAsync(key);
+
+            if (!imported)
+                _logger.Warning("Uploaded media '{key}' is stored without a blob yet, it stays a file id only", key);
+        }
+
+        foreach (var key in TakeQueued(_releasedKeys))
+            await DeleteIfUnused(key);
+    }
+
+    private static List<string> TakeQueued(List<string> queue)
+    {
+        lock (queue)
+        {
+            var queued = queue.Distinct().ToList();
+            queue.Clear();
+            return queued;
+        }
+    }
+
+    /// <summary>Скачивает и сжимает одну конкретную картинку.</summary>
+    private async Task<bool> ImportByKeyAsync(string key)
+    {
+        MediaItemModel mediaItem;
+
+        using (var storageContext = MediaStorageContext.Create())
+        {
+            mediaItem = storageContext.StoredMedia.FirstOrDefault(m => m.Key == key);
+
+            if (mediaItem is null || mediaItem.Data is not null)
+                return true;
+        }
+
+        if (await ImportAsync(mediaItem))
+            return true;
+
+        CountImportFailure(mediaItem.MediaItemId);
+        return false;
+    }
+
+    /// <summary>
+    /// Удаляет блоб, если на ключ больше никто не ссылается: ни виши, ни черновики,
+    /// ни рассылки. Вызывается после коммита апдейта, который мог удалить последнего хозяина.
+    /// </summary>
+    public Task DeleteIfUnused(string key)
+    {
+        if (string.IsNullOrEmpty(key))
+            return Task.CompletedTask;
+
+        using (var userContext = UserContext.Create())
+        {
+            var isUsed = userContext.Wishes.Any(w => w.MediaKey == key)
+                || userContext.WishDrafts.Any(d => d.MediaKey == key)
+                || userContext.Broadcasts.Any(b => b.MediaKey == key);
+
+            if (isUsed)
+                return Task.CompletedTask;
+        }
+
+        using var storageContext = MediaStorageContext.Create();
+        var mediaItem = storageContext.StoredMedia.FirstOrDefault(m => m.Key == key);
+
+        if (mediaItem is null)
+            return Task.CompletedTask;
+
+        storageContext.StoredMedia.Remove(mediaItem);
+        storageContext.SaveChanges();
+
+        _logger.Information("Dropped media '{key}': nothing references it anymore", key);
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Есть ли блоб для ключа (нужно, чтобы решить, можно ли перезалить картинку).</summary>
+    public bool HasData(string key)
+    {
+        using var storageContext = MediaStorageContext.Create();
+
+        return storageContext.StoredMedia.Any(m => m.Key == key && m.Data != null);
     }
 
     /// <summary>

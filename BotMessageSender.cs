@@ -150,15 +150,14 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
             : InputFile.FromStream(new MemoryStream(photo.Data), "photo.jpg");
 
     /// <summary>
-    /// Telegram отверг file_id: файл удалён с серверов или сменился токен бота.
-    /// Это не ошибка экрана — заливаем блоб заново и запоминаем новый file_id.
+    /// Можно ли перезалить картинку: отправляли по file_id, Telegram ответил 400 и у нас
+    /// есть сохранённый блоб. Причину отказа не разбираем по тексту — если блоб есть,
+    /// дешевле залить его и получить новый file_id, чем гадать.
     /// </summary>
-    private static bool IsStaleFileId(ApiRequestException exception, PreparedPhoto photo) =>
+    private static bool CanReupload(ApiRequestException exception, PreparedPhoto photo) =>
         photo.FileId is not null
         && exception.ErrorCode == 400
-        && (exception.Message.Contains("file identifier", StringComparison.OrdinalIgnoreCase)
-            || exception.Message.Contains("file is not found", StringComparison.OrdinalIgnoreCase)
-            || exception.Message.Contains("FILE_REFERENCE", StringComparison.OrdinalIgnoreCase));
+        && MediaStorage.Instance.HasData(photo.Key);
 
     private async Task<Message> SendPhotoAsync(long chatId, PreparedPhoto photo, string text, InlineKeyboardMarkup keyboardMarkup)
     {
@@ -166,14 +165,18 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
         {
             return await client.SendPhoto(chatId: chatId, photo: ToInputFile(photo), caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
         }
-        catch (ApiRequestException e) when (IsStaleFileId(e, photo))
+        catch (ApiRequestException e) when (CanReupload(e, photo))
         {
-            logger.Warning("Telegram rejected cached file id for media '{key}', re-uploading the blob", photo.Key);
+            logger.Warning("Telegram rejected cached file id for media '{key}' ({error}), re-uploading the stored picture",
+                photo.Key, e.Message);
 
             var reuploaded = PreparedPhoto.FromData(photo.Key, MediaStorage.Instance.GetData(photo.Key));
             var message = await client.SendPhoto(chatId: chatId, photo: ToInputFile(reuploaded), caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
 
-            await MediaStorage.Instance.RememberFileIdAsync(photo.Key, message.Photo?.LastOrDefault()?.FileId);
+            var newFileId = message.Photo.Largest()?.FileId;
+            await MediaStorage.Instance.RememberFileIdAsync(photo.Key, newFileId);
+
+            logger.Warning("Media '{key}' is re-uploaded and cached a new file id '{fileId}'", photo.Key, newFileId);
             return message;
         }
     }
@@ -186,14 +189,18 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
         {
             edited = await client.EditMessageMedia(chatId: chatId, messageId: messageId, media: new InputMediaPhoto(ToInputFile(photo)), replyMarkup: keyboardMarkup);
         }
-        catch (ApiRequestException e) when (IsStaleFileId(e, photo))
+        catch (ApiRequestException e) when (CanReupload(e, photo))
         {
-            logger.Warning("Telegram rejected cached file id for media '{key}', re-uploading the blob", photo.Key);
+            logger.Warning("Telegram rejected cached file id for media '{key}' ({error}), re-uploading the stored picture",
+                photo.Key, e.Message);
 
             var reuploaded = PreparedPhoto.FromData(photo.Key, MediaStorage.Instance.GetData(photo.Key));
             edited = await client.EditMessageMedia(chatId: chatId, messageId: messageId, media: new InputMediaPhoto(ToInputFile(reuploaded)), replyMarkup: keyboardMarkup);
 
-            await MediaStorage.Instance.RememberFileIdAsync(photo.Key, edited?.Photo?.LastOrDefault()?.FileId);
+            var newFileId = edited?.Photo.Largest()?.FileId;
+            await MediaStorage.Instance.RememberFileIdAsync(photo.Key, newFileId);
+
+            logger.Warning("Media '{key}' is re-uploaded and cached a new file id '{fileId}'", photo.Key, newFileId);
         }
 
         return await client.EditMessageCaption(chatId: chatId, messageId: messageId, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);

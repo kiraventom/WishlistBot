@@ -5,9 +5,10 @@ using WishlistBot.Model;
 namespace WishlistBot.Media;
 
 /// <summary>
-/// Фоновая догрузка картинок в базу: скачивает из Telegram всё, что ещё не импортировано
-/// (старые виши и только что присланные фото), сжимает и убирает сообщения из старого
-/// канала-хранилища. Когда импортировать нечего — засыпает и изредка проверяет снова.
+/// Разовая догрузка старых картинок: скачивает из Telegram всё, что лежит в канале-хранилище
+/// и ещё не стало блобом, сжимает и убирает сообщения канала. Когда импортировать нечего —
+/// пишет варнинг и больше не просыпается: новые фото сжимаются сразу после апдейта
+/// (<see cref="MediaStorage.FlushAsync"/>), фон им не нужен.
 /// </summary>
 public class MediaImportService
 {
@@ -17,7 +18,7 @@ public class MediaImportService
     public const int MaxImportAttempts = 5;
 
     private static readonly TimeSpan BatchDelay = TimeSpan.FromSeconds(3);
-    private static readonly TimeSpan IdleDelay = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromMinutes(5);
 
     private bool _started;
 
@@ -34,27 +35,38 @@ public class MediaImportService
 
     private async Task RunLoop(ILogger logger)
     {
-        var seeded = false;
-
-        while (true)
+        try
         {
-            try
+            await MediaStorage.Instance.SeedFromUserDatabaseAsync();
+
+            while (await HasPendingAsync())
             {
-                if (!seeded)
+                var imported = await ImportBatchAsync(BatchSize);
+
+                if (imported > 0)
                 {
-                    await MediaStorage.Instance.SeedFromUserDatabaseAsync();
-                    seeded = true;
+                    await Task.Delay(BatchDelay);
+                    continue;
                 }
 
-                var imported = await ImportBatchAsync(BatchSize);
-                await Task.Delay(imported > 0 ? BatchDelay : IdleDelay);
+                // Есть строки, но скачать не вышло — не долбим Telegram в цикле
+                await Task.Delay(RetryDelay);
             }
-            catch (Exception e)
-            {
-                logger.Error("Media import failed: {error}", e.ToString());
-                await Task.Delay(IdleDelay);
-            }
+
+            logger.Warning("No legacy media is left: MediaImportService can be disabled");
         }
+        catch (Exception e)
+        {
+            logger.Error("Media import failed: {error}", e.ToString());
+        }
+    }
+
+    /// <summary>Остались ли картинки, которые ещё не стали блобом.</summary>
+    public Task<bool> HasPendingAsync()
+    {
+        using var storageContext = MediaStorageContext.Create();
+
+        return Task.FromResult(storageContext.StoredMedia.Any(m => m.Data == null && m.TelegramFileId != null && m.ImportAttempts < MaxImportAttempts));
     }
 
     /// <summary>Один проход импорта. Возвращает число успешно импортированных картинок.</summary>
