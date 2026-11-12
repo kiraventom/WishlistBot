@@ -20,7 +20,6 @@ public abstract class BotMessage(ILogger logger)
 
     public MessageText Text { get; } = new();
     public BotKeyboard Keyboard { get; } = new();
-    public string PhotoMediaKey { get; protected set; }
 
     /// <summary>
     /// Короткий тост, который показывается вместо пустого ответа на нажатие кнопки

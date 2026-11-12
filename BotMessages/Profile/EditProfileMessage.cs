@@ -59,7 +59,7 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 
         
         // Invite link text
-        Text.LineBreak().LineBreak().Verbatim($"{downArrow} Ссылка на ваш вишлист {downArrow}");
+        Text.BlockBreak().Verbatim($"{downArrow} Ссылка на ваш вишлист {downArrow}");
 
         return Task.CompletedTask;
     }

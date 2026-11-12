@@ -33,7 +33,7 @@ public class SetProfileNotesMessage(ILogger logger) : BotMessage(logger)
                 Keyboard.AddCopyTextButton("Скопировать заметки", user.Profile.Notes);
             }
 
-            Text.LineBreak().LineBreak().Verbatim("Введите новое значение:");
+            Text.BlockBreak().Verbatim("Введите новое значение:");
         }
 
         Keyboard

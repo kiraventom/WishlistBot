@@ -21,11 +21,12 @@ public class BroadcastNotificationMessage : BotMessage, INotificationMessage
         Keyboard.AddButton<MainMenuQuery>("В главное меню", QueryParameter.ForceNewMessage);
 
         var broadcast = userContext.Broadcasts.AsNoTracking().First(b => b.BroadcastId == _broadcastId);
+
+        Text.Media(broadcast.MediaKey);
+
         Text.Bold("Рассылка от разработчика:")
             .LineBreak()
             .Italic(broadcast.Text);
-
-        PhotoMediaKey = broadcast.MediaKey;
 
         return Task.CompletedTask;
     }

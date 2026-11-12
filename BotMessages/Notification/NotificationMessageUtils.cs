@@ -11,7 +11,6 @@ public static class NotificationMessageUtils
     /// Последняя строка уведомления: ссылка на экран настроек уведомлений.
     /// </summary>
     public static MessageText AddNotificationsSettingsLink(this MessageText text) =>
-        text.LineBreak()
-            .LineBreak()
+        text.BlockBreak()
             .InlineUrl(NotificationsSettingsText, DeepLink.BuildSettings());
 }

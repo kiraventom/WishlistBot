@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using WishlistBot.Model;
@@ -8,18 +9,44 @@ public static partial class MessageTextUtils
 {
     private static Regex GetDomainRegex { get; } = DomainRegex();
 
+    /// <summary>
+    /// Символы, которые Rich Markdown понимает как escape (проверено на живом Telegram:
+    /// <c>\!</c>, <c>\#</c>, <c>\$</c>, <c>\(</c>, <c>\)</c>, <c>\*</c>, <c>\+</c>,
+    /// <c>\-</c>, <c>\.</c>, <c>\=</c>, <c>\[</c>, <c>\\</c>, <c>\]</c>, <c>\^</c>,
+    /// <c>\_</c>, <c>\`</c>, <c>\{</c>, <c>\|</c>, <c>\}</c>, <c>\~</c>, <c>\&gt;</c>).
+    /// Остальная пунктуация (<c>: ; , % ? @ / " '</c>) escape не поддаётся — перед ней
+    /// обратный слэш останется в тексте, поэтому её не трогаем.
+    /// </summary>
+    private const string EscapableCharacters = "!#$()*+-.=[\\]^_`{|}~>";
+
     public static string GetDomainFromLink(string link)
     {
         return GetDomainRegex.Replace(link, string.Empty);
     }
 
+    /// <summary>
+    /// Экранирует пользовательский текст под Rich Markdown. В отличие от прежнего
+    /// MarkdownV2-варианта, здесь экранируется только то, что Markdown вообще понимает:
+    /// иначе текст раздувается втрое и в нём появляются лишние обратные слэши.
+    /// </summary>
     public static StringBuilder EscapeString(string str, StringBuilder stringBuilder = null)
     {
         var sb = stringBuilder ?? new StringBuilder();
+
         foreach (var ch in str)
         {
-            var charCode = (int)ch;
-            if (charCode is >= 1 and <= 126)
+            switch (ch)
+            {
+                // Escape для них не работает — только HTML-сущности
+                case '<':
+                    sb.Append("&lt;");
+                    continue;
+                case '&':
+                    sb.Append("&amp;");
+                    continue;
+            }
+
+            if (EscapableCharacters.Contains(ch))
                 sb.Append('\\');
 
             sb.Append(ch);
@@ -27,6 +54,28 @@ public static partial class MessageTextUtils
 
         return sb;
     }
+
+    public static string EscapeString(string str) => EscapeString(str, null).ToString();
+
+    /// <summary>
+    /// Ссылка внутри <c>[...](...)</c>: экранировать надо только то, что может закрыть
+    /// саму ссылку.
+    /// </summary>
+    public static string EscapeLink(string link) =>
+        link.Replace("\\", "\\\\").Replace(")", "\\)").Replace(" ", "%20");
+
+    /// <summary>
+    /// Идентификатор картинки внутри rich-сообщения: <c>tg://photo?id=...</c> принимает
+    /// только <c>A-Z a-z 0-9 _ -</c> до 64 символов, а ключ хранилища — telegram file_id,
+    /// который в эти рамки не влезает. Поэтому id — короткий хэш ключа.
+    /// </summary>
+    public static string GetMediaId(string key)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(key));
+        return "m" + Convert.ToHexString(hash, 0, 15).ToLowerInvariant();
+    }
+
+    public static string GetMediaLink(string key) => $"tg://photo?id={GetMediaId(key)}";
 
     public static string PriceToString(Price priceRange)
     {

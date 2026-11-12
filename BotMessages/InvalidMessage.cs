@@ -9,7 +9,7 @@ public class InvalidMessage(ILogger logger) : BotMessage(logger)
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         Text.Bold("Что-то пошло не так :(")
-           .LineBreak().LineBreak()
+           .BlockBreak()
            .Italic("Попробуйте отправить команду /start и выполнить действие ещё раз.")
            .LineBreak().Italic("Если проблема повторится, сообщите об этом разработчику");
 

@@ -89,7 +89,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
                 {
                     if (claimer.UserId == userId)
                     {
-                        Text.ItalicBold("Этот виш забронирован вами").LineBreak().LineBreak();
+                        Text.ItalicBold("Этот виш забронирован вами").BlockBreak();
 
                         if (parameters.Peek(QueryParameterType.ReturnToMyClaims))
                         {
@@ -105,7 +105,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
                     }
                     else
                     {
-                        Text.ItalicBold("\u203c\ufe0f Этот виш забронирован ").InlineMention(claimer).ItalicBold("! \u203c\ufe0f").LineBreak().LineBreak();
+                        Text.ItalicBold("\u203c\ufe0f Этот виш забронирован ").InlineMention(claimer).ItalicBold("! \u203c\ufe0f").BlockBreak();
                     }
                 }
                 else
@@ -145,33 +145,30 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         var links = wish.Links;
         var priceRange = wish.PriceRange;
 
+        // Картинка — медиа-блоком в теле сообщения: раньше экран с фото уходил отдельным
+        // photo-сообщением, и весь текст был его подписью (лимит 1024 символа)
+        Text.Media(wish.MediaKey);
+
         Text.Bold("Название: ").Monospace(name);
 
         if (description is not null)
-            Text.LineBreak().Bold("Описание: ").LineBreak().Quote(description);
+            Text.LineBreak().Bold("Описание: ").BlockBreak().Quote(description);
 
         if (links.Any())
         {
-            Text.LineBreak().Bold("Ссылки: ");
-            for (var i = 0; i < links.Count; ++i)
-            {
-                var link = links[i].Url;
-                Text.InlineUrl(link);
-                if (i < links.Count - 1)
-                    Text.Verbatim(", ");
-            }
+            Text.BlockBreak().Bold("Ссылки:");
+
+            Text.Bullets(links.Count, (line, index) => line.InlineUrl(links[index].Url));
         }
 
         if (priceRange != Price.NotSet)
         {
             var priceRangeString = MessageTextUtils.PriceToString(priceRange);
-            Text.LineBreak().Bold("Цена: ").Monospace(priceRangeString);
+            Text.BlockBreak().Bold("Цена: ").Monospace(priceRangeString);
         }
 
         if (wish.IsPermanent)
             Text.LineBreak().Verbatim($"\u2b50 Постоянный виш: {target.FirstName} всегда ему обрадуется!");
-
-        PhotoMediaKey = wish.MediaKey;
 
         string shareText;
         

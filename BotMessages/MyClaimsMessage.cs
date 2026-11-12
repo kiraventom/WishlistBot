@@ -2,6 +2,7 @@ using Serilog;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 using WishlistBot.Queries;
+using WishlistBot.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
@@ -13,8 +14,6 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        Text.Bold("Здесь отображаются забронированные вами виши.");
-
         var users = userContext.Users
             .Include(u => u.ListPositions).ThenInclude(u => u.ClaimPage)
             .Include(u => u.ClaimedWishes).ThenInclude(cw => cw.Owner);
@@ -31,22 +30,32 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 
         var claimedWishes = sender.GetSortedClaimedWishes();
 
-        var totalCount = claimedWishes.Count;
+        Text.Italic("Здесь отображаются забронированные вами виши.");
 
-        if (totalCount != 0)
-            Text.LineBreak().LineBreak();
+        var page = TextListMessageUtils.AddListControls<MyClaimsQuery, MainMenuQuery>(
+            Keyboard, parameters, claimedWishes.Count, sender.ListPositions.ClaimPage, buttonCaption: "Страница");
 
-        TextListMessageUtils.AddListControls<MyClaimsQuery, MainMenuQuery>(Text, Keyboard, parameters, totalCount, sender.ListPositions.ClaimPage, itemIndex =>
+        if (page.Count == 0)
+            return Task.CompletedTask;
+
+        Text.Table(table =>
         {
-            var claimedWish = claimedWishes[itemIndex];
+            table
+                .Header("#", "Друг", "Виш")
+                .Align(TableAlign.Right, TableAlign.Left, TableAlign.Left);
 
-            Text.Bold($"{itemIndex + 1}. ");
-            Text.InlineMention(claimedWish.Owner);
-            Text.Verbatim(": ");
-            Text.InlineUrl(claimedWish.Name, claimedWish.BuildLink(claimedWish.Owner.SubscribeId, returnToClaims: true));
-        }, buttonCaption: "Страница");
+            for (var i = 0; i < page.Count; ++i)
+            {
+                var claimedWish = claimedWishes[page.FirstIndex + i];
+                var number = page.FirstIndex + i + 1;
+
+                table.Row(
+                    cell => cell.Verbatim(number.ToString()),
+                    cell => cell.InlineMention(claimedWish.Owner),
+                    cell => cell.InlineUrl(claimedWish.Name, claimedWish.BuildLink(claimedWish.Owner.SubscribeId, returnToClaims: true)));
+            }
+        });
 
         return Task.CompletedTask;
     }
 }
-

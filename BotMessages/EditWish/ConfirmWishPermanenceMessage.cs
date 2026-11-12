@@ -28,11 +28,11 @@ public class ConfirmWishPermanenceMessage(ILogger logger) : BotMessage(logger)
         if (willBePermanent)
         {
             Text.Verbatim("Постоянный виш — это подарок, которому вы рады всегда!")
-               .LineBreak().LineBreak()
+               .BlockBreak()
                .Verbatim("К примеру, постоянным вишем может быть испанское полусладкое вино, хорошая книга, сертификат в Золотое Яблоко.")
                .LineBreak()
                .Verbatim("Постоянный виш нельзя забронировать, поэтому любой из ваших друзей сможет порадовать вас им!")
-               .LineBreak().LineBreak();
+               .BlockBreak();
         }
 
         Text.Verbatim("Сделать виш ")

@@ -59,23 +59,18 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
            .NewRow()
            .AddButton<MyFriendsQuery>("К друзьям");
 
-        // имя отбивается пустой строкой; пустую строку даёт LineBreak первой секции ниже
+        // Имя — заголовком экрана: в MarkdownV2 заголовков не было, имя было просто жирным
         if (isSelf)
-            Text.Bold("Это вы");
+            Text.Heading("Это вы");
         else
-            Text.InlineMention(target);
-
-        Text.LineBreak();
+            Text.Heading(text => text.InlineMention(target));
 
         const string calendar = "\U0001f4c5 ";
         const string writingHand = "\u270d\ufe0f ";
 
         // Плашка показывается всегда: иначе у профиля без заметок и ДР получается
         // слишком узкое сообщение и кнопки не помещаются в один ряд
-        Text
-            .LineBreak()
-            .Verbatim(calendar)
-            .Bold("Дата рождения: ");
+        Text.Verbatim(calendar).Bold("Дата рождения: ");
 
         if (target.Profile.Birthday is not { } birthday)
         {
@@ -96,22 +91,14 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
 
         if (target.Profile.Notes != null)
         {
-            var notes = target.Profile.Notes;
-
-            Text
-                .LineBreak()
-                .Verbatim(writingHand)
-                .Bold("Заметки: ")
-                .LineBreak();
-
-            Text.Quote(notes);
+            Text.BlockBreak().Verbatim(writingHand).Bold("Заметки:").BlockBreak();
+            Text.ExpandableQuote(target.Profile.Notes);
         }
 
         // Если виши есть — их количество показано на кнопке «Открыть вишлист»
         if (target.Wishes.Count == 0)
         {
-            Text
-               .LineBreak()
+            Text.BlockBreak()
                .Verbatim(gift)
                .Bold("Вишей в вишлисте: ")
                .Monospace(target.Wishes.Count.ToString());

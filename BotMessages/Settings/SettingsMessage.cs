@@ -53,18 +53,14 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             ? $"{enabledBell} Напоминать заполнить вишлист перед праздником"
             : $"{disabledBell} Не напоминать заполнить вишлист перед праздником";
 
-        Text
-           .Bold("Настройки уведомлений")
-           .LineBreak().LineBreak()
-           .Verbatim(receiveFriendWishText)
-           .LineBreak()
-           .Verbatim(sendNotificationsText)
-           .LineBreak()
-           .Verbatim(birthdayNotificationsText)
-           .LineBreak()
-           .Verbatim(wishlistCleanupText)
-           .LineBreak()
-           .Verbatim(wishlistFillText);
+        Text.Heading("Настройки уведомлений");
+
+        Text.Bullets(
+            receiveFriendWishText,
+            sendNotificationsText,
+            birthdayNotificationsText,
+            wishlistCleanupText,
+            wishlistFillText);
 
         var settingsEnum = user.Settings.ToEnum();
 

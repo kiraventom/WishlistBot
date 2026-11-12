@@ -2,6 +2,7 @@ using Serilog;
 using WishlistBot.Queries.Admin;
 using WishlistBot.Queries.Admin.Broadcasts;
 using WishlistBot.QueryParameters;
+using WishlistBot.Text;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,44 +28,58 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
             var sentBroadcastsCount = broadcasts.Count(b => b.DateTimeSent != null);
             var draftsBroadcastsCount = broadcasts.Count - sentBroadcastsCount;
 
-            Text.Bold("Broadcasts:")
-               .LineBreak()
-               .Monospace(sentBroadcastsCount.ToString())
+            Text.Heading("Broadcasts");
+
+            Text.Monospace(sentBroadcastsCount.ToString())
                .Bold(" sent, ")
                .Monospace(draftsBroadcastsCount.ToString())
                .Bold(" drafts");
         }
         else
         {
-            Text.Bold("No broadcasts");
+            Text.Heading("No broadcasts");
         }
 
-        if (totalCount != 0)
-            Text.LineBreak().LineBreak();
+        var page = TextListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(
+            Keyboard, parameters, totalCount, sender.ListPositions.AdminBroadcastPage, buttonCaption: "Страница");
 
-        TextListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(Text, Keyboard, parameters, totalCount, sender.ListPositions.AdminBroadcastPage, itemIndex =>
+        if (page.Count != 0)
         {
-            const string pencilEmoji = "\u270f\ufe0f ";
-            const string envelopeEmoji = "\u2709\ufe0f ";
-            const string trashEmoji = "\U0001f5d1\ufe0f ";
+            Text.Table(table =>
+            {
+                table
+                    .Header("#", "Рассылка")
+                    .Align(TableAlign.Right, TableAlign.Left);
 
-            var broadcast = broadcasts[itemIndex];
-            var shortText = broadcast.GetShortText();
-            var name = broadcast.DateTimeSent != null
-             ? envelopeEmoji + shortText
-             : pencilEmoji + shortText;
+                for (var i = 0; i < page.Count; ++i)
+                {
+                    var broadcast = broadcasts[page.FirstIndex + i];
+                    var number = page.FirstIndex + i + 1;
 
-            if (broadcast.Deleted)
-                name = name.Insert(0, trashEmoji);
-
-            Text.Bold($"{itemIndex + 1}. ");
-            Text.InlineUrl(name, broadcast.BuildLink());
-        }, buttonCaption: "Страница");
+                    table.Row(
+                        cell => cell.Verbatim(number.ToString()),
+                        cell => cell.InlineUrl(BroadcastName(broadcast), broadcast.BuildLink()));
+                }
+            });
+        }
 
         Keyboard
            .NewRow()
            .AddButton<BroadcastQuery>("Add new broadcast");
 
         return Task.CompletedTask;
+    }
+
+    private static string BroadcastName(BroadcastModel broadcast)
+    {
+        const string pencilEmoji = "\u270f\ufe0f ";
+        const string envelopeEmoji = "\u2709\ufe0f ";
+        const string trashEmoji = "\U0001f5d1\ufe0f ";
+
+        var name = broadcast.DateTimeSent != null
+            ? envelopeEmoji + broadcast.GetShortText()
+            : pencilEmoji + broadcast.GetShortText();
+
+        return broadcast.Deleted ? trashEmoji + name : name;
     }
 }

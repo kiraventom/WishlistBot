@@ -108,35 +108,29 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
         else
             Text.Italic("Добавление виша");
 
-        Text
-           .LineBreak()
-           .LineBreak().Bold("Название: ").Monospace(name);
+        // Фото — медиа-блок в теле окна, а не отдельное сообщение с подписью
+        Text.Media(wishDraft.MediaKey);
+
+        Text.Bold("Название: ").Monospace(name);
 
         if (description is not null)
-            Text.LineBreak().Bold("Описание: ").LineBreak().Quote(description);
+            Text.BlockBreak().Bold("Описание:").BlockBreak().Quote(description);
 
         if (links.Any())
         {
-            Text.LineBreak().Bold("Ссылки: ");
-            for (var i = 0; i < links.Count; ++i)
-            {
-                var link = links[i].Url;
-                Text.InlineUrl(link);
-                if (i < links.Count - 1)
-                    Text.Verbatim(", ");
-            }
+            Text.BlockBreak().Bold("Ссылки:");
+
+            Text.Bullets(links.Count, (line, index) => line.InlineUrl(links[index].Url));
         }
 
         if (priceRange != Price.NotSet)
         {
             var priceRangeString = MessageTextUtils.PriceToString(priceRange);
-            Text.LineBreak().Bold("Цена: ").Monospace(priceRangeString);
+            Text.BlockBreak().Bold("Цена: ").Monospace(priceRangeString);
         }
 
         if (wishDraft.IsPermanent)
             Text.LineBreak().Verbatim("\u2b50 Постоянный виш");
-
-        PhotoMediaKey = wishDraft.MediaKey;
 
         return Task.CompletedTask;
     }

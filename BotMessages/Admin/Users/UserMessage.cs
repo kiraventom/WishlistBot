@@ -3,6 +3,7 @@ using Serilog;
 using WishlistBot.Model.User;
 using WishlistBot.Queries.Admin.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.Admin.Users;
 
@@ -23,42 +24,48 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
 
         var (sender, target) = GetSenderAndTarget(users, userId, parameters);
 
-        Text.Bold("UserId: ").Monospace(target.UserId.ToString()).LineBreak();
-        Text.Bold("TelegramId: ").Monospace(target.TelegramId.ToString())
-            .Verbatim(" ").InlineMention(target, "link")
-            .LineBreak();
-        Text.Bold("FirstName: ").Monospace(target.FirstName).LineBreak();
-        Text.Bold("SubscribeId: ").Monospace(target.SubscribeId).LineBreak();
-        
-        if (target.Tag is not null)
-            Text.Bold("Tag: ").Monospace(target.Tag).LineBreak();
+        Text.Heading($"Пользователь {target.UserId}");
 
-        Text.Bold("IsAdmin: ").Monospace(target.IsAdmin.ToString()).LineBreak();
-        Text.Bold("BotState: ").Monospace(target.BotState.ToString()).LineBreak();
-        Text.Bold("LastQueryId: ").Monospace(target.LastQueryId).LineBreak();
+        // Карточка — таблица «поле → значение»: в MarkdownV2 это был список строк
+        // с моноширинными значениями, в котором ничего не найти глазами
+        Text.Table(table =>
+        {
+            table
+                .Header("Поле", "Значение")
+                .Align(TableAlign.Left, TableAlign.Left);
 
-        if (target.LastBotMessageId is not null)
-            Text.Bold("LastBotMessageId: ").Monospace(target.LastBotMessageId.Value.ToString()).LineBreak();
+            table.Row("TelegramId", cell => cell.Monospace(target.TelegramId.ToString()).Verbatim(" ").InlineMention(target, "link"));
+            table.Row("FirstName", cell => cell.Monospace(target.FirstName));
+            table.Row("SubscribeId", cell => cell.Monospace(target.SubscribeId));
 
-        Text.Bold("QueryParams: ").Monospace(target.QueryParams).LineBreak();
-        Text.Bold("AllowedQueries: ").Monospace(target.AllowedQueries).LineBreak();
+            if (target.Tag is not null)
+                table.Row("Tag", cell => cell.Monospace(target.Tag));
 
-        // TODO Link to see wish
-        Text.Bold("CurrentWish: ").Monospace(target.CurrentWish?.Name ?? "null").LineBreak();
-        Text.Bold("Settings: ").LineBreak()
-            .Verbatim("\tSend: ").Monospace(target.Settings.SendNotifications.ToString()).LineBreak()
-            .Verbatim("\tReceive: ").Monospace(target.Settings.ReceiveFriendWishNotifications.ToString()).LineBreak();
+            table.Row("IsAdmin", cell => cell.Monospace(target.IsAdmin.ToString()));
+            table.Row("BotState", cell => cell.Monospace(target.BotState.ToString()));
+            table.Row("LastQueryId", cell => cell.Monospace(target.LastQueryId));
 
-        Text.Bold("Profile: ").LineBreak()
-            .Verbatim("\tBirthday: ").Monospace(target.Profile.Birthday?.ToShortDateString() ?? "null").LineBreak()
-            .Verbatim("\tNotes: ").Monospace(target.Profile.Notes ?? "null").LineBreak();
+            if (target.LastBotMessageId is not null)
+                table.Row("LastBotMessageId", cell => cell.Monospace(target.LastBotMessageId.Value.ToString()));
 
-        // TODO Link to see lists
-        Text.Bold("Wishes: ").Monospace(target.Wishes.Count.ToString())
-            .Verbatim(" (").Spoiler(target.Wishes.Count(w => w.HasVisibleClaim).ToString()).Verbatim(" claimed)")
-            .LineBreak();
-        Text.Bold("Friends: ").Monospace(target.Friends.Count.ToString()).LineBreak();
-        Text.Bold("ClaimedWishes: ").Monospace(target.ClaimedWishes.Count.ToString()).LineBreak();
+            table.Row("CurrentWish", cell => cell.Monospace(target.CurrentWish?.Name ?? "null"));
+            table.Row("Wishes", cell => cell
+                .Monospace(target.Wishes.Count.ToString())
+                .Verbatim(" (")
+                .Spoiler(target.Wishes.Count(w => w.HasVisibleClaim).ToString())
+                .Verbatim(" claimed)"));
+            table.Row("Friends", cell => cell.Monospace(target.Friends.Count.ToString()));
+            table.Row("ClaimedWishes", cell => cell.Monospace(target.ClaimedWishes.Count.ToString()));
+            table.Row("Send", cell => cell.Monospace(target.Settings.SendNotifications.ToString()));
+            table.Row("Receive", cell => cell.Monospace(target.Settings.ReceiveFriendWishNotifications.ToString()));
+            table.Row("Birthday", cell => cell.Monospace(target.Profile.Birthday?.ToShortDateString() ?? "null"));
+            table.Row("Notes", cell => cell.Monospace(target.Profile.Notes ?? "null"));
+        });
+
+        // Длинные технические поля — под спойлер: они нужны редко, но место занимают всегда
+        Text.Details("QueryParams и AllowedQueries", body => body
+            .Bold("QueryParams: ").Monospace(target.QueryParams).LineBreak()
+            .Bold("AllowedQueries: ").Monospace(target.AllowedQueries));
 
         var usersList = users.OrderBy(u => u.UserId).ToList();
         var totalCount = usersList.Count;
@@ -77,4 +84,3 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
         return Task.CompletedTask;
     }
 }
-

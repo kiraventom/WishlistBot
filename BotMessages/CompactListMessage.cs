@@ -75,15 +75,9 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             : $"{sortedCount} из {totalCount} {PluralUtils.WishesGenitive}";
 
         if (isReadOnly)
-        {
-            Text.Bold("Виши ").InlineMention(targetUser);
-        }
+            Text.Heading(text => text.Verbatim("Виши ").InlineMention(targetUser).Verbatim($" ({countText})"));
         else
-        {
-            Text.Bold($"Ваши виши");
-        }
-
-        Text.Bold($" ({countText})");
+            Text.Heading($"Ваши виши ({countText})");
 
         var sortPropertyText = wishViewSettings.SortProperty switch
         {
@@ -116,24 +110,19 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         var showSorting = sortedCount > 1;
 
         if (showSorting)
-            Text.LineBreak().Italic("Сортировка: ").Verbatim(sortPropertyText);
+            Text.Italic($"Сортировка: {sortPropertyText}").LineBreak();
 
         if (isReadOnly)
         {
             const string unclaimedWishesEmoji = "\U0001F513";
             const string allWishesEmoji = "\U0001F539";
 
-            var toggleUnclaimedButton = wishViewSettings.OnlyUnclaimed 
+            var toggleUnclaimedButton = wishViewSettings.OnlyUnclaimed
                 ? $"{unclaimedWishesEmoji} Без брони"
                 : $"{allWishesEmoji} Все виши";
 
             if (wishViewSettings.OnlyUnclaimed)
-            {
-                Text.LineBreak()
-                    .Italic("Фильтр: ").Verbatim("Только виши без брони");
-            }
-
-            Text.LineBreak().LineBreak();
+                Text.Italic("Фильтр: Только виши без брони").LineBreak();
 
             Keyboard.NewRow();
 
@@ -148,27 +137,14 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             }
 
             // Пришли из списка друзей — туда и возвращаемся, иначе — в профиль друга
-            if (parameters.Peek(QueryParameterType.ReturnToFriends))
-            {
-                TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
-                {
-                    var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-                }, buttonCaption: "Страница");
-            }
-            else
-            {
-                TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
-                {
-                    var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-                }, buttonCaption: "Страница");
-            }
+            var page = parameters.Peek(QueryParameterType.ReturnToFriends)
+                ? TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(Keyboard, parameters, sortedCount, wishViewSettings, buttonCaption: "Страница")
+                : TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(Keyboard, parameters, sortedCount, wishViewSettings, buttonCaption: "Страница");
+
+            AddWishTable(userContext, sortedWishes, targetUser.SubscribeId, isReadOnly, page);
         }
         else
         {
-            Text.LineBreak().LineBreak();
-
             if (showSorting)
             {
                 Keyboard
@@ -182,49 +158,86 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
             sender.CurrentWish = null;
 
-            TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
-            {
-                var wish = sortedWishes[itemIndex];
-                AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-            }, buttonCaption: "Страница");
+            var page = TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Keyboard, parameters, sortedCount, wishViewSettings, buttonCaption: "Страница");
+
+            AddWishTable(userContext, sortedWishes, targetUser.SubscribeId, isReadOnly, page);
         }
 
         return Task.CompletedTask;
     }
 
-    private void AddWishText(UserContext userContext, WishModel wish, string subscribeId, int itemIndex, bool isReadonly)
+    /// <summary>
+    /// Список вишей таблицей: номер, название ссылкой, цена и метки (описание, фото, ссылки).
+    /// Кнопки листания добавляются до таблицы — порядок кнопок от этого не зависит.
+    /// </summary>
+    private void AddWishTable(
+        UserContext userContext,
+        IReadOnlyList<WishModel> sortedWishes,
+        string subscribeId,
+        bool isReadOnly,
+        ListPage page)
     {
-        Text.Bold($"{itemIndex + 1}. ");
-
-        // If user isn't looking at its own wishes
-        if (wish.HasVisibleClaim && isReadonly)
+        Text.Table(table =>
         {
-            userContext.Entry(wish).Reference(w => w.Claimer).Load();
-            Text.Bold("[").InlineMention(wish.Claimer, "БРОНЬ").Bold("] ");
-        }
+            table
+                .Header("#", "Виш", "Цена", "Ссылка", "\U0001f512")
+                .Align(TableAlign.Right, TableAlign.Left, TableAlign.Right, TableAlign.Center, TableAlign.Center);
 
+            for (var i = 0; i < page.Count; ++i)
+            {
+                var wish = sortedWishes[page.FirstIndex + i];
+                var number = page.FirstIndex + i + 1;
+                var isBooked = wish.HasVisibleClaim && isReadOnly;
+
+                table.Row(
+                    cell => cell.Verbatim(number.ToString()),
+                    cell => AddWishName(cell, wish, subscribeId, isBooked),
+                    cell => cell.Verbatim(MessageTextUtils.PriceToShortString(wish.PriceRange)),
+                    cell => AddWishLink(cell, wish),
+                    cell => AddWishClaim(cell, userContext, wish, isBooked));
+            }
+        });
+    }
+
+    /// <summary>
+    /// Название ссылкой. Метки описания и фото идут сразу за названием, в той же ячейке;
+    /// забронированный виш зачёркнут — так видно, что его уже подарят.
+    /// </summary>
+    private static void AddWishName(MessageText text, WishModel wish, string subscribeId, bool isBooked)
+    {
         // Постоянный виш помечаем звёздочкой перед названием
         if (wish.IsPermanent)
-            Text.Verbatim("\u2b50 ");
+            text.Verbatim("\u2b50 ");
 
-        // TODO strikethrough if claimed
-        Text.InlineUrl(wish.Name, wish.BuildLink(subscribeId));
-
-        if (wish.PriceRange != Price.NotSet)
+        text.InlineUrl(name =>
         {
-            Text.Verbatim(" [").Bold(MessageTextUtils.PriceToShortString(wish.PriceRange)).Verbatim("] ");
-        }
+            if (isBooked)
+                name.Strikethrough(wish.Name);
+            else
+                name.Verbatim(wish.Name);
+        }, wish.BuildLink(subscribeId));
 
         if (!string.IsNullOrEmpty(wish.Description))
-            Text.Verbatim(" \U0001f4ac"); // speech bubble
+            text.Verbatim(" \U0001f4ac"); // speech bubble
 
         if (wish.MediaKey is not null)
-            Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
+            text.Verbatim(" \U0001f5bc\ufe0f"); // picture
+    }
 
+    /// <summary>Колонка «Ссылка»: глобус ведёт на первую ссылку виша, иначе ячейка пустая.</summary>
+    private static void AddWishLink(MessageText text, WishModel wish)
+    {
         if (wish.Links.Any())
-        {
-            var firstLink = wish.Links.First().Url;
-            Text.InlineUrl(" \U0001f310", firstLink); // globe
-        }
+            text.InlineUrl("\U0001f310", wish.Links.First().Url);
+    }
+
+    /// <summary>Колонка брони: замочек ссылается на того, кто забронировал.</summary>
+    private static void AddWishClaim(MessageText text, UserContext userContext, WishModel wish, bool isBooked)
+    {
+        if (!isBooked)
+            return;
+
+        userContext.Entry(wish).Reference(w => w.Claimer).Load();
+        text.InlineMention("\U0001f512", wish.Claimer.TelegramId);
     }
 }

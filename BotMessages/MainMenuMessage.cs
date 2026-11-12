@@ -46,7 +46,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 
         if (user.UserId == 100)
         {
-            Text.LineBreak().LineBreak()
+            Text.BlockBreak()
                 .Verbatim("🏆").Bold("ПОЛЬЗОВАТЕЛЬ #100").Verbatim("🏆");
         }
 
@@ -56,7 +56,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
         // Подсказка про день рождения — выше статусов уведомлений и отбита строкой
         if (user.Profile.Birthday is null)
         {
-            Text.LineBreak().LineBreak()
+            Text.BlockBreak()
                 .InlineUrl("\U0001f4c5 Можно указать дату дня рождения", DeepLink.BuildProfile());
         }
 
@@ -65,24 +65,35 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
             || !user.Settings.BirthdayNotifications
             || !user.Settings.WishlistCleanupNotifications
             || !user.Settings.WishlistFillNotifications)
-            Text.LineBreak();
+            Text.BlockBreak();
+
+        // Статусы идут строками одного абзаца: первая без переноса, остальные — с ним
+        var mutedStatuses = new List<string>();
 
         if (!user.Settings.ReceiveFriendWishNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Вы не получаете уведомления от друзей ").Verbatim(mutedBell);
+            mutedStatuses.Add($"{dot}Вы не получаете уведомления от друзей ");
 
         if (!user.Settings.SendNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Друзья не получают уведомления от вас ").Verbatim(mutedBell);
+            mutedStatuses.Add($"{dot}Друзья не получают уведомления от вас ");
 
         if (!user.Settings.BirthdayNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Вы не получаете напоминания о днях рождения ").Verbatim(mutedBell);
+            mutedStatuses.Add($"{dot}Вы не получаете напоминания о днях рождения ");
 
         if (!user.Settings.WishlistCleanupNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Вы не получаете напоминание о чистке вишлиста ").Verbatim(mutedBell);
+            mutedStatuses.Add($"{dot}Вы не получаете напоминание о чистке вишлиста ");
 
         if (!user.Settings.WishlistFillNotifications)
-            Text.LineBreak().ItalicBold($"{dot}Вы не получаете напоминание заполнить вишлист ").Verbatim(mutedBell);
+            mutedStatuses.Add($"{dot}Вы не получаете напоминание заполнить вишлист ");
 
-        Text.LineBreak().LineBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
+        for (var i = 0; i < mutedStatuses.Count; ++i)
+        {
+            if (i > 0)
+                Text.LineBreak();
+
+            Text.ItalicBold(mutedStatuses[i]).Verbatim(mutedBell);
+        }
+
+        Text.BlockBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
 
         return Task.CompletedTask;
     }

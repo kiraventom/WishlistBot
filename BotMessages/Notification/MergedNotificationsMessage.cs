@@ -5,6 +5,7 @@ using WishlistBot.Model.User;
 using WishlistBot.Notification;
 using WishlistBot.Queries;
 using WishlistBot.QueryParameters;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.Notification;
 
@@ -39,15 +40,11 @@ public class MergedNotificationsMessage(ILogger logger, IReadOnlyList<PendingNot
                 _items.Add(resolved);
         }
 
-        Text.Bold("\U0001f514 Уведомления").LineBreak().LineBreak();
+        Text.Heading("\U0001f514 Уведомления");
 
-        for (var i = 0; i < _items.Count; ++i)
-        {
-            AppendItem(_items[i]);
-
-            if (i < _items.Count - 1)
-                Text.LineBreak();
-        }
+        // Список вместо строк подряд: в MarkdownV2 маркеров не было, приходилось
+        // разделять пункты пустой строкой
+        Text.Bullets(_items.Count, (line, index) => AppendItem(line, _items[index]));
 
         if (_items.Count == 0)
             return Task.CompletedTask;
@@ -102,26 +99,26 @@ public class MergedNotificationsMessage(ILogger logger, IReadOnlyList<PendingNot
         return new MergedItem(notification.Type, source, wish, oldWishName, (WishPropertyType)notification.GetExtraInt());
     }
 
-    private void AppendItem(MergedItem item)
+    private static void AppendItem(MessageText text, MergedItem item)
     {
         var friendLink = DeepLink.BuildFriend(item.Source.SubscribeId[..20]);
 
         switch (item.Type)
         {
             case NotificationMessageType.NewFriend:
-                Text.InlineUrl(item.Source.FirstName, friendLink)
+                text.InlineUrl(item.Source.FirstName, friendLink)
                     .Italic(" добавил вас в друзья!");
                 break;
 
             case NotificationMessageType.NewWish:
-                Text.InlineMention(item.Source)
+                text.InlineMention(item.Source)
                     .Italic(" добавил новый виш '")
                     .InlineUrl(item.Wish.Name, BuildWishLink(item))
                     .Italic("'!");
                 break;
 
             case NotificationMessageType.WishEdit:
-                Text.InlineMention(item.Source)
+                text.InlineMention(item.Source)
                     .Italic(" изменил ")
                     .Italic(DescribeChanges(item.Changes))
                     .Italic(" у виша '")
@@ -131,14 +128,14 @@ public class MergedNotificationsMessage(ILogger logger, IReadOnlyList<PendingNot
 
             case NotificationMessageType.WishDelete:
                 // Виша больше нет, вести некуда: имя друга остаётся упоминанием
-                Text.InlineMention(item.Source)
+                text.InlineMention(item.Source)
                     .Italic(" удалил виш '")
                     .ItalicBold(item.OldWishName)
                     .Italic("'!");
                 break;
 
             case NotificationMessageType.WishPermanent:
-                Text.InlineMention(item.Source)
+                text.InlineMention(item.Source)
                     .Italic(" сделал виш ")
                     .InlineUrl(item.Wish.Name, BuildWishLink(item))
                     .Italic(" постоянным!");

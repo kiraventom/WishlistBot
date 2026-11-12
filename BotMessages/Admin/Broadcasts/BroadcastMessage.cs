@@ -111,14 +111,13 @@ public class BroadcastMessage(ILogger logger) : UserBotMessage(logger)
                          new QueryParameter(QueryParameterType.SetBroadcastTo, broadcast.BroadcastId));
             }
 
+            Text.Media(broadcast.MediaKey);
+
             Text
-               .LineBreak()
-               .LineBreak()
+               .BlockBreak()
                .Bold("Text: ")
                .LineBreak()
                .Monospace(broadcast.Text);
-
-            PhotoMediaKey = broadcast.MediaKey;
 
             Keyboard
                .NewRow()

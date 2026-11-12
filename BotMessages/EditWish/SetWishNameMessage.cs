@@ -31,8 +31,7 @@ public class SetWishNameMessage(ILogger logger) : UserBotMessage(logger)
             Text
                .Bold("Текущее название виша: ")
                .Monospace(user.CurrentWish.Name)
-               .LineBreak()
-               .LineBreak().Verbatim("Укажите новое название виша:");
+               .BlockBreak().Verbatim("Укажите новое название виша:");
 
             if (user.CurrentWish.Name.Length < 256)
                 Keyboard.AddCopyTextButton("Скопировать название", user.CurrentWish.Name);

@@ -4,33 +4,34 @@ using WishlistBot.Text;
 namespace WishlistBot.BotMessages.Friends;
 
 /// <summary>
-/// Строка списка друзей: <c>1. Имя 05.03 (через 12 дней, 36 лет): 3 виша</c>.
-/// «Имя + дата» ведут в профиль друга, «N виша» — в его вишлист.
-/// Если вишей нет: <c>1. Имя (ДР не указан): вишлист пуст</c>.
+/// Строка списка друзей: номер, имя ссылкой на профиль, ближайший ДР с пояснением и число
+/// вишей. Раньше это была строка текста <c>1. Имя 05.03 (через 12 дней, 36 лет): 3 виша</c>,
+/// теперь — строка таблицы: дата ушла в свою колонку, в «Виши» осталось только число.
 /// </summary>
 public static class FriendBirthdayLine
 {
-    public static void Append(MessageText text, int number, FriendBirthday friend)
+    public static void AddColumns(TableBuilder table) =>
+        table
+            .Header("#", "Друг", "Ближайший ДР", "Виши")
+            .Align(TableAlign.Right, TableAlign.Left, TableAlign.Left, TableAlign.Right);
+
+    public static void AppendRow(TableBuilder table, int number, FriendBirthday friend)
     {
-        text.Bold($"{number}. ");
+        table.Row(
+            cell => cell.Verbatim(number.ToString()),
+            cell => cell.InlineUrl(friend.Friend.FirstName, friend.Friend.BuildFriendLink()),
+            cell => cell.Verbatim(Describe(friend)),
+            cell =>
+            {
+                // В колонке только число; ссылка на вишлист — на самом числе
+                if (friend.WishesCount == 0)
+                {
+                    cell.Verbatim("0");
+                    return;
+                }
 
-        // имя и дата — ссылка на профиль
-        var profileText = friend.NextBirthday is { } nextBirthday
-            ? $"{friend.Friend.FirstName} {nextBirthday.ToString("dd.MM")}"
-            : friend.Friend.FirstName;
-
-        text.InlineUrl(profileText, friend.Friend.BuildFriendLink());
-        text.Verbatim($" {DescribeWhen(friend)}: ");
-
-        if (friend.WishesCount == 0)
-        {
-            text.Verbatim("вишлист пуст");
-            return;
-        }
-
-        text.InlineUrl(
-            $"{friend.WishesCount} {PluralUtils.Wishes(friend.WishesCount)}",
-            friend.Friend.BuildWishlistLink());
+                cell.InlineUrl(friend.WishesCount.ToString(), friend.Friend.BuildWishlistLink());
+            });
     }
 
     /// <summary>Дата ближайшего ДР и пояснение в скобках.</summary>
