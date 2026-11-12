@@ -76,7 +76,7 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
                 || botMessage.ForceNewMessage
                 || forceNewMessage
                 // Между экраном и этим вводом приходило уведомление: экран остаётся выше него,
-                // поэтому отвечаем новым сообщением, чтобы в «All» ответ был внизу
+                // поэтому отвечаем новым сообщением, чтобы экран всегда был снизу
                 || userModel.NotifiedSinceLastMessage
                 || userModel.ReceivedBroadcasts.Any(b => b.MessageId == userModel.LastBotMessageId);
 
