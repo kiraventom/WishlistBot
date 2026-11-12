@@ -26,16 +26,18 @@ public class NewFriendNotificationMessage : BotMessage, INotificationMessage
     {
         var notificationSource = userContext.Users.First(u => u.UserId == _notificationSourceId);
 
+        // Порядок друзей должен совпадать с экраном «Мои друзья» (ближайший ДР, число вишей,
+        // имя) — иначе страница для кнопки считается по чужому порядку и ведёт не туда.
         var notificationTarget = userContext.Users
-           .Include(u => u.Friends).ThenInclude(f => f.Friend)
+           .Include(u => u.Friends).ThenInclude(f => f.Friend).ThenInclude(friend => friend.Profile)
+           .Include(u => u.Friends).ThenInclude(f => f.Friend).ThenInclude(friend => friend.Wishes)
            .First(u => u.UserId == userId);
 
-        var friends = notificationTarget.Friends.Select(f => f.Friend).ToList();
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var friends = notificationTarget.GetSortedFriends(today);
 
-        // TODO Fix
-        friends.Sort((f0, f1) => f0.UserId.CompareTo(f1.UserId));
-        var friendIndex = friends.IndexOf(notificationSource);
-        var pageIndex = friendIndex / TextListMessageUtils.ItemsPerPage;
+        var friendIndex = friends.FindIndex(friend => friend.Friend.UserId == _notificationSourceId);
+        var pageIndex = TextListMessageUtils.GetPageIndex(friendIndex);
 
         Keyboard
            .AddButton<FriendQuery>("Перейти к другу",

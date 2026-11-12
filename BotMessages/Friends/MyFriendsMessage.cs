@@ -20,7 +20,7 @@ public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
             .First(u => u.UserId == userId);
 
         var today = DateOnly.FromDateTime(DateTime.Now);
-        var friends = BirthdayUtils.SortByUpcomingBirthday(user.Friends.Select(f => f.Friend), today);
+        var friends = user.GetSortedFriends(today);
         var totalCount = friends.Count;
 
         if (totalCount == 0)

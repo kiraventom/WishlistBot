@@ -12,6 +12,12 @@ public static class TextListMessageUtils
 
    public static int GetPagesCount(int totalCount) => (int)Math.Ceiling((double)totalCount / ItemsPerPage);
 
+   /// <summary>
+   /// Страница, на которой лежит элемент с указанным индексом. Индекс -1 значит «не нашли»
+   /// (такое бывает у ссылок из уведомлений) — ведём на первую страницу, а не в минус.
+   /// </summary>
+   public static int GetPageIndex(int itemIndex) => Math.Max(itemIndex, 0) / ItemsPerPage;
+
    public static void AddListControls<TListQuery, TParentQuery>(MessageText text, BotKeyboard keyboard, QueryParameterCollection parameters, int totalCount, IListPage listPosition, Action<int> addLineAt, string buttonCaption = null)
       where TListQuery : IQuery, new() where TParentQuery : IQuery, new()
       {

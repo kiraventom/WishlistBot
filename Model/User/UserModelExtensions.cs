@@ -24,6 +24,33 @@ public static class UserModelExtensions
         };
     }
 
+    /// <summary>
+    /// Друзья в том же порядке, в котором их показывает экран «Мои друзья»:
+    /// ближайший день рождения, затем число вишей, затем имя.
+    /// </summary>
+    public static List<FriendBirthday> GetSortedFriends(this UserModel userModel, DateOnly today) =>
+        BirthdayUtils.SortByUpcomingBirthday(userModel.Friends.Select(f => f.Friend), today);
+
+    /// <summary>
+    /// Ищет виш в том списке, который видит зритель: с учётом сортировки и фильтра
+    /// «только без брони». Если виш отфильтрован, фильтр снимается и поиск повторяется —
+    /// иначе переход к вишу из уведомления вёл бы на страницу, где его не видно.
+    /// </summary>
+    public static WishListLocation LocateWish(this UserModel userModel, WishViewSettingsModel viewSettings, WishModel wish)
+    {
+        var wishes = userModel.GetSortedWishes(viewSettings).ToList();
+        var index = wishes.IndexOf(wish);
+
+        if (index == -1)
+        {
+            viewSettings.OnlyUnclaimed = false;
+            wishes = userModel.GetSortedWishes(viewSettings).ToList();
+            index = wishes.IndexOf(wish);
+        }
+
+        return new WishListLocation(wishes, index);
+    }
+
     public static List<WishModel> GetSortedClaimedWishes(this UserModel userModel)
     {
         // Брони постоянных вишей в базе остаются, но в «Моих бронях» не показываются
