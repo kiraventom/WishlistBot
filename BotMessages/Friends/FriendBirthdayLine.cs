@@ -34,24 +34,9 @@ public static class FriendBirthdayLine
             });
     }
 
-    /// <summary>Дата ближайшего ДР и пояснение в скобках.</summary>
+    /// <summary>Дата ближайшего ДР и когда он будет: «05.03, 32 года через 113 дней».</summary>
     public static string Describe(FriendBirthday friend) =>
         friend.NextBirthday is { } nextBirthday
-            ? $"{nextBirthday.ToString("dd.MM")} {DescribeWhen(friend)}"
+            ? $"{nextBirthday.ToString("dd.MM")}, {BirthdayUtils.DescribeUpcoming(friend.Age!.Value, friend.DaysUntil!.Value)}"
             : "(ДР не указан)";
-
-    private static string DescribeWhen(FriendBirthday friend)
-    {
-        if (friend.NextBirthday is null)
-            return "(ДР не указан)";
-
-        var daysUntil = friend.DaysUntil!.Value;
-        var age = friend.Age!.Value;
-
-        var daysText = daysUntil == 0
-            ? "сегодня"
-            : $"через {daysUntil} {PluralUtils.Days(daysUntil)}";
-
-        return $"({daysText}, {age} {PluralUtils.Years(age)})";
-    }
 }

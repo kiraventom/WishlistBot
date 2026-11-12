@@ -1,4 +1,5 @@
 using System.Text;
+using WishlistBot.QueryParameters;
 
 namespace WishlistBot.Model.User;
 
@@ -35,6 +36,12 @@ public static class DeepLink
     public const string WishIdKey = "w";
     public const string BroadcastIdKey = "i";
 
+    /// <summary>
+    /// Новое значение настроек уведомлений: ссылка на экране настроек работает как кнопка
+    /// (в rich-сообщении тумблеры — инлайн-ссылки, а не кнопки).
+    /// </summary>
+    public const string SettingsKey = "s";
+
     /// <summary>Флаг «вернуться в список броней».</summary>
     public const string ReturnToClaimsKey = "c";
 
@@ -68,6 +75,13 @@ public static class DeepLink
 
     /// <summary>Ссылка на экран настроек — из уведомлений, чтобы можно было отписаться.</summary>
     public static string BuildSettings() => BuildLink(BuildPayload(Kind.Settings));
+
+    /// <summary>
+    /// Ссылка, которая открывает настройки уже с переключённым флагом: так тумблеры
+    /// на экране настроек работают без кнопок.
+    /// </summary>
+    public static string BuildSettings(SettingsEnum newSettings) =>
+        BuildLink(BuildPayload(Kind.Settings, (SettingsKey, ((int)newSettings).ToString())));
 
     /// <summary>Ссылка на свой профиль (экран редактирования даты рождения и заметок).</summary>
     public static string BuildProfile() => BuildLink(BuildPayload(Kind.Profile));

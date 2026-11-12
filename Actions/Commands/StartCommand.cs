@@ -37,7 +37,7 @@ public class StartCommand(ILogger logger, BotMessageSender sender) : Command(log
                 DeepLink.Kind.Wishlist => await HandleWishlistLink(userContext, user, parameters),
                 DeepLink.Kind.Broadcast => await HandleBroadcastLink(userContext, user, parameters),
                 DeepLink.Kind.AdminUser => await HandleAdminUserLink(userContext, user, parameters),
-                DeepLink.Kind.Settings => await HandleSettingsLink(userContext, user),
+                DeepLink.Kind.Settings => await HandleSettingsLink(userContext, user, parameters),
                 DeepLink.Kind.Profile => await HandleProfileLink(userContext, user),
                 _ => false,
             };
@@ -170,8 +170,15 @@ public class StartCommand(ILogger logger, BotMessageSender sender) : Command(log
         return true;
     }
 
-    private async Task<bool> HandleSettingsLink(UserContext userContext, UserModel user)
+    private async Task<bool> HandleSettingsLink(UserContext userContext, UserModel user, IReadOnlyDictionary<string, string> parameters)
     {
+        // Ссылка с параметром — это нажатие на тумблер: экран откроется уже с новым значением
+        if (parameters.TryGetValue(DeepLink.SettingsKey, out var settingsValue)
+            && long.TryParse(settingsValue, out var newSettings))
+        {
+            SetQueryParams(user, new QueryParameter(QueryParameterType.SetSettingsTo, newSettings));
+        }
+
         await Sender.SendOrEdit(userContext, user.UserId, new SettingsMessage(Logger));
         return true;
     }

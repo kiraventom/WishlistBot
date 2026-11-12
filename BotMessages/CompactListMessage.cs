@@ -169,6 +169,10 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
     /// <summary>
     /// Список вишей таблицей: номер, название ссылкой, цена и метки (описание, фото, ссылки).
     /// Кнопки листания добавляются до таблицы — порядок кнопок от этого не зависит.
+    ///
+    /// Колонки «Цена», «Ссылка» и «Бронь» рисуются только если на странице есть что
+    /// в них показать: пустые колонки — лишние 30% ширины на телефоне. Бронь, кроме того,
+    /// видна только в чужом вишлисте: свой бронировать нельзя, и колонка там бессмысленна.
     /// </summary>
     private void AddWishTable(
         UserContext userContext,
@@ -177,24 +181,59 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         bool isReadOnly,
         ListPage page)
     {
+        var wishes = Enumerable.Range(page.FirstIndex, page.Count)
+            .Select(index => sortedWishes[index])
+            .ToList();
+
+        var showPrice = wishes.Any(wish => wish.PriceRange != Price.NotSet);
+        var showLink = wishes.Any(wish => wish.Links.Any());
+        var showClaim = isReadOnly && wishes.Any(wish => wish.HasVisibleClaim);
+
         Text.Table(table =>
         {
-            table
-                .Header("#", "Виш", "Цена", "Ссылка", "\U0001f512")
-                .Align(TableAlign.Right, TableAlign.Left, TableAlign.Right, TableAlign.Center, TableAlign.Center);
+            var headers = new List<string> { "#", "Виш" };
+            var aligns = new List<TableAlign> { TableAlign.Right, TableAlign.Left };
 
-            for (var i = 0; i < page.Count; ++i)
+            if (showPrice)
             {
-                var wish = sortedWishes[page.FirstIndex + i];
+                headers.Add("Цена");
+                aligns.Add(TableAlign.Right);
+            }
+
+            if (showLink)
+            {
+                headers.Add("Ссылка");
+                aligns.Add(TableAlign.Center);
+            }
+
+            if (showClaim)
+            {
+                headers.Add("Бронь");
+                aligns.Add(TableAlign.Center);
+            }
+
+            table.Header([.. headers]).Align([.. aligns]);
+
+            for (var i = 0; i < wishes.Count; ++i)
+            {
+                var wish = wishes[i];
                 var number = page.FirstIndex + i + 1;
                 var isBooked = wish.HasVisibleClaim && isReadOnly;
 
-                table.Row(
-                    cell => cell.Verbatim(number.ToString()),
-                    cell => AddWishName(cell, wish, subscribeId, isBooked),
-                    cell => cell.Verbatim(MessageTextUtils.PriceToShortString(wish.PriceRange)),
-                    cell => AddWishLink(cell, wish),
-                    cell => AddWishClaim(cell, userContext, wish, isBooked));
+                table.Row(cells =>
+                {
+                    cells.Add(cell => cell.Verbatim(number.ToString()));
+                    cells.Add(cell => AddWishName(cell, wish, subscribeId, isBooked));
+
+                    if (showPrice)
+                        cells.Add(cell => cell.Verbatim(MessageTextUtils.PriceToShortString(wish.PriceRange)));
+
+                    if (showLink)
+                        cells.Add(cell => AddWishLink(cell, wish));
+
+                    if (showClaim)
+                        cells.Add(cell => AddWishClaim(cell, userContext, wish, isBooked));
+                });
             }
         });
     }

@@ -18,7 +18,7 @@ namespace WishlistBot.Text;
 /// пустой строкой — иначе Markdown склеит их с абзацем.</item>
 /// </list>
 /// </summary>
-public sealed partial class MessageText
+public sealed class MessageText
 {
     /// <summary>Жёсткий перенос строки внутри абзаца: два пробела перед переводом строки.</summary>
     private const string HardBreak = "  \n";
@@ -44,15 +44,27 @@ public sealed partial class MessageText
         return this;
     }
 
-    /// <summary>Пустая строка между блоками. Повторные вызовы не копят пустые строки.</summary>
-    public MessageText BlockBreak()
+    /// <summary>
+    /// Дополнительная пустая строка. <see cref="BlockBreak"/> идемпотентен, поэтому
+    /// «отбить ещё одной строкой» им не выразить.
+    /// </summary>
+    public MessageText BlankLine()
     {
         TrimTrailingSpaces();
 
         if (_sb.Length == 0)
             return this;
 
-        if (EndsWithBlankLine())
+        _sb.Append('\n').Append('\n');
+        return this;
+    }
+
+    /// <summary>Пустая строка между блоками. Повторные вызовы не копят пустые строки.</summary>
+    public MessageText BlockBreak()
+    {
+        TrimTrailingNewLines();
+
+        if (_sb.Length == 0)
             return this;
 
         _sb.Append('\n').Append('\n');
@@ -362,18 +374,8 @@ public sealed partial class MessageText
     public override string ToString()
     {
         TrimTrailingSpaces();
-
-        // Больше одной пустой строки подряд Markdown всё равно не покажет, а в отладке мешает
-        var text = ExcessiveNewLinesRegex().Replace(_sb.ToString(), "\n\n");
-
-        return text.TrimEnd('\n');
+        return _sb.ToString().TrimEnd('\n');
     }
-
-    private bool EndsWithBlankLine() =>
-        _sb.Length >= 2 && _sb[_sb.Length - 1] == '\n' && _sb[_sb.Length - 2] == '\n';
-
-    [System.Text.RegularExpressions.GeneratedRegex(@"\n{3,}")]
-    private static partial System.Text.RegularExpressions.Regex ExcessiveNewLinesRegex();
 
     private MessageText Wrap(string marker, string text) => Wrap(marker, marker, text);
 
@@ -408,9 +410,9 @@ public sealed partial class MessageText
     /// <summary>Блочный элемент не должен прилипать к предыдущему абзацу.</summary>
     private void EnsureBlockStart()
     {
-        TrimTrailingSpaces();
+        TrimTrailingNewLines();
 
-        if (_sb.Length > 0 && !EndsWithBlankLine())
+        if (_sb.Length > 0)
             _sb.Append("\n\n");
     }
 
@@ -419,6 +421,23 @@ public sealed partial class MessageText
         var length = _sb.Length;
 
         while (length > 0 && (_sb[length - 1] == ' ' || _sb[length - 1] == '\t'))
+            --length;
+
+        if (length != _sb.Length)
+            _sb.Length = length;
+    }
+
+    /// <summary>
+    /// Убирает хвостовые переводы строк: блок сам решает, сколько пустых строк поставить,
+    /// иначе после списка или цитаты накапливается три-четыре перевода подряд.
+    /// </summary>
+    private void TrimTrailingNewLines()
+    {
+        TrimTrailingSpaces();
+
+        var length = _sb.Length;
+
+        while (length > 0 && _sb[length - 1] == '\n')
             --length;
 
         if (length != _sb.Length)

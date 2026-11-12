@@ -1,3 +1,5 @@
+using WishlistBot.Text;
+
 namespace WishlistBot.Model.User;
 
 /// <summary>Друг с посчитанным ближайшим днём рождения.</summary>
@@ -26,6 +28,19 @@ public static class BirthdayUtils
     /// <summary>Сколько лет исполнится в ближайший день рождения.</summary>
     public static int GetAge(DateOnly birthday, DateOnly nextBirthday) =>
         nextBirthday.Year - birthday.Year;
+
+    /// <summary>
+    /// Когда ближайший ДР и сколько лет будет: «32 года через 113 дней», «32 года сегодня».
+    /// Один формат на все экраны (список друзей, дайджест, профиль), чтобы не расходились.
+    /// </summary>
+    public static string DescribeUpcoming(int age, int daysUntil)
+    {
+        var ageText = $"{age} {PluralUtils.Years(age)}";
+
+        return daysUntil == 0
+            ? $"{ageText} сегодня"
+            : $"{ageText} через {daysUntil} {PluralUtils.Days(daysUntil)}";
+    }
 
     /// <summary>
     /// Друзья, отсортированные по ближайшему ДР: сначала те, у кого дата указана

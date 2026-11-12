@@ -85,8 +85,8 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
             var daysBeforeBirthday = BirthdayUtils.GetDaysUntil(nextBirthday, today);
             var nextAge = BirthdayUtils.GetAge(birthday, nextBirthday);
 
-            Text.Italic($" ({nextAge}-{PluralUtils.YearsOrdinalEnding(nextAge)} ДР через " +
-                        $"{daysBeforeBirthday} {PluralUtils.Days(daysBeforeBirthday)})");
+            // Тот же формат, что в списке друзей и дайджесте: «32 года через 113 дней»
+            Text.Italic($" ({BirthdayUtils.DescribeUpcoming(nextAge, daysBeforeBirthday)})");
         }
 
         if (target.Profile.Notes != null)

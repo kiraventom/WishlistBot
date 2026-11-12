@@ -52,6 +52,18 @@ public sealed class TableBuilder
         return this;
     }
 
+    /// <summary>
+    /// Строка, число ячеек которой зависит от данных (например, колонки «Цена»/«Ссылка»
+    /// рисуются только когда есть что показать).
+    /// </summary>
+    public TableBuilder Row(Action<List<Action<MessageText>>> build)
+    {
+        var cells = new List<Action<MessageText>>();
+        build(cells);
+
+        return Row(cells.ToArray());
+    }
+
     /// <summary>Строка «поле → значение»: подпись простым текстом, значение с форматированием.</summary>
     public TableBuilder Row(string label, Action<MessageText> value)
     {
