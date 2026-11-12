@@ -12,8 +12,8 @@ namespace WishlistBot.BotMessages.Profile;
 [MessageFor(typeof(EditProfileQuery))]
 public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 {
-    private const string EditEmoji = "\u270f\ufe0f";
-    private const string DeleteEmoji = "\U0001f5d1\ufe0f";
+    private const string EditCaption = "Изменить";
+    private const string DeleteCaption = "Удалить";
 
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
@@ -42,7 +42,7 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         if (sender.Profile.Birthday is { } birthday)
         {
             Text.Date(birthday, "d", birthday.ToString("dd.MM.yyyy")).Verbatim(" ");
-            Text.Button(EditEmoji, Keyboard.AddTextButton<SetProfileBirthdayQuery>());
+            Text.Button(EditCaption, Keyboard.AddTextButton<SetProfileBirthdayQuery>());
         }
         else
         {
@@ -57,12 +57,12 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
         {
             Text.Verbatim("Не указаны ");
             Text.Button("Указать", Keyboard.AddTextButton<SetProfileNotesQuery>());
-            Text.Verbatim(" ").Button("Что это?", Keyboard.AddTextButton<EditProfileQuery>(parameters: QueryParameter.ShowHelp));
+            Text.Verbatim(" ").Button("Что это?", Keyboard.AddTextButton<EditProfileQuery>(parameters: QueryParameter.ShowHelp), style: "primary");
         }
         else
         {
-            Text.Button(EditEmoji, Keyboard.AddTextButton<SetProfileNotesQuery>());
-            Text.Verbatim(" ").Button(DeleteEmoji,
+            Text.Button(EditCaption, Keyboard.AddTextButton<SetProfileNotesQuery>());
+            Text.Verbatim(" ").Button(DeleteCaption,
                 Keyboard.AddTextButton<EditProfileQuery>(parameters: new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Description)));
 
             Text.BlockBreak();

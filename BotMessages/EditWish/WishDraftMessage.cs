@@ -26,8 +26,8 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
     /// <summary>Нижние кнопки окна: у нового виша и у существующего они разные.</summary>
     protected abstract void AddControls(bool isEditing, long wishId);
 
-    private const string EditEmoji = "\u270f\ufe0f";
-    private const string DeleteEmoji = "\U0001f5d1\ufe0f";
+    private const string EditCaption = "Изменить";
+    private const string DeleteCaption = "Удалить";
 
     /// <summary>
     /// Строка параметра. Если значение есть — подпись, кнопки ✏️ и 🗑 справа от двоеточия,
@@ -54,10 +54,10 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
 
     private void AddEditButtons(string editData, string deleteData)
     {
-        Text.Button(EditEmoji, editData);
+        Text.Button(EditCaption, editData);
 
         if (deleteData is not null)
-            Text.Verbatim(" ").Button(DeleteEmoji, deleteData);
+            Text.Verbatim(" ").Button(DeleteCaption, deleteData);
     }
 
     private string DeleteData(WishPropertyType property) =>
@@ -199,7 +199,7 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
                 Keyboard.AddTextButton<EditWishQuery>(parameters: QueryParameter.ToggleWishPermanence));
 
             Text.Verbatim(" ").Button("Что это?",
-                Keyboard.AddTextButton<EditWishQuery>(parameters: QueryParameter.ShowHelp));
+                Keyboard.AddTextButton<EditWishQuery>(parameters: QueryParameter.ShowHelp), style: "primary");
         }
 
         return Task.CompletedTask;

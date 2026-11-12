@@ -45,9 +45,7 @@ public class WishlistCleanupMessage(ILogger logger, bool snooze = false) : BotMe
 
         Text.AddNotificationsSettingsLink();
 
-        Keyboard.AddButton<CompactListQuery>("\U0001f381 Открыть вишлист");
-
-        Keyboard.NewRow().AddButton<MainMenuQuery>("Главное меню");
+        Keyboard.AddButton<MainMenuQuery>("Главное меню");
 
         return Task.CompletedTask;
     }

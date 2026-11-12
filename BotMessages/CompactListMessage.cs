@@ -124,7 +124,6 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
         var showPrice = wishesOnPage.Any(wish => wish.PriceRange != Price.NotSet);
         var sortByDate = viewSettings.SortProperty == SortProperty.Default;
-        var triangle = viewSettings.Descending ? DescendingTriangle : AscendingTriangle;
 
         var directionData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortOrder);
         var switchSortData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortProperty);
@@ -132,22 +131,26 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             ? Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.WishFilterToggleUnclaimed)
             : null;
 
+        // Сортировка — строкой над таблицей: кнопки в шапке выглядели чужеродно
+        var sortPropertyCaption = sortByDate ? "По дате добавления" : "По цене";
+
+        var sortOrderCaption = (sortByDate, viewSettings.Descending) switch
+        {
+            (true, false) => "От старых к новым",
+            (true, true) => "От новых к старым",
+            (false, false) => "От дешёвых к дорогим",
+            (false, true) => "От дорогих к дешёвым",
+        };
+
+        Text.Verbatim("Сортировка: ");
+        Text.Button(sortPropertyCaption, switchSortData);
+        Text.Verbatim(" ").Button(sortOrderCaption, directionData);
+        Text.BlockBreak();
+
         Text.Table(table =>
         {
             var headerCells = new List<Action<MessageText>>
             {
-                cell =>
-                {
-                    if (sortByDate)
-                    {
-                        cell.Verbatim($"{ClockEmoji} ");
-                        cell.Button(triangle, directionData);
-                    }
-                    else
-                    {
-                        cell.Button(ClockEmoji, switchSortData);
-                    }
-                },
                 cell =>
                 {
                     cell.Verbatim("Виш ");
@@ -159,37 +162,25 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
             if (showPrice)
             {
-                table.Align(TableAlign.Right, TableAlign.Left, TableAlign.Right);
-
-                headerCells.Add(cell =>
-                {
-                    if (sortByDate)
-                        cell.Button("Цена", switchSortData);
-                    else
-                    {
-                        cell.Verbatim("Цена ");
-                        cell.Button(triangle, directionData);
-                    }
-                });
+                table.Align(TableAlign.Left, TableAlign.Right);
+                headerCells.Add(cell => cell.Verbatim("Цена"));
             }
-
-            if (!showPrice)
-                table.Align(TableAlign.Right, TableAlign.Left);
+            else
+            {
+                table.Align(TableAlign.Left);
+            }
 
             table.Header([.. headerCells]);
 
             if (page.PageIndex > 0)
                 AddJumpRow(table, page.FirstIndex, 0, showPrice);
 
-            for (var i = 0; i < wishesOnPage.Count; ++i)
+            foreach (var wish in wishesOnPage)
             {
-                var wish = wishesOnPage[i];
-                var number = page.FirstIndex + i + 1;
                 var isBooked = wish.HasVisibleClaim && isReadOnly;
 
                 table.Row(cells =>
                 {
-                    cells.Add(cell => cell.Verbatim(number.ToString()));
                     cells.Add(cell => AddWishName(cell, userContext, wish, subscribeId, isBooked));
 
                     if (showPrice)
@@ -211,7 +202,6 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 
         table.Row(cells =>
         {
-            cells.Add(cell => cell.Verbatim(Dot));
             cells.Add(cell => cell.Button($"ещё {wishesCount} {PluralUtils.WishesGenitive}", data));
 
             if (showPrice)

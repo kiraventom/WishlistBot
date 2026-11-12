@@ -146,7 +146,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         {
             Text.BlockBreak().Verbatim("\u2b50 Постоянный виш ");
 
-            Text.Button("Что это?", Keyboard.AddTextButton<ShowWishQuery>(parameters: QueryParameter.ShowHelp));
+            Text.Button("Что это?", Keyboard.AddTextButton<ShowWishQuery>(parameters: QueryParameter.ShowHelp), style: "primary");
 
             if (parameters.Pop(QueryParameterType.ShowHelp))
                 AlertText = "Постоянный виш — это подарок, которому вы рады всегда!\n\n" +

@@ -53,11 +53,7 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
 
         const string link = "\U0001f517";
 
-        Keyboard
-           .NewRow()
-           .AddCopyTextButton($"{link} Ссылка на вишлист", target.GetSubscribeLink())
-           .NewRow()
-           .AddButton<MyFriendsQuery>("К друзьям");
+        Keyboard.AddButton<MyFriendsQuery>("К друзьям");
 
         // Имя — заголовком экрана: в MarkdownV2 заголовков не было, имя было просто жирным
         if (isSelf)
@@ -101,6 +97,11 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
             Text.BlockBreak().Verbatim(writingHand).Bold("Заметки:").BlockBreak();
             Text.ExpandableQuote(target.Profile.Notes);
         }
+
+        // Футер: ссылка на вишлист с кнопкой копирования
+        Text.Divider();
+        Text.Verbatim("Ссылка на вишлист: ");
+        Text.CopyButton($"{link} Скопировать", target.GetSubscribeLink());
 
         // Если виши есть — их количество показано на кнопке «Открыть вишлист»
         if (target.Wishes.Count == 0)
