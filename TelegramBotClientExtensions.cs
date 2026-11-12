@@ -1,6 +1,7 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using WishlistBot.BotMessages;
 
@@ -15,7 +16,11 @@ public static class TelegramBotClientExtensions
 {
     public static async Task<Message> SendOrEditBotMessage(this ITelegramBotClient client, ILogger logger, UserContext userContext, int userId, BotMessage botMessage, bool forceNewMessage = false)
     {
-        var userModel = userContext.Users.First(u => u.UserId == userId);
+        // FilterPositions в BotMessage больше не ходит в базу сам — ListPositions
+        // должен быть загружен здесь, вместе с остальными спутниками пользователя
+        var userModel = userContext.Users
+            .Include(u => u.ListPositions)
+            .First(u => u.UserId == userId);
 
         Message message;
 

@@ -32,19 +32,7 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
         var sender = userContext.Users.Include(u => u.WishViewSettings).First(u => u.UserId == userId);
         var wishViewSettings = sender.GetOrCreateViewerTarget<WishViewSettingsModel>(_notificationSourceId);
 
-        // TODO ToList() here is not very cool
-        var wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
-        var wishIndex = wishes.IndexOf(newWish);
-
-        // TODO: Make this prettier, DRY
-        if (wishIndex == -1)
-        {
-            wishViewSettings.OnlyUnclaimed = false;
-            wishes = notificationSource.GetSortedWishes(wishViewSettings).ToList();
-            wishIndex = wishes.IndexOf(newWish);
-        }
-
-        var pageIndex = wishIndex / TextListMessageUtils.ItemsPerPage;
+        var pageIndex = TextListMessageUtils.GetPageIndex(notificationSource.LocateWish(wishViewSettings, newWish).Index);
 
         Keyboard
            .AddButton<ShowWishQuery>("Перейти к вишу",

@@ -46,7 +46,6 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
                     if (update.Message is { } message )
                     {
                         var result = await HandleMessageAsync(message, userContext);
-                        // TODO Delete message before acting
                         if (result.Cleanup)
                             await client.DeleteMessage(message.Chat.Id, message.MessageId);
                     }

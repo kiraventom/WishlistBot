@@ -215,7 +215,7 @@ $@"
 
             // Return to the page of the claims list that contains this wish
             Keyboard.AddButton<MyClaimsQuery>("Назад",
-                new QueryParameter(QueryParameterType.SetListPageTo, Math.Max(index, 0) / TextListMessageUtils.ItemsPerPage));
+                new QueryParameter(QueryParameterType.SetListPageTo, TextListMessageUtils.GetPageIndex(index)));
 
             if (index < totalCount - 1)
                 Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, claimedWishes[nextIndex].WishId));
@@ -227,16 +227,9 @@ $@"
             userContext.Entry(wish.Owner).Collection(c => c.Wishes).Load();
 
             var wishViewSettings = sender.GetOrCreateViewerTarget<WishViewSettingsModel>(target.UserId);
-            var wishes = wish.Owner.GetSortedWishes(wishViewSettings).ToList();
-            var index = wishes.IndexOf(wish);
-
-            // TODO: Make this prettier, DRY
-            if (index == -1)
-            {
-                wishViewSettings.OnlyUnclaimed = false;
-                wishes = wish.Owner.GetSortedWishes(wishViewSettings).ToList();
-                index = wishes.IndexOf(wish);
-            }
+            var location = wish.Owner.LocateWish(wishViewSettings, wish);
+            var wishes = location.Wishes;
+            var index = location.Index;
 
             var totalCount = wishes.Count;
             var prevIndex = index - 1;
@@ -247,7 +240,7 @@ $@"
 
             // Return to the page of the wishlist that contains this wish
             Keyboard.AddButton<CompactListQuery>("Назад",
-                new QueryParameter(QueryParameterType.SetListPageTo, Math.Max(index, 0) / TextListMessageUtils.ItemsPerPage));
+                new QueryParameter(QueryParameterType.SetListPageTo, TextListMessageUtils.GetPageIndex(index)));
 
             if (index < totalCount - 1)
                 Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, wishes[nextIndex].WishId));

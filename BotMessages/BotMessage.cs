@@ -118,8 +118,13 @@ public abstract class BotMessage(ILogger logger)
 
     private void FilterPositions(UserContext userContext, UserModel user)
     {
-        // TODO Bruh
-        userContext.Entry(user).Reference(u => u.ListPositions).Load();
+        // Строки-спутники грузит тот, кто достал пользователя: GetOrAddUser в контроллере,
+        // SendOrEditBotMessage — для экранов. Если какой-то вызов забыл Include, дочитываем
+        // здесь (без второго запроса, когда всё уже загружено), чтобы страницы списков
+        // не перестали сбрасываться молча.
+        var listPositionsReference = userContext.Entry(user).Reference(u => u.ListPositions);
+        if (!listPositionsReference.IsLoaded)
+            listPositionsReference.Load();
 
         if (user.ListPositions is null)
         {
