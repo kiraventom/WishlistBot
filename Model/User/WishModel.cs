@@ -20,7 +20,9 @@ public class WishModel
 
     [Required] public string Name { get; set; }
     public string Description { get; set; }
-    public string FileId { get; set; }
+
+    /// <summary>Ключ картинки в медиа-хранилище (см. <see cref="MediaItemModel"/>).</summary>
+    public string MediaKey { get; set; }
     public Price PriceRange { get; set; }
 
     /// <summary>
@@ -52,7 +54,7 @@ public class WishModel
             OwnerId = draft.OwnerId,
             Name = draft.Name,
             Description = draft.Description,
-            FileId = draft.FileId,
+            MediaKey = draft.MediaKey,
             PriceRange = draft.PriceRange,
             IsPermanent = draft.IsPermanent,
         };

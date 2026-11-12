@@ -1,10 +1,12 @@
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using WishlistBot.BotMessages;
+using WishlistBot.Media;
 using WishlistBot.Model.User;
 using WishlistBot.Notification;
 
@@ -64,12 +66,9 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
             var text = botMessage.Text.ToString();
 
             var keyboardMarkup = botMessage.Keyboard.ToInlineKeyboardMarkup();
-            var photoFileId = botMessage.PhotoFileId;
-
-            if (photoFileId != null)
-            {
-                await MediaStorageManager.Instance.Store(photoFileId);
-            }
+            var photo = botMessage.PhotoMediaKey is null
+                ? null
+                : await MediaStorage.Instance.PrepareAsync(botMessage.PhotoMediaKey);
 
             var shouldSendNewMessage =
                 userModel.LastBotMessageId < 0
@@ -82,21 +81,20 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
 
             if (shouldSendNewMessage)
             {
-                if (photoFileId is null)
+                if (photo is null)
                 {
                     message = await client.SendMessage(chatId: userModel.TelegramId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: LinkPreviewOptions.Disabled);
                 }
                 else
                 {
-                    var photo = InputFile.FromFileId(photoFileId);
-                    message = await client.SendPhoto(chatId: userModel.TelegramId, photo: photo, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+                    message = await SendPhotoAsync(userModel.TelegramId, photo, text, keyboardMarkup);
                 }
 
                 logger.Information("Sent '{text}' to [{id}] with inline keyboard, messageId [{messageId}]", text, userModel.UserId, message.MessageId);
             }
             else
             {
-                if (photoFileId == null)
+                if (photo is null)
                 {
                     try
                     {
@@ -120,9 +118,7 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
                 }
                 else
                 {
-                    var photo = new InputMediaPhoto(InputFile.FromFileId(photoFileId));
-                    await client.EditMessageMedia(chatId: userModel.TelegramId, messageId: userModel.LastBotMessageId.Value, media: photo, replyMarkup: keyboardMarkup);
-                    message = await client.EditMessageCaption(chatId: userModel.TelegramId, messageId: userModel.LastBotMessageId.Value, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+                    message = await ReplacePhotoAsync(userModel.TelegramId, userModel.LastBotMessageId.Value, photo, text, keyboardMarkup);
                 }
 
                 logger.Information("Edited [{messageId}] for [{userId}] to '{text}'", userModel.LastBotMessageId, userModel.UserId, text);
@@ -146,6 +142,61 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
         }
 
         return message;
+    }
+
+    private static InputFile ToInputFile(PreparedPhoto photo) =>
+        photo.FileId is not null
+            ? InputFile.FromFileId(photo.FileId)
+            : InputFile.FromStream(new MemoryStream(photo.Data), "photo.jpg");
+
+    /// <summary>
+    /// Telegram отверг file_id: файл удалён с серверов или сменился токен бота.
+    /// Это не ошибка экрана — заливаем блоб заново и запоминаем новый file_id.
+    /// </summary>
+    private static bool IsStaleFileId(ApiRequestException exception, PreparedPhoto photo) =>
+        photo.FileId is not null
+        && exception.ErrorCode == 400
+        && (exception.Message.Contains("file identifier", StringComparison.OrdinalIgnoreCase)
+            || exception.Message.Contains("file is not found", StringComparison.OrdinalIgnoreCase)
+            || exception.Message.Contains("FILE_REFERENCE", StringComparison.OrdinalIgnoreCase));
+
+    private async Task<Message> SendPhotoAsync(long chatId, PreparedPhoto photo, string text, InlineKeyboardMarkup keyboardMarkup)
+    {
+        try
+        {
+            return await client.SendPhoto(chatId: chatId, photo: ToInputFile(photo), caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+        }
+        catch (ApiRequestException e) when (IsStaleFileId(e, photo))
+        {
+            logger.Warning("Telegram rejected cached file id for media '{key}', re-uploading the blob", photo.Key);
+
+            var reuploaded = PreparedPhoto.FromData(photo.Key, MediaStorage.Instance.GetData(photo.Key));
+            var message = await client.SendPhoto(chatId: chatId, photo: ToInputFile(reuploaded), caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
+
+            await MediaStorage.Instance.RememberFileIdAsync(photo.Key, message.Photo?.LastOrDefault()?.FileId);
+            return message;
+        }
+    }
+
+    private async Task<Message> ReplacePhotoAsync(long chatId, int messageId, PreparedPhoto photo, string text, InlineKeyboardMarkup keyboardMarkup)
+    {
+        Message edited;
+
+        try
+        {
+            edited = await client.EditMessageMedia(chatId: chatId, messageId: messageId, media: new InputMediaPhoto(ToInputFile(photo)), replyMarkup: keyboardMarkup);
+        }
+        catch (ApiRequestException e) when (IsStaleFileId(e, photo))
+        {
+            logger.Warning("Telegram rejected cached file id for media '{key}', re-uploading the blob", photo.Key);
+
+            var reuploaded = PreparedPhoto.FromData(photo.Key, MediaStorage.Instance.GetData(photo.Key));
+            edited = await client.EditMessageMedia(chatId: chatId, messageId: messageId, media: new InputMediaPhoto(ToInputFile(reuploaded)), replyMarkup: keyboardMarkup);
+
+            await MediaStorage.Instance.RememberFileIdAsync(photo.Key, edited?.Photo?.LastOrDefault()?.FileId);
+        }
+
+        return await client.EditMessageCaption(chatId: chatId, messageId: messageId, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
     }
 
     public async Task ClearKeyboard(long chatId, long telegramMessageId, bool suppressLog = false)

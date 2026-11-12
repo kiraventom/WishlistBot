@@ -172,7 +172,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         if (wish.IsPermanent)
             Text.LineBreak().Verbatim($"\u2b50 Постоянный виш: {target.FirstName} всегда ему обрадуется!");
 
-        PhotoFileId = wish.FileId;
+        PhotoMediaKey = wish.MediaKey;
 
         string shareText;
         
@@ -306,7 +306,7 @@ $@"
         if (!draft.Original.Links.SequenceEqual(draft.Links))
             wishPropertyType |= WishPropertyType.Links;
 
-        if (draft.Original.FileId != draft.FileId)
+        if (draft.Original.MediaKey != draft.MediaKey)
             wishPropertyType |= WishPropertyType.Media;
 
         // О смене типа виша сообщаем отдельно: только когда виш стал постоянным

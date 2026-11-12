@@ -7,7 +7,8 @@ public class BroadcastModel
     [Key] public int BroadcastId { get; set; }
 
     [Required] public string Text { get; set; }
-    public string FileId { get; set; }
+    /// <summary>Ключ картинки в медиа-хранилище (см. <see cref="MediaItemModel"/>).</summary>
+    public string MediaKey { get; set; }
     public DateTime? DateTimeSent { get; set; }
     public bool Deleted { get; set; }
 

@@ -21,7 +21,7 @@ public class ConfirmBroadcastMessage(ILogger logger) : BotMessage(logger)
            .LineBreak()
            .ExpandableQuote(broadcast.Text);
 
-        PhotoFileId = broadcast.FileId;
+        PhotoMediaKey = broadcast.MediaKey;
 
         Keyboard
            .AddButton<FinishBroadcastQuery>("Send")

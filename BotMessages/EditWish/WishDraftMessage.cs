@@ -90,7 +90,7 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
                     wishDraft.Description = null;
                     break;
                 case WishPropertyType.Media:
-                    wishDraft.FileId = null;
+                    wishDraft.MediaKey = null;
                     break;
                 case WishPropertyType.Links:
                     wishDraft.Links.Clear();
@@ -136,7 +136,7 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
         if (wishDraft.IsPermanent)
             Text.LineBreak().Verbatim("\u2b50 Постоянный виш");
 
-        PhotoFileId = wishDraft.FileId;
+        PhotoMediaKey = wishDraft.MediaKey;
 
         return Task.CompletedTask;
     }

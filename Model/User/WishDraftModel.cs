@@ -25,7 +25,9 @@ public class WishDraftModel
 
     [Required] public string Name { get; set; }
     public string Description { get; set; }
-    public string FileId { get; set; }
+
+    /// <summary>Ключ картинки в медиа-хранилище (см. <see cref="MediaItemModel"/>).</summary>
+    public string MediaKey { get; set; }
     public Price PriceRange { get; set; }
 
     /// <summary>Черновик помнит, постоянный ли виш: тип переключается в окне редактирования.</summary>
@@ -46,7 +48,7 @@ public class WishDraftModel
             OwnerId = wish.OwnerId,
             Name = wish.Name,
             Description = wish.Description,
-            FileId = wish.FileId,
+            MediaKey = wish.MediaKey,
             PriceRange = wish.PriceRange,
             IsPermanent = wish.IsPermanent,
             Original = wish,

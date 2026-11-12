@@ -25,7 +25,7 @@ public class BroadcastNotificationMessage : BotMessage, INotificationMessage
             .LineBreak()
             .Italic(broadcast.Text);
 
-        PhotoFileId = broadcast.FileId;
+        PhotoMediaKey = broadcast.MediaKey;
 
         return Task.CompletedTask;
     }

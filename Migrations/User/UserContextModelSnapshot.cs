@@ -29,7 +29,7 @@ namespace WishlistBot.Migrations.User
                     b.Property<bool>("Deleted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("FileId")
+                    b.Property<string>("MediaKey")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Text")
@@ -369,11 +369,11 @@ namespace WishlistBot.Migrations.User
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FileId")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IsPermanent")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("MediaKey")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -412,11 +412,11 @@ namespace WishlistBot.Migrations.User
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FileId")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IsPermanent")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("MediaKey")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()

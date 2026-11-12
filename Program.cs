@@ -7,6 +7,7 @@ using Telegram.Bot;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
 using WishlistBot.Listeners;
+using WishlistBot.Media;
 using WishlistBot.Notification;
 using WishlistBot.BotMessages;
 using WishlistBot.Actions;
@@ -48,12 +49,15 @@ public static class Program
       }
 
       // TODO Ugly
-      var mediaStorageManagerInited = await TryInitMediaStorageManager(logger, client, config.StorageChannelId);
-      if (!mediaStorageManagerInited)
+      var mediaStorageInited = TryInitMediaStorage(logger, client, config.StorageChannelId);
+      if (!mediaStorageInited)
       {
-         logger.Fatal("Couldn't init {MediaStorageManager}, exiting", nameof(MediaStorageManager));
+         logger.Fatal("Couldn't init {MediaStorage}, exiting", nameof(MediaStorage));
          return;
       }
+
+      // Догружает старые картинки в базу блобами и убирает их из старого канала-хранилища
+      MediaImportService.Instance.Start(logger);
 
       NotificationService.Instance.Init(logger, client);
 
@@ -169,12 +173,11 @@ public static class Program
       }
    }
 
-   private static async Task<bool> TryInitMediaStorageManager(ILogger logger, TelegramBotClient client, long storageChannelId)
+   private static bool TryInitMediaStorage(ILogger logger, TelegramBotClient client, long storageChannelId)
    {
       try
       {
-         MediaStorageManager.Instance.Init(logger, client, storageChannelId);
-         await MediaStorageManager.Instance.Cleanup();
+         MediaStorage.Instance.Init(logger, client, storageChannelId);
          return true;
       }
       catch (Exception e)

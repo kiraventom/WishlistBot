@@ -29,9 +29,11 @@ public class Config(string token, string username, string userConnectionString, 
     public string MediaStorageConnectionString { get; } = mediaStorageConnectionString;
 
     /// <summary>
-    /// ID of a channel that will work as media storage. 
-    /// Bot will copy all received media to this channel to cache them.
-    /// It is required because otherwise Telegram will delete them from servers if user deletes them from dialog.
+    /// ID of the channel that used to work as media storage: pictures lived there and only
+    /// their telegram file_id was kept in the database.
+    ///
+    /// Pictures are now stored as blobs in the media database, so the channel is only needed
+    /// to delete the old messages after they have been imported. Can be left as is.
     /// </summary>
     public long StorageChannelId { get; } = storageChannelId;
 

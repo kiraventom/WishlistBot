@@ -4,6 +4,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WishlistBot.BotMessages;
 using WishlistBot.BotMessages.EditWish;
+using WishlistBot.Media;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
@@ -82,22 +83,21 @@ public class WishMessagesListener(ILogger logger, BotMessageSender sender) : ILi
         return Task.CompletedTask;
     }
 
-    private Task HandleSettingWishMediaAsync(Message message, UserContext userContext, UserModel user)
+    private async Task HandleSettingWishMediaAsync(Message message, UserContext userContext, UserModel user)
     {
-        var fileId = message.Photo?.FirstOrDefault()?.FileId;
-        if (fileId is null)
+        // PhotoSize идут от меньшего к большему: берём самый крупный, из него и делаем блоб
+        var photo = message.Photo?.LastOrDefault();
+        if (photo is null)
         {
             logger.Warning("Received message with no photo, ignoring");
-            return Task.CompletedTask;
+            return;
         }
 
-        user.CurrentWish.FileId = fileId;
-        logger.Information("Photo [{fileId}] is added to {firstName} [{userId}] wish", fileId, user.FirstName, user.UserId);
+        user.CurrentWish.MediaKey = await MediaStorage.Instance.RegisterAsync(photo);
+        logger.Information("Photo [{key}] is added to {firstName} [{userId}] wish", user.CurrentWish.MediaKey, user.FirstName, user.UserId);
 
         if (message.MediaGroupId is not null)
             logger.Warning("Media groups are not supported, ignoring other photos");
-
-        return Task.CompletedTask;
     }
 
     private Task HandleSettingWishLinksAsync(Message message, UserContext userContext, UserModel user)

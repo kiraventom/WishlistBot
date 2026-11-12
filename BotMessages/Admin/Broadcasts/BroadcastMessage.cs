@@ -106,7 +106,7 @@ public class BroadcastMessage(ILogger logger) : UserBotMessage(logger)
                .LineBreak()
                .Monospace(broadcast.Text);
 
-            PhotoFileId = broadcast.FileId;
+            PhotoMediaKey = broadcast.MediaKey;
 
             Keyboard
                .NewRow()
