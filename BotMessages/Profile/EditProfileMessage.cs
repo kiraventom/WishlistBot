@@ -4,62 +4,75 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries.Profile;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.Profile;
 
+[AllowedTypes(QueryParameterType.ShowHelp, QueryParameterType.ClearWishProperty)]
 [MessageFor(typeof(EditProfileQuery))]
 public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 {
+    private const string EditEmoji = "\u270f\ufe0f";
+    private const string DeleteEmoji = "\U0001f5d1\ufe0f";
+
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var users = userContext.Users.Include(u => u.Profile);
         var sender = users.First(u => u.UserId == userId);
 
-        const string calendar = "\U0001f4c5 ";
-        const string writingHand = "\u270d\ufe0f ";
-        const string downArrow = "\u2b07\ufe0f";
-        const string link = "\U0001f517";
+        // 🗑 рядом с заметками: чистим их и рисуем экран заново
+        if (parameters.Pop(QueryParameterType.ClearWishProperty))
+            sender.Profile.Notes = null;
 
-        // Invite link button: копирует в буфер только саму ссылку
-        Keyboard.AddCopyTextButton($"{link} Скопировать ссылку", sender.GetSubscribeLink());
-
-        Keyboard.NewRow();
-
-        // Birthday
-        Text.Verbatim(calendar);
-
-        if (sender.Profile.Birthday is null)
+        if (parameters.Pop(QueryParameterType.ShowHelp))
         {
-            Text.Italic("Дата рождения не установлена");
-            Keyboard.AddButton<SetProfileBirthdayQuery>("\U0001f4c5 Установить дату рождения");
+            AlertText = "Заметки видят друзья в вашем профиле.\n\n" +
+                        "Здесь можно указать размер одежды, общие интересы, пожелания " +
+                        "или просто написать какую-то чушь";
+        }
+
+        // Из reply-кнопок остаётся только «Назад»: всё остальное — в тексте
+        Keyboard.AddButton<MainMenuQuery>("Назад");
+
+        Text.Heading("Профиль");
+
+        // Дата рождения: значение через tg-time, справа — правка или «Указать»
+        Text.Verbatim("\U0001f4c5 ").Bold("Дата рождения: ");
+
+        if (sender.Profile.Birthday is { } birthday)
+        {
+            Text.Date(birthday, "d", birthday.ToString("dd.MM.yyyy")).Verbatim(" ");
+            Text.Button(EditEmoji, Keyboard.AddTextButton<SetProfileBirthdayQuery>());
         }
         else
         {
-            Text.Bold("Дата рождения: ").Monospace(sender.Profile.Birthday.Value.ToString("dd.MM.yyyy"));
-            Keyboard.AddButton<SetProfileBirthdayQuery>("\U0001f4c5 Изменить дату рождения");
+            Text.Verbatim("Не указана ");
+            Text.Button("Указать", Keyboard.AddTextButton<SetProfileBirthdayQuery>());
         }
 
-        Keyboard.NewRow();
-
-        // Notes
-        Text.LineBreak().Verbatim(writingHand);
+        // Заметки: кнопки справа от двоеточия, сам текст — цитатой ниже
+        Text.BlockBreak().Verbatim("\u270d\ufe0f ").Bold("Заметки: ");
 
         if (string.IsNullOrWhiteSpace(sender.Profile.Notes))
         {
-            Text.Italic("Заметки пусты. Здесь можно указать размер одежды, общие интересы, пожелания или просто написать какую-то чушь");
-            Keyboard.AddButton<SetProfileNotesQuery>("\u270f\ufe0f Добавить заметки");
+            Text.Verbatim("Не указаны ");
+            Text.Button("Указать", Keyboard.AddTextButton<SetProfileNotesQuery>());
+            Text.Verbatim(" ").Button("Что это?", Keyboard.AddTextButton<EditProfileQuery>(parameters: QueryParameter.ShowHelp));
         }
         else
         {
-            Text.Bold("Заметки: ").LineBreak().ExpandableQuote(sender.Profile.Notes);
-            Keyboard.AddButton<SetProfileNotesQuery>("\u270f\ufe0f Изменить заметки");
+            Text.Button(EditEmoji, Keyboard.AddTextButton<SetProfileNotesQuery>());
+            Text.Verbatim(" ").Button(DeleteEmoji,
+                Keyboard.AddTextButton<EditProfileQuery>(parameters: new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Description)));
+
+            Text.BlockBreak();
+            Text.ExpandableQuote(sender.Profile.Notes);
         }
 
-        Keyboard.NewRow().AddButton<MainMenuQuery>("Назад");
+        Text.Divider();
 
-        
-        // Invite link text
-        Text.BlockBreak().Verbatim($"{downArrow} Ссылка на ваш вишлист {downArrow}");
+        // Ссылка на вишлист — кнопка, которая копирует её в буфер
+        Text.CopyButton("\U0001f517 Ссылка на вишлист", sender.GetSubscribeLink());
 
         return Task.CompletedTask;
     }

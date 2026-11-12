@@ -2,24 +2,31 @@ using Serilog;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Friends;
 using WishlistBot.Queries.Settings;
+using WishlistBot.Queries.Profile;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
+using WishlistBot.Text;
 using Microsoft.EntityFrameworkCore;
-using WishlistBot.Queries.Profile;
 
 namespace WishlistBot.BotMessages;
 
+[AllowedTypes(QueryParameterType.SetSettingsTo)]
 [MessageFor(typeof(MainMenuQuery))]
 public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         const string giftEmoji = "\U0001f381";
+        const string mutedBell = "\U0001f515";
 
         var user = userContext.Users
             .Include(u => u.ClaimedWishes)
             .Include(u => u.Profile)
             .Include(u => u.Settings).First(u => u.UserId == userId);
+
+        // «Включить» из главного меню: флаг включается сразу, экран настроек не открываем
+        if (parameters.Pop(QueryParameterType.SetSettingsTo, out var newSettingsNum))
+            user.Settings.SetFromEnum((SettingsEnum)newSettingsNum);
 
         // Страницу не передаём: вишлист открывается на той, где зритель его оставил
         Keyboard
@@ -47,50 +54,53 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
         if (user.UserId == 100)
         {
             Text.BlockBreak()
-                .Verbatim("🏆").Bold("ПОЛЬЗОВАТЕЛЬ #100").Verbatim("🏆");
+                .Verbatim("\U0001f3c6").Bold("ПОЛЬЗОВАТЕЛЬ #100").Verbatim("\U0001f3c6");
         }
 
-        const string mutedBell = "\U0001f515";
-        const string dot = "⋅ ";
-
-        // Подсказка про день рождения — выше статусов уведомлений и отбита строкой
+        // Подсказка про день рождения ведёт сразу в окно ввода даты, минуя профиль
         if (user.Profile.Birthday is null)
         {
             Text.BlockBreak()
-                .InlineUrl("\U0001f4c5 Можно указать дату дня рождения", DeepLink.BuildProfile());
+                .Verbatim("\U0001f4c6 Не указана дата рождения ");
+
+            Text.Button("Указать", Keyboard.AddTextButton<SetProfileBirthdayQuery>());
         }
 
-        if (!user.Settings.ReceiveFriendWishNotifications
-            || !user.Settings.SendNotifications
-            || !user.Settings.BirthdayNotifications
-            || !user.Settings.WishlistCleanupNotifications
-            || !user.Settings.WishlistFillNotifications)
-            Text.BlockBreak();
-
-        // Статусы идут строками одного абзаца: первая без переноса, остальные — с ним
-        var mutedStatuses = new List<string>();
+        // Статусы выключенных уведомлений: короткая подпись + кнопка «Включить»,
+        // которая включает категорию сразу, не открывая настройки
+        var mutedStatuses = new List<(SettingsEnum Flag, string Name)>();
 
         if (!user.Settings.ReceiveFriendWishNotifications)
-            mutedStatuses.Add($"{dot}Вы не получаете уведомления от друзей ");
+            mutedStatuses.Add((SettingsEnum.ReceiveFriendWishNotifications, "Уведомления от друзей"));
 
         if (!user.Settings.SendNotifications)
-            mutedStatuses.Add($"{dot}Друзья не получают уведомления от вас ");
+            mutedStatuses.Add((SettingsEnum.SendNotifications, "Уведомления друзьям"));
 
         if (!user.Settings.BirthdayNotifications)
-            mutedStatuses.Add($"{dot}Вы не получаете напоминания о днях рождения ");
+            mutedStatuses.Add((SettingsEnum.BirthdayNotifications, "Напоминания о днях рождения"));
 
         if (!user.Settings.WishlistCleanupNotifications)
-            mutedStatuses.Add($"{dot}Вы не получаете напоминание о чистке вишлиста ");
+            mutedStatuses.Add((SettingsEnum.WishlistCleanupNotifications, "Напоминание о чистке вишлиста"));
 
         if (!user.Settings.WishlistFillNotifications)
-            mutedStatuses.Add($"{dot}Вы не получаете напоминание заполнить вишлист ");
+            mutedStatuses.Add((SettingsEnum.WishlistFillNotifications, "Напоминание заполнить вишлист"));
+
+        if (mutedStatuses.Count != 0)
+            Text.BlockBreak();
+
+        var settingsEnum = user.Settings.ToEnum();
 
         for (var i = 0; i < mutedStatuses.Count; ++i)
         {
+            var (flag, name) = mutedStatuses[i];
+
             if (i > 0)
                 Text.LineBreak();
 
-            Text.ItalicBold(mutedStatuses[i]).Verbatim(mutedBell);
+            Text.Verbatim($"{mutedBell} {name} ");
+
+            Text.Button("Включить", Keyboard.AddTextButton<MainMenuQuery>(
+                parameters: new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum | flag))));
         }
 
         Text.BlockBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");

@@ -35,8 +35,12 @@ public class QueryAction<T>(ILogger logger, BotMessageSender sender, MessageFact
       var message = MessageFactory.Build(_query, userContext, queryId);
       await Sender.SendOrEdit(userContext, user.UserId, message);
 
-      // Отвечаем после сборки сообщения: экран может попросить короткий тост вместо пустого ответа
-      await Sender.AnswerCallbackQuery(queryId, message?.ToastText);
+      // Отвечаем после сборки сообщения: экран может попросить короткий тост вместо пустого
+      // ответа или модальный алерт с пояснением («Что это?»)
+      if (message?.AlertText is { } alertText)
+         await Sender.AnswerCallbackQuery(queryId, alertText, showAlert: true);
+      else
+         await Sender.AnswerCallbackQuery(queryId, message?.ToastText);
    }
 
    public override bool IsMatch(string actionText)

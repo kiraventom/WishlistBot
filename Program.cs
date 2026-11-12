@@ -188,7 +188,7 @@ public static class Program
    {
       yield return new StartCommand(logger, messageSender);
       yield return new AdminCommand(logger, messageSender);
-      yield return new HelpCommand(logger, messageSender);
+      // /help временно выключен: экран HelpMessage остался, команда не регистрируется
    }
 
    private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, BotMessageSender messageSender, MessageFactory messagesFactory)

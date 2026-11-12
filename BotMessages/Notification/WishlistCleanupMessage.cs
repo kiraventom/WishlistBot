@@ -5,6 +5,7 @@ using WishlistBot.Queries;
 using WishlistBot.Queries.Notification;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Notification;
 
@@ -24,16 +25,29 @@ public class WishlistCleanupMessage(ILogger logger, bool snooze = false) : BotMe
             ToastText = $"Напоминание придет завтра в {WishlistCleanupSchedule.RunTime:hh\\:mm}";
         }
 
-        Text.Verbatim("Возможно, в вашем вишлисте есть что-то, что вам уже подарили. Взглянете?");
+        var user = userContext.Users.AsNoTracking().First(u => u.UserId == userId);
+
+        // «вишлисте» ведёт на свой вишлист, дальше два действия — кнопками в тексте
+        Text
+            .Verbatim("Возможно, в вашем ")
+            .InlineUrl("вишлисте", DeepLink.BuildWishlist(user.SubscribeId[..20]))
+            .Verbatim(" есть что-то, что вам уже подарили. ");
+
+        Text.Button("Взглянете", Keyboard.AddTextButton<CompactListQuery>());
+
+        if (!WishlistCleanupNotificationService.IsSnoozed(userContext, userId))
+        {
+            Text.Verbatim(" или ");
+            Text.Button("напомнить завтра", Keyboard.AddTextButton<WishlistCleanupSnoozeQuery>());
+        }
+
+        Text.Verbatim("?");
 
         Text.AddNotificationsSettingsLink();
 
         Keyboard.AddButton<CompactListQuery>("\U0001f381 Открыть вишлист");
 
-        if (!WishlistCleanupNotificationService.IsSnoozed(userContext, userId))
-            Keyboard.NewRow().AddButton<WishlistCleanupSnoozeQuery>();
-
-        Keyboard.NewRow().AddButton<MainMenuQuery>("Закрыть");
+        Keyboard.NewRow().AddButton<MainMenuQuery>("Главное меню");
 
         return Task.CompletedTask;
     }

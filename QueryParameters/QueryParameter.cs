@@ -18,6 +18,7 @@ public readonly struct QueryParameter(QueryParameterType type, long? value = nul
    public static QueryParameter ChangeWishSortProperty { get; } = new(QueryParameterType.ChangeWishSortProperty);
    public static QueryParameter WishFilterToggleUnclaimed { get; } = new(QueryParameterType.WishFilterToggleUnclaimed);
    public static QueryParameter ToggleWishPermanence { get; } = new(QueryParameterType.ToggleWishPermanence);
+   public static QueryParameter ShowHelp { get; } = new(QueryParameterType.ShowHelp);
 
    public QueryParameterType Type { get; } = type;
    public long? Value { get; } = value;

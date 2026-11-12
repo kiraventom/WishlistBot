@@ -8,7 +8,7 @@ namespace WishlistBot.BotMessages.EditWish;
 /// Черновик нового виша. Параметра <see cref="QueryParameterType.WishId"/> тут нет:
 /// виша ещё не существует, поэтому окно всегда «добавление», а не «редактирование».
 /// </summary>
-[AllowedTypes(QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo, QueryParameterType.ToggleWishPermanence)]
+[AllowedTypes(QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo, QueryParameterType.ToggleWishPermanence, QueryParameterType.ShowHelp)]
 [ChildMessage(typeof(CompactListMessage))]
 public class NewWishMessage(ILogger logger) : WishDraftMessage(logger)
 {

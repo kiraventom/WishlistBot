@@ -11,7 +11,7 @@ using WishlistBot.BotMessages.Friends;
 
 namespace WishlistBot.BotMessages;
 
-[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims, QueryParameterType.SaveDraft)]
+[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims, QueryParameterType.SaveDraft, QueryParameterType.ShowHelp)]
 [ChildMessage(typeof(CompactListMessage))]
 [MessageFor(typeof(ShowWishQuery))]
 public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
@@ -125,7 +125,11 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         if (description is not null)
             Text.Quote(description);
 
-        if (links.Any())
+        if (links.Count == 1)
+        {
+            Text.BlockBreak().Bold("Ссылка: ").InlineUrl(links[0].Url);
+        }
+        else if (links.Count > 1)
         {
             Text.BlockBreak().Bold("Ссылки:");
 
@@ -139,7 +143,16 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         if (wish.IsPermanent)
-            Text.BlockBreak().Verbatim($"\u2b50 Постоянный виш: {target.FirstName} всегда ему обрадуется!");
+        {
+            Text.BlockBreak().Verbatim("\u2b50 Постоянный виш ");
+
+            Text.Button("Что это?", Keyboard.AddTextButton<ShowWishQuery>(parameters: QueryParameter.ShowHelp));
+
+            if (parameters.Pop(QueryParameterType.ShowHelp))
+                AlertText = "Постоянный виш — это подарок, которому вы рады всегда!\n\n" +
+                            "Например: испанское полусладкое вино, хорошая книга, сертификат в Золотое Яблоко.\n\n" +
+                            "Постоянный виш нельзя забронировать, поэтому любой из друзей сможет порадовать вас им!";
+        }
 
         if (readOnly && !wish.IsPermanent)
             AddClaimLine(userContext, wish, userId, parameters);
@@ -237,12 +250,16 @@ $@"
             return;
         }
 
-        userContext.Entry(wish).Reference(w => w.Claimer).Load();
-
-        Text.Verbatim("Этот виш забронирован ").InlineMention(wish.Claimer);
-
-        if (wish.ClaimerId != userId)
+        if (wish.ClaimerId == userId)
+        {
+            Text.Verbatim("Этот виш забронирован вами");
+        }
+        else
+        {
+            userContext.Entry(wish).Reference(w => w.Claimer).Load();
+            Text.Verbatim("Этот виш забронирован ").InlineMention(wish.Claimer);
             return;
+        }
 
         // Свою бронь снимаем тем же экраном; из «Моих броней» возвращаемся в список
         var claimParameters = new List<QueryParameter>

@@ -27,6 +27,12 @@ public abstract class BotMessage(ILogger logger)
     /// </summary>
     public string ToastText { get; protected set; }
 
+    /// <summary>
+    /// Пояснение, которое показывается модальным алертом поверх чата (кнопка «Что это?»).
+    /// В отличие от <see cref="ToastText"/> не исчезает само и требует нажатия «ОК».
+    /// </summary>
+    public string AlertText { get; protected set; }
+
     public bool ForceNewMessage { get; private set; }
 
     public async Task Init(UserContext userContext, UserModel user)

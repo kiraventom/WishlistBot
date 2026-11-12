@@ -10,10 +10,9 @@ namespace WishlistBot.BotMessages.EditWish;
 /// какой именно. Без параметра окно ведёт себя как добавление — так в него возвращаются
 /// кнопки «Отмена»/«Очистить» из подэкранов нового виша.
 /// </summary>
-[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo, QueryParameterType.ToggleWishPermanence)]
+[AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClearWishProperty, QueryParameterType.SetPriceTo, QueryParameterType.ToggleWishPermanence, QueryParameterType.ShowHelp)]
 [ChildMessage(typeof(CompactListMessage))]
 [MessageFor(typeof(EditWishQuery))]
-[MessageFor(typeof(ConfirmWishPermanenceQuery))]
 public class EditWishMessage(ILogger logger) : WishDraftMessage(logger)
 {
     protected override bool TryGetEditedWishId(QueryParameterCollection parameters, out long wishId) =>

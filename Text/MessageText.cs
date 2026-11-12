@@ -256,6 +256,21 @@ public sealed class MessageText
         return this;
     }
 
+    /// <summary>Кнопка «скопировать в буфер» внутри текста.</summary>
+    public MessageText CopyButton(string text, string textToCopy, string style = null)
+    {
+        _sb.Append("<tg-button type=\"copy_text\"");
+
+        if (style is not null)
+            _sb.Append(" style=\"").Append(style).Append('"');
+
+        _sb.Append(" text=\"").Append(EscapeAttribute(textToCopy)).Append("\">");
+        Verbatim(text);
+        _sb.Append("</tg-button>");
+
+        return this;
+    }
+
     /// <summary>Кнопка-ссылка внутри текста.</summary>
     public MessageText LinkButton(string text, string url, string style = null)
     {

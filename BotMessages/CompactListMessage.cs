@@ -227,7 +227,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         if (isBooked)
         {
             userContext.Entry(wish).Reference(w => w.Claimer).Load();
-            text.InlineMention("БРОНЬ", wish.Claimer.TelegramId).CellLineBreak();
+            text.Verbatim("\U0001f512 ").InlineMention("БРОНЬ", wish.Claimer.TelegramId).CellLineBreak();
         }
 
         // Постоянный виш помечаем звёздочкой перед названием
