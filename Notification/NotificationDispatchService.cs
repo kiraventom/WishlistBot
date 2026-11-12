@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Telegram.Bot;
 using WishlistBot.BotMessages;
+using WishlistBot.BotMessages.Admin.Broadcasts;
 using WishlistBot.BotMessages.Notification;
 using WishlistBot.Model.User;
 
@@ -25,6 +26,12 @@ public sealed class NotificationDispatchService
 
     private static readonly TimeSpan IdleThreshold = TimeSpan.FromMinutes(IdleMinutes);
     private static readonly TimeSpan TickInterval = TimeSpan.FromMinutes(1);
+
+    /// <summary>
+    /// Пауза между получателями: Telegram не любит больше ~30 сообщений в секунду, а рассылка
+    /// уходит сразу всем, кто молчит. 50 мс — это 20 сообщений в секунду.
+    /// </summary>
+    public TimeSpan SendInterval { get; set; } = TimeSpan.FromMilliseconds(50);
 
     public static NotificationDispatchService Instance { get; } = new();
 
@@ -97,6 +104,9 @@ public sealed class NotificationDispatchService
             PruneDeliveredNotifications(userContext, queued);
 
             ++served;
+
+            if (SendInterval > TimeSpan.Zero)
+                await Task.Delay(SendInterval);
         }
 
         return served;
@@ -143,6 +153,7 @@ public sealed class NotificationDispatchService
     {
         var recepient = userContext.Users
             .Include(user => user.Settings)
+            .Include(user => user.ReceivedBroadcasts)
             .First(user => user.UserId == recepientId);
 
         var events = queued.Where(item => item.Type <= PendingNotificationType.WishPermanent).ToList();
@@ -241,9 +252,79 @@ public sealed class NotificationDispatchService
 
                 return await Send(userContext, recepient, new WishlistFillMessage(_logger, (WishlistHolidayKind)kind));
 
+            case PendingNotificationType.Broadcast:
+                return await DeliverBroadcast(userContext, recepient, pending);
+
+            case PendingNotificationType.BroadcastDelete:
+                return await DeleteBroadcast(userContext, recepient, pending);
+
             default:
                 return false;
         }
+    }
+
+    /// <summary>
+    /// Админская рассылка. Настройки уведомлений её не касаются: это сообщение от
+    /// разработчика, а не событие друзей. Если рассылку удалили, пока она стояла в очереди,
+    /// ничего не отправляем.
+    /// </summary>
+    private async Task<bool> DeliverBroadcast(UserContext userContext, UserModel recepient, PendingNotificationModel pending)
+    {
+        if (!int.TryParse(pending.Payload, out var broadcastId))
+            return false;
+
+        var broadcast = userContext.Broadcasts.AsNoTracking().FirstOrDefault(b => b.BroadcastId == broadcastId);
+
+        if (broadcast is null || broadcast.Deleted)
+            return false;
+
+        var message = new BroadcastNotificationMessage(_logger, broadcastId);
+        var sent = await _sender.SendOrEdit(userContext, recepient.UserId, message, forceNewMessage: true);
+
+        if (sent is null)
+            return false;
+
+        recepient.ReceivedBroadcasts.Add(new ReceivedBroadcastModel
+        {
+            BroadcastId = broadcastId,
+            MessageId = sent.MessageId,
+        });
+
+        userContext.SaveChanges();
+
+        _logger?.Information("Sent broadcast [{broadcastId}] to [{userId}], messageId [{messageId}]",
+            broadcastId, recepient.UserId, sent.MessageId);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Убирает доставленную рассылку из чата получателя. Ничего не отправляет, поэтому
+    /// и не помечает пользователя как «получившего уведомление».
+    /// </summary>
+    private async Task<bool> DeleteBroadcast(UserContext userContext, UserModel recepient, PendingNotificationModel pending)
+    {
+        if (!int.TryParse(pending.Payload, out var broadcastId))
+            return false;
+
+        var received = recepient.ReceivedBroadcasts.FirstOrDefault(item => item.BroadcastId == broadcastId);
+
+        if (received is null)
+            return false;
+
+        try
+        {
+            await _client.DeleteMessage(chatId: recepient.TelegramId, messageId: received.MessageId);
+        }
+        catch (Exception e)
+        {
+            _logger?.Information("Failed to delete broadcast message [{messageId}]: {error}", received.MessageId, e.Message);
+        }
+
+        recepient.ReceivedBroadcasts.Remove(received);
+        userContext.SaveChanges();
+
+        return false;
     }
 
     /// <summary>

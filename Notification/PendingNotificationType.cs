@@ -5,8 +5,8 @@ namespace WishlistBot.Notification;
 ///
 /// Первые пять значений — события друзей: данные для них берутся из
 /// <see cref="WishlistBot.Model.User.NotificationModel"/> (ссылка на него лежит в очереди).
-/// Последние три — фоновые рассылки: у них нет источника-пользователя, а всё, что нужно
-/// для восстановления сообщения, лежит в payload.
+/// Остальные — фоновые рассылки и админские действия: у них нет источника-пользователя,
+/// а всё, что нужно для восстановления сообщения, лежит в payload.
 /// </summary>
 public enum PendingNotificationType
 {
@@ -19,4 +19,10 @@ public enum PendingNotificationType
     BirthdayDigest = 0x10,
     WishlistCleanup = 0x11,
     WishlistFill = 0x12,
+
+    /// <summary>Админская рассылка: payload — id рассылки.</summary>
+    Broadcast = 0x20,
+
+    /// <summary>Убрать доставленную рассылку из чата получателя: payload — id рассылки.</summary>
+    BroadcastDelete = 0x21,
 }
