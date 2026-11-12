@@ -53,7 +53,7 @@ public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
                 FriendBirthdayLine.AddColumns(table);
 
                 for (var i = 0; i < page.Count; ++i)
-                    FriendBirthdayLine.AppendRow(table, page.FirstIndex + i + 1, friends[page.FirstIndex + i]);
+                    FriendBirthdayLine.AppendRow(table, friends[page.FirstIndex + i]);
             });
         }
 

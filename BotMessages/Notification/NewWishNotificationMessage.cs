@@ -32,7 +32,7 @@ public class NewWishNotificationMessage : BotMessage, INotificationMessage
         var sender = userContext.Users.Include(u => u.WishViewSettings).First(u => u.UserId == userId);
         var wishViewSettings = sender.GetOrCreateViewerTarget<WishViewSettingsModel>(_notificationSourceId);
 
-        var pageIndex = TextListMessageUtils.GetPageIndex(notificationSource.LocateWish(wishViewSettings, newWish).Index);
+        var pageIndex = TextListMessageUtils.GetPageIndex(notificationSource.LocateWish(wishViewSettings, newWish).Index, CompactListMessage.WishesPerPage);
 
         Keyboard
            .AddButton<ShowWishQuery>("Перейти к вишу",

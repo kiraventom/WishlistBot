@@ -24,6 +24,21 @@ public sealed class TableBuilder
 
     public IReadOnlyList<List<string>> Rows => _rows;
 
+    /// <summary>Заголовок таблицы с форматированием в ячейках (кнопки, ссылки).</summary>
+    public TableBuilder Header(params Action<MessageText>[] cells)
+    {
+        _headers.Clear();
+
+        foreach (var cell in cells)
+        {
+            var text = new MessageText();
+            cell(text);
+            _headers.Add(text.ToString());
+        }
+
+        return this;
+    }
+
     /// <summary>Заголовок таблицы: обычный текст, экранируется автоматически.</summary>
     public TableBuilder Header(params string[] headers)
     {

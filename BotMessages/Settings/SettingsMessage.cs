@@ -22,53 +22,33 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
             user.Settings.SetFromEnum(newSettingsEnum);
         }
 
-        const string enabledBell = "\U0001f514";
-
         var settingsEnum = user.Settings.ToEnum();
 
         Text.Heading("Настройки уведомлений");
 
-        // Тумблеры — инлайн-ссылки, а не кнопки: колокольчик и название настройки ведут
-        // на тот же экран с уже переключённым флагом (диплинк a=st_s=<значение>)
-        Text.Table(table =>
+        // Чекбокс-список: состояние видно галочкой, а название настройки — инлайн-ссылка,
+        // которая переключает флаг (диплинк a=st_s=<значение>). Кнопок-тумблеров нет.
+        var settings = new (SettingsEnum Flag, bool IsEnabled, string Name)[]
         {
-            table
-                .Header(enabledBell, "Настройка")
-                .Align(TableAlign.Center, TableAlign.Left);
+            (SettingsEnum.ReceiveFriendWishNotifications, user.Settings.ReceiveFriendWishNotifications,
+                "Сообщать мне об изменениях вишлистов друзей"),
+            (SettingsEnum.SendNotifications, user.Settings.SendNotifications,
+                "Сообщать друзьям об изменениях моего вишлиста"),
+            (SettingsEnum.BirthdayNotifications, user.Settings.BirthdayNotifications,
+                "Напоминать о днях рождения друзей"),
+            (SettingsEnum.WishlistCleanupNotifications, user.Settings.WishlistCleanupNotifications,
+                "Напоминать о чистке вишлиста после праздников"),
+            (SettingsEnum.WishlistFillNotifications, user.Settings.WishlistFillNotifications,
+                "Напоминать заполнить вишлист перед праздником"),
+        };
 
-            AddRow(table, settingsEnum, SettingsEnum.ReceiveFriendWishNotifications,
-                user.Settings.ReceiveFriendWishNotifications, "Сообщать мне об изменениях вишлистов друзей");
-
-            AddRow(table, settingsEnum, SettingsEnum.SendNotifications,
-                user.Settings.SendNotifications, "Сообщать друзьям об изменениях моего вишлиста");
-
-            AddRow(table, settingsEnum, SettingsEnum.BirthdayNotifications,
-                user.Settings.BirthdayNotifications, "Напоминать о днях рождения друзей");
-
-            AddRow(table, settingsEnum, SettingsEnum.WishlistCleanupNotifications,
-                user.Settings.WishlistCleanupNotifications, "Напоминать о чистке вишлиста после праздников");
-
-            AddRow(table, settingsEnum, SettingsEnum.WishlistFillNotifications,
-                user.Settings.WishlistFillNotifications, "Напоминать заполнить вишлист перед праздником");
-        });
+        Text.TaskList(
+            settings.Length,
+            index => settings[index].IsEnabled,
+            (line, index) => line.InlineUrl(settings[index].Name, DeepLink.BuildSettings(settingsEnum ^ settings[index].Flag)));
 
         Keyboard.AddButton<MainMenuQuery>("В главное меню");
 
         return Task.CompletedTask;
-    }
-
-    private static void AddRow(
-        TableBuilder table,
-        SettingsEnum settingsEnum,
-        SettingsEnum flag,
-        bool isEnabled,
-        string name)
-    {
-        var link = DeepLink.BuildSettings(settingsEnum ^ flag);
-        var bell = isEnabled ? "\U0001f514" : "\U0001f515";
-
-        table.Row(
-            cell => cell.InlineUrl(bell, link),
-            cell => cell.InlineUrl(name, link));
     }
 }

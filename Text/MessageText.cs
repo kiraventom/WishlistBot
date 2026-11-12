@@ -85,6 +85,21 @@ public sealed class MessageText
 
     public MessageText Italic(string text) => Wrap("_", text);
 
+    /// <summary>Курсив вокруг содержимого с вложенной разметкой (ссылки, tg-time).</summary>
+    public MessageText Italic(Action<MessageText> content) => Wrap("_", "_", content);
+
+    /// <summary>Жирный вокруг содержимого с вложенной разметкой.</summary>
+    public MessageText Bold(Action<MessageText> content) => Wrap("**", "**", content);
+
+    private MessageText Wrap(string openMarker, string closeMarker, Action<MessageText> content)
+    {
+        _sb.Append(openMarker);
+        content(this);
+        _sb.Append(closeMarker);
+
+        return this;
+    }
+
     public MessageText ItalicBold(string text) => Wrap("**_", "_**", text);
 
     public MessageText Strikethrough(string text) => Wrap("~~", text);
@@ -200,19 +215,12 @@ public sealed class MessageText
     }
 
     /// <summary>Заголовок экрана (## по умолчанию — крупный, но не гигантский).</summary>
-    public MessageText Heading(string text, int level = 2)
-    {
-        EnsureBlockStart();
+    public MessageText Heading(string text, int level = 2) => Heading(heading => heading.Verbatim(text), level);
 
-        for (var i = 0; i < Math.Clamp(level, 1, 6); ++i)
-            _sb.Append('#');
-
-        _sb.Append(' ');
-        Verbatim(text);
-
-        return BlockBreak();
-    }
-
+    /// <summary>
+    /// Заголовок экрана. Сразу под ним идёт горизонтальная черта: она отделяет шапку
+    /// от содержимого (в MarkdownV2 такого разделителя не было вообще).
+    /// </summary>
     public MessageText Heading(Action<MessageText> content, int level = 2)
     {
         EnsureBlockStart();
@@ -222,8 +230,87 @@ public sealed class MessageText
 
         _sb.Append(' ');
         content(this);
+        BlockBreak();
+
+        _sb.Append("---");
 
         return BlockBreak();
+    }
+
+    /// <summary>
+    /// Кнопка внутри текста (в том числе в ячейке таблицы). Callback-данные приходят
+    /// в обычном <c>callback_query</c>, но их надо отдельно разрешить экрану — за это
+    /// отвечает <c>BotKeyboard.AddTextButton</c>.
+    /// </summary>
+    public MessageText Button(string text, string callbackData, string style = null)
+    {
+        _sb.Append("<tg-button type=\"callback_data\"");
+
+        if (style is not null)
+            _sb.Append(" style=\"").Append(style).Append('"');
+
+        _sb.Append(" data=\"").Append(EscapeAttribute(callbackData)).Append("\">");
+        Verbatim(text);
+        _sb.Append("</tg-button>");
+
+        return this;
+    }
+
+    /// <summary>Кнопка-ссылка внутри текста.</summary>
+    public MessageText LinkButton(string text, string url, string style = null)
+    {
+        _sb.Append("<tg-button type=\"url\"");
+
+        if (style is not null)
+            _sb.Append(" style=\"").Append(style).Append('"');
+
+        _sb.Append(" url=\"").Append(EscapeAttribute(url)).Append("\">");
+        Verbatim(text);
+        _sb.Append("</tg-button>");
+
+        return this;
+    }
+
+    /// <summary>
+    /// Дата/время, которые клиент показывает в формате и часовом поясе пользователя.
+    /// <paramref name="text"/> — запасной текст для клиентов, которые тег не понимают.
+    /// Форматы: <c>r</c> (относительно), <c>w</c> (день недели), <c>d</c>/<c>D</c> (дата),
+    /// <c>t</c>/<c>T</c> (время) — можно комбинировать, например <c>wDT</c>.
+    /// </summary>
+    public MessageText DateTime(long unixTime, string format, string text)
+    {
+        _sb.Append("<tg-time unix=\"").Append(unixTime).Append("\" format=\"").Append(format).Append("\">");
+        Verbatim(text);
+        _sb.Append("</tg-time>");
+
+        return this;
+    }
+
+    /// <summary>Дата в формате пользователя (см. <see cref="DateTime(long, string, string)"/>).</summary>
+    public MessageText Date(DateOnly date, string format, string text) =>
+        DateTime(ToUnixTime(date), format, text);
+
+    /// <summary>Дата и время в формате пользователя.</summary>
+    public MessageText Date(DateTime date, string format, string text) =>
+        DateTime(new DateTimeOffset(date).ToUnixTimeSeconds(), format, text);
+
+    /// <summary>«через 3 дня» / «сегодня» — считает клиент, текст нужен как запасной.</summary>
+    public MessageText RelativeDate(DateOnly date, string text) => Date(date, "r", text);
+
+    /// <summary>«через 3 дня» / «сегодня» для момента времени.</summary>
+    public MessageText RelativeDate(DateTime date, string text) => Date(date, "r", text);
+
+    private static long ToUnixTime(DateOnly date) =>
+        new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue)).ToUnixTimeSeconds();
+
+    /// <summary>
+    /// Перенос строки внутри ячейки таблицы: обычный <c>\n</c> разваливает таблицу,
+    /// поэтому нужен HTML-тег.
+    /// </summary>
+    public MessageText CellLineBreak()
+    {
+        _sb.Append("<br>");
+        return this;
     }
 
     public MessageText Divider()
@@ -443,6 +530,9 @@ public sealed class MessageText
         if (length != _sb.Length)
             _sb.Length = length;
     }
+
+    private static string EscapeAttribute(string value) =>
+        value.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
 
     private static int LongestBacktickRun(string text)
     {

@@ -22,7 +22,7 @@ public class BirthdayListMessage(ILogger logger, IReadOnlyList<FriendBirthday> f
             FriendBirthdayLine.AddColumns(table);
 
             for (var i = 0; i < friends.Count; ++i)
-                FriendBirthdayLine.AppendRow(table, i + 1, friends[i]);
+                FriendBirthdayLine.AppendRow(table, friends[i]);
         });
 
         Text.AddNotificationsSettingsLink();

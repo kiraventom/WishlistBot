@@ -12,15 +12,14 @@ public static class FriendBirthdayLine
 {
     public static void AddColumns(TableBuilder table) =>
         table
-            .Header("#", "Друг", "Ближайший ДР", "Виши")
-            .Align(TableAlign.Right, TableAlign.Left, TableAlign.Left, TableAlign.Right);
+            .Header("Друг", "Ближайший ДР", "Виши")
+            .Align(TableAlign.Left, TableAlign.Left, TableAlign.Right);
 
-    public static void AppendRow(TableBuilder table, int number, FriendBirthday friend)
+    public static void AppendRow(TableBuilder table, FriendBirthday friend)
     {
         table.Row(
-            cell => cell.Verbatim(number.ToString()),
             cell => cell.InlineUrl(friend.Friend.FirstName, friend.Friend.BuildFriendLink()),
-            cell => cell.Verbatim(Describe(friend)),
+            cell => AddBirthdayCell(cell, friend),
             cell =>
             {
                 // В колонке только число; ссылка на вишлист — на самом числе
@@ -34,9 +33,34 @@ public static class FriendBirthdayLine
             });
     }
 
-    /// <summary>Дата ближайшего ДР и когда он будет: «05.03, 32 года через 113 дней».</summary>
+    /// <summary>
+    /// Дата ближайшего ДР (через tg-time — клиент покажет её в своём формате) и сколько
+    /// лет будет: «05.03.2027, 32 года через 113 дней».
+    /// </summary>
+    public static void AddBirthdayCell(MessageText text, FriendBirthday friend)
+    {
+        if (friend.NextBirthday is not { } nextBirthday)
+        {
+            text.Verbatim("(ДР не указан)");
+            return;
+        }
+
+        var age = friend.Age!.Value;
+        var daysUntil = friend.DaysUntil!.Value;
+
+        var relativeText = daysUntil == 0
+            ? "сегодня"
+            : $"через {daysUntil} {PluralUtils.Days(daysUntil)}";
+
+        text
+            .Date(nextBirthday, "d", nextBirthday.ToString("dd.MM.yyyy"))
+            .Verbatim($", {age} {PluralUtils.Years(age)} ")
+            .RelativeDate(nextBirthday, relativeText);
+    }
+
+    /// <summary>Текстовая версия для тестов и логов.</summary>
     public static string Describe(FriendBirthday friend) =>
         friend.NextBirthday is { } nextBirthday
-            ? $"{nextBirthday.ToString("dd.MM")}, {BirthdayUtils.DescribeUpcoming(friend.Age!.Value, friend.DaysUntil!.Value)}"
+            ? $"{nextBirthday:dd.MM.yyyy}, {BirthdayUtils.DescribeUpcoming(friend.Age!.Value, friend.DaysUntil!.Value)}"
             : "(ДР не указан)";
 }

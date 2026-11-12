@@ -36,20 +36,19 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
         Text.Table(table =>
         {
             table
-                .Header("#", "Пользователь", "Виши", "Друзья")
-                .Align(TableAlign.Right, TableAlign.Left, TableAlign.Left, TableAlign.Right);
+                .Header("Пользователь", "Виши", "Друзья")
+                .Align(TableAlign.Left, TableAlign.Left, TableAlign.Right);
 
             for (var i = 0; i < page.Count; ++i)
-                AddUserRow(table, users[page.FirstIndex + i], page.FirstIndex + i + 1);
+                AddUserRow(table, users[page.FirstIndex + i]);
         });
 
         return Task.CompletedTask;
     }
 
-    private static void AddUserRow(TableBuilder table, UserModel user, int number)
+    private static void AddUserRow(TableBuilder table, UserModel user)
     {
         table.Row(
-            cell => cell.Verbatim(number.ToString()),
             cell => cell.InlineUrl(user.FirstName, DeepLink.BuildAdminUser(user.UserId)),
             cell => cell
                 .Verbatim($"{user.Wishes.Count} (")

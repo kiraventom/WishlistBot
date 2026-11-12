@@ -9,10 +9,9 @@ public static class NotificationMessageUtils
 
     /// <summary>
     /// Последняя строка уведомления: ссылка на экран настроек уведомлений.
-    /// Отбивается двумя пустыми строками, чтобы не липнуть к тексту уведомления.
+    /// Отбивается горизонтальной чертой — пустых строк не хватало, футер лип к тексту.
     /// </summary>
     public static MessageText AddNotificationsSettingsLink(this MessageText text) =>
-        text.BlockBreak()
-            .BlankLine()
+        text.Divider()
             .InlineUrl(NotificationsSettingsText, DeepLink.BuildSettings());
 }

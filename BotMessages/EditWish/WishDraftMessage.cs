@@ -26,6 +26,31 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
     /// <summary>Нижние кнопки окна: у нового виша и у существующего они разные.</summary>
     protected abstract void AddControls(bool isEditing, long wishId);
 
+    /// <summary>
+    /// Строка параметра: подпись, значение (или «Не указано») и кнопка «Добавить»/«Изменить».
+    /// Кнопка живёт в тексте, поэтому её callback-данные приходят из <c>AddTextButton</c>.
+    /// </summary>
+    private void AddField(string label, bool isSet, Action<MessageText> renderValue, string callbackData, bool blockValue = false)
+    {
+        Text.BlockBreak().Bold($"{label}: ");
+
+        if (!isSet)
+        {
+            Text.Verbatim("Не указано ");
+            Text.Button("Добавить", callbackData);
+            return;
+        }
+
+        renderValue(Text);
+
+        // Значение-блок (цитата, список) уже закончилось пустой строкой — кнопка идёт
+        // отдельной строкой, без лишнего пробела перед ней
+        if (!blockValue)
+            Text.Verbatim(" ");
+
+        Text.Button("Изменить", callbackData);
+    }
+
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var user = userContext.Users
@@ -58,18 +83,8 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
         if (parameters.Pop(QueryParameterType.ToggleWishPermanence))
             wishDraft.IsPermanent = !wishDraft.IsPermanent;
 
-        Keyboard
-           .AddButton<SetWishNameQuery>()
-           .AddButton<SetWishDescriptionQuery>()
-           .NewRow()
-           .AddButton<SetWishMediaQuery>()
-           .AddButton<SetWishLinksQuery>()
-           .NewRow()
-           .AddButton<SetWishPriceQuery>()
-           .NewRow()
-           .AddButton<WishPermanenceQuery>(wishDraft.IsPermanent ? "Сделать обычным" : null)
-           .NewRow();
-
+        // Кнопки полей переехали в текст (tg-button рядом с каждым параметром),
+        // в клавиатуре остались только «Готово» / «Отмена» / «Удалить»
         AddControls(isEditing, wishId);
 
         if (parameters.Pop(QueryParameterType.SetPriceTo, out var priceValue))
@@ -103,34 +118,47 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
         var links = wishDraft.Links;
         var priceRange = wishDraft.PriceRange;
 
-        if (isEditing)
-            Text.Italic("Редактирование виша");
-        else
-            Text.Italic("Добавление виша");
+        Text.Heading(isEditing ? "Редактирование виша" : "Добавление виша");
 
         // Фото — медиа-блок в теле окна, а не отдельное сообщение с подписью
         Text.Media(wishDraft.MediaKey);
 
-        Text.Bold("Название: ").Monospace(name);
+        // Все параметры показываются всегда: у пустого — «Не указано» и кнопка «Добавить»,
+        // у заполненного — значение и кнопка «Изменить»
+        AddField("Название", !string.IsNullOrEmpty(name),
+            text => text.Monospace(name),
+            Keyboard.AddTextButton<SetWishNameQuery>());
 
-        if (description is not null)
-            Text.BlockBreak().Bold("Описание:").BlockBreak().Quote(description);
+        AddField("Описание", description is not null,
+            text => text.Quote(description),
+            Keyboard.AddTextButton<SetWishDescriptionQuery>(),
+            blockValue: true);
 
-        if (links.Any())
-        {
-            Text.BlockBreak().Bold("Ссылки:");
+        AddField("Ссылки", links.Count != 0,
+            text => text.Bullets(links.Count, (line, index) => line.InlineUrl(links[index].Url)),
+            Keyboard.AddTextButton<SetWishLinksQuery>(),
+            blockValue: true);
 
-            Text.Bullets(links.Count, (line, index) => line.InlineUrl(links[index].Url));
-        }
+        AddField("Цена", priceRange != Price.NotSet,
+            text => text.Monospace(MessageTextUtils.PriceToString(priceRange)),
+            Keyboard.AddTextButton<SetWishPriceQuery>());
 
-        if (priceRange != Price.NotSet)
-        {
-            var priceRangeString = MessageTextUtils.PriceToString(priceRange);
-            Text.BlockBreak().Bold("Цена: ").Monospace(priceRangeString);
-        }
+        AddField("Фото", wishDraft.MediaKey is not null,
+            text => text.Verbatim("Приложено"),
+            Keyboard.AddTextButton<SetWishMediaQuery>());
+
+        Text.BlockBreak();
 
         if (wishDraft.IsPermanent)
-            Text.LineBreak().Verbatim("\u2b50 Постоянный виш");
+        {
+            Text.Verbatim("\u2b50 Постоянный виш ");
+            Text.Button("Сделать обычным", Keyboard.AddTextButton<WishPermanenceQuery>());
+        }
+        else
+        {
+            Text.Verbatim("Обычный виш ");
+            Text.Button("Сделать постоянным", Keyboard.AddTextButton<WishPermanenceQuery>());
+        }
 
         return Task.CompletedTask;
     }

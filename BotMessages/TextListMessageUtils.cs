@@ -15,13 +15,15 @@ public static class TextListMessageUtils
 {
     public const int ItemsPerPage = 15;
 
-    public static int GetPagesCount(int totalCount) => (int)Math.Ceiling((double)totalCount / ItemsPerPage);
+    public static int GetPagesCount(int totalCount, int itemsPerPage = ItemsPerPage) =>
+        (int)Math.Ceiling((double)totalCount / itemsPerPage);
 
     /// <summary>
     /// Страница, на которой лежит элемент с указанным индексом. Индекс -1 значит «не нашли»
     /// (такое бывает у ссылок из уведомлений) — ведём на первую страницу, а не в минус.
     /// </summary>
-    public static int GetPageIndex(int itemIndex) => Math.Max(itemIndex, 0) / ItemsPerPage;
+    public static int GetPageIndex(int itemIndex, int itemsPerPage = ItemsPerPage) =>
+        Math.Max(itemIndex, 0) / itemsPerPage;
 
     /// <summary>
     /// Кнопки листания и «Назад» для списка. Текст страницы собирает сам экран: с Rich Markdown
@@ -32,7 +34,8 @@ public static class TextListMessageUtils
         QueryParameterCollection parameters,
         int totalCount,
         IListPage listPosition,
-        string buttonCaption = null)
+        string buttonCaption = null,
+        int itemsPerPage = ItemsPerPage)
         where TListQuery : IQuery, new() where TParentQuery : IQuery, new()
     {
         buttonCaption = buttonCaption is null ? string.Empty : $"{buttonCaption} ";
@@ -49,7 +52,7 @@ public static class TextListMessageUtils
             return new ListPage(0, 0, 0);
         }
 
-        var pagesCount = GetPagesCount(totalCount);
+        var pagesCount = GetPagesCount(totalCount, itemsPerPage);
 
         // Page can be out of range: the only item on the last page was removed,
         // or the page came from a parameter of another list (see SetListPageTo)
@@ -57,8 +60,8 @@ public static class TextListMessageUtils
 
         listPosition.Page = pageIndex;
 
-        var firstIndex = pageIndex * ItemsPerPage;
-        var count = Math.Min(ItemsPerPage, totalCount - firstIndex);
+        var firstIndex = pageIndex * itemsPerPage;
+        var count = Math.Min(itemsPerPage, totalCount - firstIndex);
 
         var prevPageIndex = pageIndex - 1;
         var nextPageIndex = pageIndex + 1;

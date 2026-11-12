@@ -85,41 +85,11 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             if (!wish.IsPermanent && wish.ClaimerId is not null)
             {
                 var claimer = userContext.Users.FirstOrDefault(u => u.UserId == wish.ClaimerId);
-                if (claimer is not null)
-                {
-                    if (claimer.UserId == userId)
-                    {
-                        Text.ItalicBold("Этот виш забронирован вами").BlockBreak();
-
-                        if (parameters.Peek(QueryParameterType.ReturnToMyClaims))
-                        {
-                            Keyboard
-                                .AddButton<MyClaimsQuery>("Снять бронь", QueryParameter.ClaimWish, new QueryParameter(QueryParameterType.WishId, wish.WishId))
-                                .NewRow();
-                        }
-                        else
-                        {
-                            Keyboard.AddButton<ShowWishQuery>("Снять бронь", new QueryParameter(QueryParameterType.WishId, wishId), QueryParameter.ClaimWish)
-                                .NewRow();
-                        }
-                    }
-                    else
-                    {
-                        Text.ItalicBold("\u203c\ufe0f Этот виш забронирован ").InlineMention(claimer).ItalicBold("! \u203c\ufe0f").BlockBreak();
-                    }
-                }
-                else
+                if (claimer is null)
                 {
                     Logger.Error("Wish [{wishId}]: Claimer [{claimerId}] not found in database. Cleaning ClaimerId", wish.WishId, wish.ClaimerId);
                     wish.ClaimerId = null;
                 }
-            }
-
-            // Checking ClaimerId in separate if because it can be reset when claimer was not found in database
-            if (!wish.IsPermanent && wish.ClaimerId is null)
-            {
-                Keyboard.AddButton<ShowWishQuery>("Забронировать", new QueryParameter(QueryParameterType.WishId, wishId), QueryParameter.ClaimWish)
-                    .NewRow();
             }
         }
         else
@@ -145,14 +115,15 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         var links = wish.Links;
         var priceRange = wish.PriceRange;
 
+        // Название — заголовком экрана, а не полем «Название: …»
+        Text.Heading(name);
+
         // Картинка — медиа-блоком в теле сообщения: раньше экран с фото уходил отдельным
         // photo-сообщением, и весь текст был его подписью (лимит 1024 символа)
         Text.Media(wish.MediaKey);
 
-        Text.Bold("Название: ").Monospace(name);
-
         if (description is not null)
-            Text.LineBreak().Bold("Описание: ").BlockBreak().Quote(description);
+            Text.Quote(description);
 
         if (links.Any())
         {
@@ -168,7 +139,10 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         if (wish.IsPermanent)
-            Text.LineBreak().Verbatim($"\u2b50 Постоянный виш: {target.FirstName} всегда ему обрадуется!");
+            Text.BlockBreak().Verbatim($"\u2b50 Постоянный виш: {target.FirstName} всегда ему обрадуется!");
+
+        if (readOnly && !wish.IsPermanent)
+            AddClaimLine(userContext, wish, userId, parameters);
 
         string shareText;
         
@@ -212,7 +186,7 @@ $@"
 
             // Return to the page of the claims list that contains this wish
             Keyboard.AddButton<MyClaimsQuery>("Назад",
-                new QueryParameter(QueryParameterType.SetListPageTo, TextListMessageUtils.GetPageIndex(index)));
+                new QueryParameter(QueryParameterType.SetListPageTo, TextListMessageUtils.GetPageIndex(index, CompactListMessage.WishesPerPage)));
 
             if (index < totalCount - 1)
                 Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, claimedWishes[nextIndex].WishId));
@@ -237,11 +211,52 @@ $@"
 
             // Return to the page of the wishlist that contains this wish
             Keyboard.AddButton<CompactListQuery>("Назад",
-                new QueryParameter(QueryParameterType.SetListPageTo, TextListMessageUtils.GetPageIndex(index)));
+                new QueryParameter(QueryParameterType.SetListPageTo, TextListMessageUtils.GetPageIndex(index, CompactListMessage.WishesPerPage)));
 
             if (index < totalCount - 1)
                 Keyboard.AddButton<ShowWishQuery>($"{nextIndex + 1} \u27a1\ufe0f", new QueryParameter(QueryParameterType.WishId, wishes[nextIndex].WishId));
         }
+    }
+
+    /// <summary>
+    /// Строка о брони внизу экрана: кто забронировал и кнопка действия.
+    /// Кнопка живёт в тексте (tg-button), а не в reply_markup.
+    /// </summary>
+    private void AddClaimLine(UserContext userContext, WishModel wish, int userId, QueryParameterCollection parameters)
+    {
+        Text.BlockBreak();
+
+        if (wish.ClaimerId is null)
+        {
+            Text.Verbatim("Этот виш не забронирован ");
+
+            var data = Keyboard.AddTextButton<ShowWishQuery>(
+                parameters: [new QueryParameter(QueryParameterType.WishId, wish.WishId), QueryParameter.ClaimWish]);
+
+            Text.Button("Забронировать", data, style: "success");
+            return;
+        }
+
+        userContext.Entry(wish).Reference(w => w.Claimer).Load();
+
+        Text.Verbatim("Этот виш забронирован ").InlineMention(wish.Claimer);
+
+        if (wish.ClaimerId != userId)
+            return;
+
+        // Свою бронь снимаем тем же экраном; из «Моих броней» возвращаемся в список
+        var claimParameters = new List<QueryParameter>
+        {
+            new(QueryParameterType.WishId, wish.WishId),
+            QueryParameter.ClaimWish
+        };
+
+        if (parameters.Peek(QueryParameterType.ReturnToMyClaims))
+            claimParameters.Add(QueryParameter.ReturnToMyClaims);
+
+        var claimData = Keyboard.AddTextButton<ShowWishQuery>(parameters: [.. claimParameters]);
+
+        Text.Verbatim(" ").Button("Снять бронь", claimData, style: "danger");
     }
 
     private async Task<WishModel> AddWish(UserContext userContext, UserModel user, WishDraftModel draft)

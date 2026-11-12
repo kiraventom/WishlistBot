@@ -58,7 +58,13 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
             table.Row("ClaimedWishes", cell => cell.Monospace(target.ClaimedWishes.Count.ToString()));
             table.Row("Send", cell => cell.Monospace(target.Settings.SendNotifications.ToString()));
             table.Row("Receive", cell => cell.Monospace(target.Settings.ReceiveFriendWishNotifications.ToString()));
-            table.Row("Birthday", cell => cell.Monospace(target.Profile.Birthday?.ToShortDateString() ?? "null"));
+            table.Row("Birthday", cell =>
+            {
+                if (target.Profile.Birthday is { } birthday)
+                    cell.Date(birthday, "d", birthday.ToString("dd.MM.yyyy"));
+                else
+                    cell.Monospace("null");
+            });
             table.Row("Notes", cell => cell.Monospace(target.Profile.Notes ?? "null"));
         });
 

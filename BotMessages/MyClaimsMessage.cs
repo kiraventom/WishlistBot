@@ -41,16 +41,14 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
         Text.Table(table =>
         {
             table
-                .Header("#", "Друг", "Виш")
-                .Align(TableAlign.Right, TableAlign.Left, TableAlign.Left);
+                .Header("Друг", "Виш")
+                .Align(TableAlign.Left, TableAlign.Left);
 
             for (var i = 0; i < page.Count; ++i)
             {
                 var claimedWish = claimedWishes[page.FirstIndex + i];
-                var number = page.FirstIndex + i + 1;
 
                 table.Row(
-                    cell => cell.Verbatim(number.ToString()),
                     cell => cell.InlineMention(claimedWish.Owner),
                     cell => cell.InlineUrl(claimedWish.Name, claimedWish.BuildLink(claimedWish.Owner.SubscribeId, returnToClaims: true)));
             }

@@ -48,16 +48,14 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
             Text.Table(table =>
             {
                 table
-                    .Header("#", "Рассылка")
-                    .Align(TableAlign.Right, TableAlign.Left);
+                    .Header("Рассылка")
+                    .Align(TableAlign.Left);
 
                 for (var i = 0; i < page.Count; ++i)
                 {
                     var broadcast = broadcasts[page.FirstIndex + i];
-                    var number = page.FirstIndex + i + 1;
 
                     table.Row(
-                        cell => cell.Verbatim(number.ToString()),
                         cell => cell.InlineUrl(BroadcastName(broadcast), broadcast.BuildLink()));
                 }
             });

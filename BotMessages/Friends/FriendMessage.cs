@@ -78,15 +78,22 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
-            Text.Monospace(birthday.ToString("dd.MM.yyyy"));
+            Text.Date(birthday, "d", birthday.ToString("dd.MM.yyyy"));
 
             var today = DateOnly.FromDateTime(DateTime.Now);
             var nextBirthday = BirthdayUtils.GetNextBirthday(birthday, today);
             var daysBeforeBirthday = BirthdayUtils.GetDaysUntil(nextBirthday, today);
             var nextAge = BirthdayUtils.GetAge(birthday, nextBirthday);
 
+            var relativeText = daysBeforeBirthday == 0
+                ? "сегодня"
+                : $"через {daysBeforeBirthday} {PluralUtils.Days(daysBeforeBirthday)}";
+
             // Тот же формат, что в списке друзей и дайджесте: «32 года через 113 дней»
-            Text.Italic($" ({BirthdayUtils.DescribeUpcoming(nextAge, daysBeforeBirthday)})");
+            Text.Italic(line => line
+                .Verbatim($" ({nextAge} {PluralUtils.Years(nextAge)} ")
+                .RelativeDate(nextBirthday, relativeText)
+                .Verbatim(")"));
         }
 
         if (target.Profile.Notes != null)

@@ -66,9 +66,9 @@ public class BroadcastMessage(ILogger logger) : UserBotMessage(logger)
                 {
                     Text
                        .Bold(" was sent ")
-                       .Monospace(broadcast.DateTimeSent.Value.ToString("dd/MM/yyyy"))
+                       .Date(broadcast.DateTimeSent.Value, "d", broadcast.DateTimeSent.Value.ToString("dd.MM.yyyy"))
                        .Bold(" at ")
-                       .Monospace(broadcast.DateTimeSent.Value.ToString("HH:mm:ss"))
+                       .Date(broadcast.DateTimeSent.Value, "T", broadcast.DateTimeSent.Value.ToString("HH:mm:ss"))
                        .LineBreak();
 
                     if (broadcast.Deleted)
