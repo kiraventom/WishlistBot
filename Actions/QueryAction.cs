@@ -7,8 +7,8 @@ using WishlistBot.Model.User;
 
 namespace WishlistBot.Actions;
 
-public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFactory messageFactory)
-   : UserAction(logger, client) where T : IQuery, new()
+public class QueryAction<T>(ILogger logger, BotMessageSender sender, MessageFactory messageFactory)
+   : UserAction(logger, sender) where T : IQuery, new()
 {
    private readonly IQuery _query = new T();
 
@@ -33,10 +33,10 @@ public class QueryAction<T>(ILogger logger, ITelegramBotClient client, MessageFa
       user.QueryParams = parameters.ToString();
 
       var message = MessageFactory.Build(_query, userContext, queryId);
-      await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, message);
+      await Sender.SendOrEdit(userContext, user.UserId, message);
 
       // Отвечаем после сборки сообщения: экран может попросить короткий тост вместо пустого ответа
-      await Client.AnswerCallbackQuery(queryId, message?.ToastText);
+      await Sender.AnswerCallbackQuery(queryId, message?.ToastText);
    }
 
    public override bool IsMatch(string actionText)

@@ -5,7 +5,7 @@ using WishlistBot.Model.User;
 
 namespace WishlistBot.Actions.Commands;
 
-public class AdminCommand(ILogger logger, ITelegramBotClient client) : Command(logger, client)
+public class AdminCommand(ILogger logger, BotMessageSender sender) : Command(logger, sender)
 {
    public override string Name => "/admin";
 
@@ -13,7 +13,7 @@ public class AdminCommand(ILogger logger, ITelegramBotClient client) : Command(l
    {
       if (user.IsAdmin)
       {
-         await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new AdminMenuMessage(Logger), forceNewMessage: true);
+         await Sender.SendOrEdit(userContext, user.UserId, new AdminMenuMessage(Logger), forceNewMessage: true);
       }
       else
       {

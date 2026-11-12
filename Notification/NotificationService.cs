@@ -20,6 +20,7 @@ public class NotificationService
 
     private ILogger _logger;
     private ITelegramBotClient _client;
+    private BotMessageSender _sender;
 
     public static NotificationService Instance { get; } = new();
 
@@ -30,6 +31,7 @@ public class NotificationService
 
         _logger = logger;
         _client = client;
+        _sender = new BotMessageSender(logger, client);
 
         _inited = true;
     }
@@ -92,7 +94,7 @@ public class NotificationService
     public async Task<int> BroadcastToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
     {
         var notificationRecepient = userContext.Users.First(u => u.UserId == notificationRecepientId);
-        var message = await _client.SendOrEditBotMessage(_logger, userContext, notificationRecepientId, notification, forceNewMessage: true);
+        var message = await _sender.SendOrEdit(userContext, notificationRecepientId, notification, forceNewMessage: true);
         return message.MessageId;
     }
 

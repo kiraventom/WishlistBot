@@ -1,4 +1,5 @@
 using Serilog;
+using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries;
 using WishlistBot.Notification;
 using WishlistBot.QueryParameters;
@@ -9,6 +10,7 @@ namespace WishlistBot.BotMessages.EditWish;
 
 [AllowedTypes(QueryParameterType.WishId)]
 [ChildMessage(typeof(ConfirmDeleteWishMessage))]
+[MessageFor(typeof(DeleteWishQuery))]
 public class DeleteWishMessage(ILogger logger) : BotMessage(logger)
 {
     protected override async Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages.Friends;
 
+[MessageFor(typeof(RemoveFriendQuery))]
 public class RemoveFriendMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

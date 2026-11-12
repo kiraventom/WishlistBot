@@ -2,6 +2,7 @@ using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using WishlistBot.BotMessages;
 using WishlistBot.BotMessages.EditWish;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
@@ -9,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.Listeners;
 
-public class WishMessagesListener(ILogger logger, ITelegramBotClient client) : IListener
+public class WishMessagesListener(ILogger logger, BotMessageSender sender) : IListener
 {
     public async Task<HandleResult> HandleMessageAsync(Message message, UserContext userContext, int userId)
     {
@@ -36,8 +37,12 @@ public class WishMessagesListener(ILogger logger, ITelegramBotClient client) : I
                 return false;
         }
 
-        var editWishMessage = new EditWishMessage(logger);
-        await client.SendOrEditBotMessage(logger, userContext, user.UserId, editWishMessage, forceNewMessage: true);
+        // Черновик помнит, откуда он взялся: правка существующего виша или новый виш
+        BotMessage wishDraftMessage = user.CurrentWish?.OriginalId is null
+            ? new NewWishMessage(logger)
+            : new EditWishMessage(logger);
+
+        await sender.SendOrEdit(userContext, user.UserId, wishDraftMessage, forceNewMessage: true);
         return true;
     }
 

@@ -9,6 +9,7 @@ using WishlistBot.QueryParameters;
 namespace WishlistBot.BotMessages.Friends;
 
 [ChildMessage(typeof(MyFriendsMessage))]
+[MessageFor(typeof(FriendQuery))]
 public class FriendMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

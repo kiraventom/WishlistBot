@@ -9,6 +9,7 @@ namespace WishlistBot.BotMessages.Friends;
 
 [AllowedListPositions(ListPosition.Friend)]
 [AllowedTypes(QueryParameterType.SetListPageTo)]
+[MessageFor(typeof(MyFriendsQuery))]
 public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

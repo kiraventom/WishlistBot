@@ -12,6 +12,7 @@ namespace WishlistBot.BotMessages;
 
 [AllowedListPositions(ListPosition.Friend)]
 [AllowedTypes(QueryParameterType.ReturnToFriends, QueryParameterType.SetListPageTo, QueryParameterType.ChangeWishSortOrder, QueryParameterType.ChangeWishSortProperty, QueryParameterType.WishFilterToggleUnclaimed)]
+[MessageFor(typeof(CompactListQuery))]
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

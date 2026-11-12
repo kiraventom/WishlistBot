@@ -7,7 +7,7 @@ using WishlistBot.Model.User;
 
 namespace WishlistBot.Listeners;
 
-public class AdminMessagesListener(ILogger logger, ITelegramBotClient client) : IListener
+public class AdminMessagesListener(ILogger logger, BotMessageSender sender) : IListener
 {
     public async Task<HandleResult> HandleMessageAsync(Message message, UserContext userContext, int userId)
     {
@@ -51,6 +51,6 @@ public class AdminMessagesListener(ILogger logger, ITelegramBotClient client) : 
     private async Task SendFinishAddBroadcastMessage(UserContext userContext, UserModel user, BroadcastModel broadcast)
     {
         var message = new FinishAddBroadcastMessage(logger, broadcast);
-        await client.SendOrEditBotMessage(logger, userContext, user.UserId, message, forceNewMessage: true);
+        await sender.SendOrEdit(userContext, user.UserId, message, forceNewMessage: true);
     }
 }

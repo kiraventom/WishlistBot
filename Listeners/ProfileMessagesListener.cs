@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace WishlistBot.Listeners;
 
-public class ProfileMessagesListener(ILogger logger, ITelegramBotClient client) : IListener
+public class ProfileMessagesListener(ILogger logger, BotMessageSender sender) : IListener
 {
     private readonly CultureInfo _ruCulture = new CultureInfo("ru-RU");
 
@@ -31,7 +31,7 @@ public class ProfileMessagesListener(ILogger logger, ITelegramBotClient client) 
         }
 
         var editProfileMessage = new EditProfileMessage(logger);
-        await client.SendOrEditBotMessage(logger, userContext, user.UserId, editProfileMessage, forceNewMessage: true);
+        await sender.SendOrEdit(userContext, user.UserId, editProfileMessage, forceNewMessage: true);
         return true;
     }
 

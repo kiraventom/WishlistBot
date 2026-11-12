@@ -1,71 +1,47 @@
+using System.Reflection;
 using Serilog;
-using WishlistBot.Queries;
-using WishlistBot.Queries.EditWish;
-using WishlistBot.Queries.Friends;
-using WishlistBot.Queries.Admin;
-using WishlistBot.Queries.Admin.Broadcasts;
-using WishlistBot.BotMessages.EditWish;
-using WishlistBot.BotMessages.Friends;
-using WishlistBot.BotMessages.Admin;
-using WishlistBot.BotMessages.Admin.Broadcasts;
-using WishlistBot.BotMessages.Settings;
-using WishlistBot.Queries.Settings;
-using WishlistBot.Model.User;
-using WishlistBot.Queries.Profile;
-using WishlistBot.BotMessages.Profile;
-using WishlistBot.Queries.Admin.Users;
-using WishlistBot.BotMessages.Admin.Users;
 using WishlistBot.BotMessages.Notification;
+using WishlistBot.Model.User;
+using WishlistBot.Queries;
 using WishlistBot.Queries.Notification;
 
 namespace WishlistBot.BotMessages;
 
-// TODO Replace with attributes
+/// <summary>
+/// Собирает экран по запросу. Соответствие «запрос → экран» объявлено атрибутом
+/// <see cref="MessageForAttribute"/> на самом экране и собирается один раз на старте,
+/// поэтому новый экран не требует правок в этом классе.
+/// </summary>
 public class MessageFactory(ILogger logger)
 {
+   private static readonly Dictionary<Type, Func<ILogger, BotMessage>> _builders = BuildBuilders();
+
    public BotMessage Build(IQuery query, UserContext userContext, string queryId)
    {
-      BotMessage botMessage = query switch
+      if (_builders.TryGetValue(query.GetType(), out var build))
+         return build(logger);
+
+      logger.Error("Failed to find message for query [{queryId}]", queryId);
+      return new InvalidMessage(logger);
+   }
+
+   private static Dictionary<Type, Func<ILogger, BotMessage>> BuildBuilders()
+   {
+      var builders = new Dictionary<Type, Func<ILogger, BotMessage>>();
+
+      foreach (var messageType in typeof(MessageFactory).Assembly.GetTypes())
       {
-         MainMenuQuery => new MainMenuMessage(logger),
-         MyClaimsQuery => new MyClaimsMessage(logger),
-         ConfirmDeleteWishQuery => new ConfirmDeleteWishMessage(logger),
-         SetWishDescriptionQuery => new SetWishDescriptionMessage(logger),
-         SetWishMediaQuery => new SetWishMediaMessage(logger),
-         SetWishLinksQuery => new SetWishLinksMessage(logger),
-         SetWishPriceQuery => new SetWishPriceMessage(logger),
-         DeleteWishQuery => new DeleteWishMessage(logger),
-         EditWishQuery => new EditWishMessage(logger),
-         SetWishNameQuery => new SetWishNameMessage(logger),
-         CompactListQuery => new CompactListMessage(logger),
-         ShowWishQuery => new ShowWishMessage(logger),
-         MyFriendsQuery => new MyFriendsMessage(logger),
-         ConfirmRemoveFriendQuery => new ConfirmRemoveFriendMessage(logger),
-         RemoveFriendQuery => new RemoveFriendMessage(logger),
-         AddFriendQuery => new AddFriendMessage(logger),
-         FriendQuery => new FriendMessage(logger),
-         AdminMenuQuery => new AdminMenuMessage(logger),
-         UsersQuery => new UsersMessage(logger),
-         UserQuery => new UserMessage(logger),
-         BroadcastQuery => new BroadcastMessage(logger),
-         BroadcastsQuery => new BroadcastsMessage(logger),
-         ConfirmBroadcastQuery => new ConfirmBroadcastMessage(logger),
-         ConfirmDeleteBroadcastQuery => new ConfirmDeleteBroadcastMessage(logger),
-         DeleteBroadcastQuery => new DeleteBroadcastMessage(logger),
-         FinishBroadcastQuery => new FinishBroadcastMessage(logger),
-         SettingsQuery => new SettingsMessage(logger),
-         WishPermanenceQuery => new ConfirmWishPermanenceMessage(logger),
-         ConfirmWishPermanenceQuery => new EditWishMessage(logger),
-         WishlistCleanupSnoozeQuery => new WishlistCleanupMessage(logger, snooze: true),
-         EditProfileQuery => new EditProfileMessage(logger),
-         SetProfileBirthdayQuery => new SetProfileBirthdayMessage(logger),
-         SetProfileNotesQuery => new SetProfileNotesMessage(logger),
-         _ => new InvalidMessage(logger),
-      };
+         if (messageType is not { IsClass: true, IsAbstract: false } || !messageType.IsSubclassOf(typeof(BotMessage)))
+            continue;
 
-      if (botMessage is InvalidMessage)
-         logger.Error("Failed to find message for query [{queryId}]", queryId);
+         foreach (var queryType in messageType.GetCustomAttributes<MessageForAttribute>().Select(a => a.QueryType))
+            builders[queryType] = messageLogger => (BotMessage)Activator.CreateInstance(messageType, messageLogger);
+      }
 
-      return botMessage;
+      // Единственный экран, которому нужен не только логгер: у напоминания о чистке
+      // кнопка «Напомнить завтра» открывает тот же экран с другим поведением
+      builders[typeof(WishlistCleanupSnoozeQuery)] = messageLogger => new WishlistCleanupMessage(messageLogger, snooze: true);
+
+      return builders;
    }
 }

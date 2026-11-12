@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace WishlistBot.BotMessages.Settings;
 
 [AllowedTypes(QueryParameterType.SetSettingsTo)]
+[MessageFor(typeof(SettingsQuery))]
 public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
