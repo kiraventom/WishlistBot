@@ -22,7 +22,11 @@ public class MediaImportService
 
     private bool _started;
 
+    private ILogger _logger;
+
     public static MediaImportService Instance { get; } = new();
+
+    public void Init(ILogger logger) => _logger = logger;
 
     public void Start(ILogger logger)
     {
@@ -30,6 +34,7 @@ public class MediaImportService
             return;
 
         _started = true;
+        Init(logger);
         _ = Task.Run(() => RunLoop(logger));
     }
 
@@ -37,6 +42,10 @@ public class MediaImportService
     {
         try
         {
+            // Сначала добираем то, что в прошлый раз не дали удалить (например, боту выдали
+            // право «удалять сообщения» уже после импорта)
+            await DeleteLeftoverChannelMessagesAsync();
+
             await MediaStorage.Instance.SeedFromUserDatabaseAsync();
 
             while (await HasPendingAsync())
@@ -59,6 +68,45 @@ public class MediaImportService
         {
             logger.Error("Media import failed: {error}", e.ToString());
         }
+    }
+
+    /// <summary>
+    /// Убирает из старого канала сообщения, которые в прошлый раз удалить не дали:
+    /// картинки уже лежат блобами, в канале остались только копии.
+    /// </summary>
+    public async Task<int> DeleteLeftoverChannelMessagesAsync()
+    {
+        List<MediaItemModel> leftovers;
+
+        using (var storageContext = MediaStorageContext.Create())
+        {
+            leftovers = storageContext.StoredMedia
+                .Where(m => m.LegacyMessageId != null && m.Data != null)
+                .ToList();
+        }
+
+        if (leftovers.Count == 0)
+            return 0;
+
+        var deleted = 0;
+
+        foreach (var mediaItem in leftovers)
+        {
+            if (await MediaStorage.Instance.TryDeleteLegacyChannelMessageAsync(mediaItem.MediaItemId, mediaItem.LegacyMessageId.Value))
+                ++deleted;
+        }
+
+        if (deleted > 0)
+            _logger.Information("Deleted {count} leftover messages from the storage channel", deleted);
+
+        if (leftovers.Count > deleted)
+        {
+            _logger.Warning("{count} imported pictures are still in the storage channel: Telegram refused to delete them. " +
+                "Give the bot the 'Delete messages' admin right in the channel and restart, or delete the messages by hand",
+                leftovers.Count - deleted);
+        }
+
+        return deleted;
     }
 
     /// <summary>Остались ли картинки, которые ещё не стали блобом.</summary>
@@ -84,6 +132,7 @@ public class MediaImportService
         }
 
         var imported = 0;
+        var leftInChannel = 0;
 
         foreach (var mediaItem in pending)
         {
@@ -96,8 +145,18 @@ public class MediaImportService
             ++imported;
 
             // Картинка уже у нас — сообщение в старом канале больше не нужно
-            if (mediaItem.LegacyMessageId is { } messageId)
-                await MediaStorage.Instance.DeleteLegacyChannelMessageAsync(mediaItem.MediaItemId, messageId);
+            if (mediaItem.LegacyMessageId is { } messageId
+                && !await MediaStorage.Instance.TryDeleteLegacyChannelMessageAsync(mediaItem.MediaItemId, messageId))
+            {
+                ++leftInChannel;
+            }
+        }
+
+        if (leftInChannel > 0)
+        {
+            _logger.Warning("{count} imported pictures are still in the storage channel: Telegram refused to delete them. " +
+                "Give the bot the 'Delete messages' admin right in the channel to clean it up, or delete the messages by hand",
+                leftInChannel);
         }
 
         return imported;
