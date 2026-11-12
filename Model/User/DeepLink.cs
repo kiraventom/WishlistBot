@@ -25,6 +25,9 @@ public static class DeepLink
         Settings,
         Wishlist,
         Profile,
+
+        /// <summary>«Напомнить завтра» в напоминании о чистке вишлиста.</summary>
+        CleanupSnooze,
     }
 
     /// <summary>
@@ -86,6 +89,9 @@ public static class DeepLink
     /// <summary>Ссылка на свой профиль (экран редактирования даты рождения и заметок).</summary>
     public static string BuildProfile() => BuildLink(BuildPayload(Kind.Profile));
 
+    /// <summary>«Напомнить завтра» — откладывает напоминание о чистке вишлиста на завтра.</summary>
+    public static string BuildCleanupSnooze() => BuildLink(BuildPayload(Kind.CleanupSnooze));
+
     /// <summary>
     /// Разбирает текст команды <c>/start a=...</c> на действие и параметры.
     /// Возвращает <see langword="false"/>, если это не ссылка бота.
@@ -140,6 +146,7 @@ public static class DeepLink
         Kind.Settings => "st",
         Kind.Wishlist => "wl",
         Kind.Profile => "pf",
+        Kind.CleanupSnooze => "cs",
         _ => throw new NotSupportedException($"Unknown deep link kind '{kind}'"),
     };
 

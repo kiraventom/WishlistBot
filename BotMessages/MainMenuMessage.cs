@@ -57,11 +57,13 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
                 .Verbatim("\U0001f3c6").Bold("ПОЛЬЗОВАТЕЛЬ #100").Verbatim("\U0001f3c6");
         }
 
+        // Приветствие отделено от остального чертой
+        Text.Divider();
+
         // Подсказка про день рождения ведёт сразу в окно ввода даты, минуя профиль
         if (user.Profile.Birthday is null)
         {
-            Text.BlockBreak()
-                .Verbatim("\U0001f4c6 Не указана дата рождения ");
+            Text.Verbatim("\U0001f4c6 Не указана дата рождения ");
 
             Text.Button("Указать", Keyboard.AddTextButton<SetProfileBirthdayQuery>());
         }
@@ -103,7 +105,9 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
                 parameters: new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum | flag))));
         }
 
-        Text.BlockBreak().Italic("Отправьте друзьям ссылку на свой вишлист в окне \"Профиль\"");
+        // Ссылка на вишлист — та же кнопка-копирование, что и в профиле, за чертой
+        Text.Divider();
+        Text.CopyButton("\U0001f517 Ссылка на вишлист", user.GetSubscribeLink());
 
         return Task.CompletedTask;
     }

@@ -81,6 +81,15 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         else
             Text.Heading("Ваши виши");
 
+        // «Добавить виш» — над рядом листания, чтобы не искать её под «Назад»
+        if (!isReadOnly)
+        {
+            sender.CurrentWish = null;
+            Keyboard
+                .NewRow()
+                .AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish);
+        }
+
         // Пришли из списка друзей — туда и возвращаемся, иначе — в профиль друга
         var page = parameters.Peek(QueryParameterType.ReturnToFriends)
             ? TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(
@@ -89,14 +98,6 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 Keyboard, parameters, sortedWishes.Count, wishViewSettings, buttonCaption: "Страница", WishesPerPage);
 
         AddWishTable(userContext, sortedWishes, targetUser.SubscribeId, isReadOnly, wishViewSettings, page);
-
-        Keyboard.NewRow();
-
-        if (!isReadOnly)
-        {
-            sender.CurrentWish = null;
-            Keyboard.AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish);
-        }
 
         return Task.CompletedTask;
     }

@@ -8,6 +8,7 @@ using WishlistBot.BotMessages.Admin.Users;
 using WishlistBot.BotMessages.Admin.Broadcasts;
 using WishlistBot.BotMessages.Settings;
 using WishlistBot.BotMessages.Profile;
+using WishlistBot.BotMessages.Notification;
 
 namespace WishlistBot.Actions.Commands;
 
@@ -39,6 +40,7 @@ public class StartCommand(ILogger logger, BotMessageSender sender) : Command(log
                 DeepLink.Kind.AdminUser => await HandleAdminUserLink(userContext, user, parameters),
                 DeepLink.Kind.Settings => await HandleSettingsLink(userContext, user, parameters),
                 DeepLink.Kind.Profile => await HandleProfileLink(userContext, user),
+                DeepLink.Kind.CleanupSnooze => await HandleCleanupSnoozeLink(userContext, user),
                 _ => false,
             };
 
@@ -180,6 +182,16 @@ public class StartCommand(ILogger logger, BotMessageSender sender) : Command(log
         }
 
         await Sender.SendOrEdit(userContext, user.UserId, new SettingsMessage(Logger));
+        return true;
+    }
+
+    /// <summary>
+    /// «Напомнить завтра» из напоминания о чистке: откладываем и рисуем напоминание
+    /// заново — там уже не будет ссылки на отсрочку, зато появится тост.
+    /// </summary>
+    private async Task<bool> HandleCleanupSnoozeLink(UserContext userContext, UserModel user)
+    {
+        await Sender.SendOrEdit(userContext, user.UserId, new WishlistCleanupMessage(Logger, snooze: true), forceNewMessage: true);
         return true;
     }
 

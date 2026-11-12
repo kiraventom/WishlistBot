@@ -140,22 +140,22 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
         // Фото — медиа-блок в теле окна, а не отдельное сообщение с подписью
         Text.Media(wishDraft.MediaKey);
 
-        AddField("Название", !string.IsNullOrEmpty(name),
-            text => text.Monospace(name),
-            Keyboard.AddTextButton<SetWishNameQuery>(),
-            valueOnSameLine: true);
+        // Фото идёт сразу под картинкой, до остальных полей
+        AddField("Фото", wishDraft.MediaKey is not null,
+            _ => { },
+            Keyboard.AddTextButton<SetWishMediaQuery>(),
+            DeleteData(WishPropertyType.Media),
+            emptyCaption: "Добавить");
+
+        // Название: значение, а за ним — кнопки «максимально справа»
+        Text.BlockBreak().Bold("Название: ").Monospace(name).Verbatim(" ");
+        AddEditButtons(Keyboard.AddTextButton<SetWishNameQuery>(), null);
 
         // Описание и ссылки-блоки: кнопки справа от двоеточия, значение — следующей строкой
         AddField("Описание", description is not null,
             text => text.Quote(description),
             Keyboard.AddTextButton<SetWishDescriptionQuery>(),
             DeleteData(WishPropertyType.Description));
-
-        AddField("Фото", wishDraft.MediaKey is not null,
-            _ => { },
-            Keyboard.AddTextButton<SetWishMediaQuery>(),
-            DeleteData(WishPropertyType.Media),
-            emptyCaption: "Добавить");
 
         if (links.Count == 1)
         {
@@ -173,11 +173,18 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
                 emptyCaption: "Добавить");
         }
 
-        AddField("Цена", priceRange != Price.NotSet,
-            text => text.Monospace(MessageTextUtils.PriceToString(priceRange)),
-            Keyboard.AddTextButton<SetWishPriceQuery>(),
-            DeleteData(WishPropertyType.Price),
-            valueOnSameLine: true);
+        // Цена: значение, затем кнопки — как у названия
+        Text.BlockBreak().Bold("Цена: ");
+
+        if (priceRange == Price.NotSet)
+        {
+            Text.Verbatim("Не указано ").Button("Указать", Keyboard.AddTextButton<SetWishPriceQuery>());
+        }
+        else
+        {
+            Text.Monospace(MessageTextUtils.PriceToString(priceRange)).Verbatim(" ");
+            AddEditButtons(Keyboard.AddTextButton<SetWishPriceQuery>(), DeleteData(WishPropertyType.Price));
+        }
 
         Text.BlockBreak().Bold("Тип виша: ");
 

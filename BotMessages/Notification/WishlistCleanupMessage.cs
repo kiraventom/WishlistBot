@@ -2,7 +2,6 @@ using Serilog;
 using WishlistBot.Model.User;
 using WishlistBot.Notification;
 using WishlistBot.Queries;
-using WishlistBot.Queries.Notification;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 using Microsoft.EntityFrameworkCore;
@@ -27,18 +26,19 @@ public class WishlistCleanupMessage(ILogger logger, bool snooze = false) : BotMe
 
         var user = userContext.Users.AsNoTracking().First(u => u.UserId == userId);
 
-        // «вишлисте» ведёт на свой вишлист, дальше два действия — кнопками в тексте
+        // Все действия — обычные инлайн-ссылки: «Взглянете» ведёт на свой вишлист,
+        // «напомнить завтра» — диплинк, который откладывает напоминание
+        var wishlistLink = DeepLink.BuildWishlist(user.SubscribeId[..20]);
+
         Text
             .Verbatim("Возможно, в вашем ")
-            .InlineUrl("вишлисте", DeepLink.BuildWishlist(user.SubscribeId[..20]))
-            .Verbatim(" есть что-то, что вам уже подарили. ");
-
-        Text.Button("Взглянете", Keyboard.AddTextButton<CompactListQuery>());
+            .InlineUrl("вишлисте", wishlistLink)
+            .Verbatim(" есть что-то, что вам уже подарили. ")
+            .InlineUrl("Взглянете", wishlistLink);
 
         if (!WishlistCleanupNotificationService.IsSnoozed(userContext, userId))
         {
-            Text.Verbatim(" или ");
-            Text.Button("напомнить завтра", Keyboard.AddTextButton<WishlistCleanupSnoozeQuery>());
+            Text.Verbatim(" или ").InlineUrl("напомнить завтра", DeepLink.BuildCleanupSnooze());
         }
 
         Text.Verbatim("?");
