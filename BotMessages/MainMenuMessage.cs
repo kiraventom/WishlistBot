@@ -9,6 +9,7 @@ using WishlistBot.Queries.Profile;
 
 namespace WishlistBot.BotMessages;
 
+[MessageFor(typeof(MainMenuQuery))]
 public class MainMenuMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

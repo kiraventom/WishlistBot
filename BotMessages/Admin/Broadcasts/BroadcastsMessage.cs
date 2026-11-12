@@ -10,6 +10,7 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 [AllowedListPositions(ListPosition.AdminBroadcast)]
 [AllowedTypes(QueryParameterType.SetListPageTo)]
 [ChildMessage(typeof(AdminMenuMessage))]
+[MessageFor(typeof(BroadcastsQuery))]
 public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

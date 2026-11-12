@@ -31,11 +31,13 @@ public sealed class NotificationDispatchService
     private bool _started;
     private ILogger _logger;
     private ITelegramBotClient _client;
+    private BotMessageSender _sender;
 
     public void Init(ILogger logger, ITelegramBotClient client)
     {
         _logger = logger;
         _client = client;
+        _sender = new BotMessageSender(logger, client);
     }
 
     public void Start(ILogger logger)
@@ -276,7 +278,7 @@ public sealed class NotificationDispatchService
 
     private async Task<bool> Send(UserContext userContext, UserModel recepient, BotMessage message)
     {
-        var sent = await _client.SendOrEditBotMessage(_logger, userContext, recepient.UserId, message, forceNewMessage: true);
+        var sent = await _sender.SendOrEdit(userContext, recepient.UserId, message, forceNewMessage: true);
         return sent is not null;
     }
 

@@ -13,6 +13,7 @@ namespace WishlistBot.BotMessages.Friends;
 /// <c>?start=&lt;SubscribeId&gt;</c>. Дружба создаётся сразу в обе стороны.
 /// </summary>
 [AllowedTypes(QueryParameterType.UserId)]
+[MessageFor(typeof(AddFriendQuery))]
 public class AddFriendMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override async Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

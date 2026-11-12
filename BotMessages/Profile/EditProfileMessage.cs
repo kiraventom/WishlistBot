@@ -7,6 +7,7 @@ using WishlistBot.Queries.Profile;
 
 namespace WishlistBot.BotMessages.Profile;
 
+[MessageFor(typeof(EditProfileQuery))]
 public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

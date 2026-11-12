@@ -66,13 +66,15 @@ public static class Program
 
       var messagesFactory = new MessageFactory(logger);
 
-      var commands = BuildCommands(logger, client);
-      var queryActions = BuildQueryActions(logger, client, messagesFactory);
+      var messageSender = new BotMessageSender(logger, client);
+
+      var commands = BuildCommands(logger, messageSender);
+      var queryActions = BuildQueryActions(logger, messageSender, messagesFactory);
       var actions = commands.Concat(queryActions);
 
-      var listeners = BuildListeners(logger, client);
+      var listeners = BuildListeners(logger, messageSender);
 
-      var telegramController = new TelegramController(logger, client, actions.ToList(), listeners.ToList());
+      var telegramController = new TelegramController(logger, client, messageSender, actions.ToList(), listeners.ToList());
       telegramController.StartReceiving();
 
       while (true)
@@ -182,14 +184,14 @@ public static class Program
       }
    }
 
-   private static IEnumerable<UserAction> BuildCommands(ILogger logger, TelegramBotClient client)
+   private static IEnumerable<UserAction> BuildCommands(ILogger logger, BotMessageSender messageSender)
    {
-      yield return new StartCommand(logger, client);
-      yield return new AdminCommand(logger, client);
-      yield return new HelpCommand(logger, client);
+      yield return new StartCommand(logger, messageSender);
+      yield return new AdminCommand(logger, messageSender);
+      yield return new HelpCommand(logger, messageSender);
    }
 
-   private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, TelegramBotClient client, MessageFactory messagesFactory)
+   private static IEnumerable<UserAction> BuildQueryActions(ILogger logger, BotMessageSender messageSender, MessageFactory messagesFactory)
    {
       var queryTypes = Assembly.GetExecutingAssembly()
          .GetTypes()
@@ -198,15 +200,15 @@ public static class Program
       foreach (var queryType in queryTypes)
       {
          var queryActionType = typeof(QueryAction<>).MakeGenericType(queryType);
-         var queryAction = (UserAction)Activator.CreateInstance(queryActionType, logger, client, messagesFactory);
+         var queryAction = (UserAction)Activator.CreateInstance(queryActionType, logger, messageSender, messagesFactory);
          yield return queryAction;
       }
    }
 
-   private static IEnumerable<IListener> BuildListeners(ILogger logger, TelegramBotClient client)
+   private static IEnumerable<IListener> BuildListeners(ILogger logger, BotMessageSender messageSender)
    {
-      yield return new AdminMessagesListener(logger, client);
-      yield return new WishMessagesListener(logger, client);
-      yield return new ProfileMessagesListener(logger, client);
+      yield return new AdminMessagesListener(logger, messageSender);
+      yield return new WishMessagesListener(logger, messageSender);
+      yield return new ProfileMessagesListener(logger, messageSender);
    }
 }

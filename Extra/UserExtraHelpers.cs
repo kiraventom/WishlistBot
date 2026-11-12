@@ -1,5 +1,4 @@
 using Serilog;
-using Telegram.Bot;
 using WishlistBot.Model.User;
 
 namespace WishlistBot.Extra;
@@ -12,7 +11,7 @@ public class KeyboardCleaner
 
     private KeyboardCleaner() { }
 
-    public void CleanAll(ILogger logger, ITelegramBotClient client, UserContext userContext, UserModel user)
+    public void CleanAll(ILogger logger, BotMessageSender sender, UserContext userContext, UserModel user)
     {
         if (user.LastBotMessageId is null)
             return;
@@ -35,7 +34,7 @@ public class KeyboardCleaner
             for (int messageId = (userExtra.LastCleanedMessageId ?? user.LastBotMessageId.Value) - 1; messageId >= -1; --messageId)
             {
                 var localUserContext = UserContext.Create();
-                await client.ClearKeyboard(logger, user.TelegramId, messageId, suppressLog: true);
+                await sender.ClearKeyboard(user.TelegramId, messageId, suppressLog: true);
 
                 var localUserExtra = localUserContext.UserExtra.First(e => e.UserId == user.UserId);
                 localUserExtra.LastCleanedMessageId = messageId;

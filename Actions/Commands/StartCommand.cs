@@ -11,7 +11,7 @@ using WishlistBot.BotMessages.Profile;
 
 namespace WishlistBot.Actions.Commands;
 
-public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(logger, client)
+public class StartCommand(ILogger logger, BotMessageSender sender) : Command(logger, sender)
 {
     public override string Name => "/start";
 
@@ -46,7 +46,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
                 return;
         }
 
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
+        await Sender.SendOrEdit(userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
     }
 
     public override bool ShouldCleanup(string actionText) =>
@@ -58,18 +58,18 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
 
         if (userToAddAsFriend is null)
         {
-            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FailFriendLinkMessage(Logger), forceNewMessage: true);
+            await Sender.SendOrEdit(userContext, user.UserId, new FailFriendLinkMessage(Logger), forceNewMessage: true);
             return;
         }
 
         if (userToAddAsFriend == user)
         {
-            await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
+            await Sender.SendOrEdit(userContext, user.UserId, new MainMenuMessage(Logger), forceNewMessage: true);
             return;
         }
 
         SetQueryParams(user, new QueryParameter(QueryParameterType.UserId, userToAddAsFriend.UserId));
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new AddFriendMessage(Logger), forceNewMessage: true);
+        await Sender.SendOrEdit(userContext, user.UserId, new AddFriendMessage(Logger), forceNewMessage: true);
     }
 
     private async Task<bool> HandleWishLink(UserContext userContext, UserModel user, IReadOnlyDictionary<string, string> parameters)
@@ -96,7 +96,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             queryParameters.Add(QueryParameter.ReturnToMyClaims);
 
         SetQueryParams(user, queryParameters.ToArray());
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new ShowWishMessage(Logger));
+        await Sender.SendOrEdit(userContext, user.UserId, new ShowWishMessage(Logger));
         return true;
     }
 
@@ -110,7 +110,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             return false;
 
         SetQueryParams(user, new QueryParameter(QueryParameterType.UserId, friend.UserId));
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new FriendMessage(Logger));
+        await Sender.SendOrEdit(userContext, user.UserId, new FriendMessage(Logger));
         return true;
     }
 
@@ -128,7 +128,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
             new QueryParameter(QueryParameterType.UserId, wishlistOwner.UserId),
             QueryParameter.ReturnToFriends);
 
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new CompactListMessage(Logger));
+        await Sender.SendOrEdit(userContext, user.UserId, new CompactListMessage(Logger));
         return true;
     }
 
@@ -147,7 +147,7 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         }
 
         SetQueryParams(user, new QueryParameter(QueryParameterType.SetBroadcastTo, broadcastId));
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new BroadcastMessage(Logger));
+        await Sender.SendOrEdit(userContext, user.UserId, new BroadcastMessage(Logger));
         return true;
     }
 
@@ -166,19 +166,19 @@ public class StartCommand(ILogger logger, ITelegramBotClient client) : Command(l
         }
 
         SetQueryParams(user, new QueryParameter(QueryParameterType.UserId, userId));
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new UserMessage(Logger));
+        await Sender.SendOrEdit(userContext, user.UserId, new UserMessage(Logger));
         return true;
     }
 
     private async Task<bool> HandleSettingsLink(UserContext userContext, UserModel user)
     {
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new SettingsMessage(Logger));
+        await Sender.SendOrEdit(userContext, user.UserId, new SettingsMessage(Logger));
         return true;
     }
 
     private async Task<bool> HandleProfileLink(UserContext userContext, UserModel user)
     {
-        await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new EditProfileMessage(Logger));
+        await Sender.SendOrEdit(userContext, user.UserId, new EditProfileMessage(Logger));
         return true;
     }
 

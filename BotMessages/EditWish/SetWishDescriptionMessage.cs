@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace WishlistBot.BotMessages.EditWish;
 
 [ChildMessage(typeof(EditWishMessage))]
+[MessageFor(typeof(SetWishDescriptionQuery))]
 public class SetWishDescriptionMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

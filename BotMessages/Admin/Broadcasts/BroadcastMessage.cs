@@ -10,6 +10,7 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
 [AllowedTypes(QueryParameterType.SetBroadcastTo, QueryParameterType.CancelJob)]
 [ChildMessage(typeof(BroadcastsMessage))]
+[MessageFor(typeof(BroadcastQuery))]
 public class BroadcastMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

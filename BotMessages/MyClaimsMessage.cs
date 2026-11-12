@@ -8,6 +8,7 @@ namespace WishlistBot.BotMessages;
 
 [AllowedListPositions(ListPosition.Claim)]
 [AllowedTypes(QueryParameterType.SetListPageTo, QueryParameterType.ClaimWish, QueryParameterType.WishId)]
+[MessageFor(typeof(MyClaimsQuery))]
 public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

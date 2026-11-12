@@ -12,6 +12,7 @@ namespace WishlistBot.BotMessages.EditWish;
 /// для обратного превращения — просто вопрос.
 /// </summary>
 [ChildMessage(typeof(EditWishMessage))]
+[MessageFor(typeof(WishPermanenceQuery))]
 public class ConfirmWishPermanenceMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
