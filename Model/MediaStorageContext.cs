@@ -21,14 +21,47 @@ public class MediaStorageContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<MediaItemModel>().HasIndex(e => new { e.FileId, e.MessageId }).IsUnique();
+        modelBuilder.Entity<MediaItemModel>().HasIndex(e => e.Key).IsUnique();
+        modelBuilder.Entity<MediaItemModel>().HasIndex(e => e.TelegramFileId);
     }
 }
 
+/// <summary>
+/// Картинка виша (или рассылки), которая лежит блобом в базе.
+///
+/// Раньше медиа жило в канале-хранилище, а в базе был только telegram file_id: так file_id
+/// не умирал вместе с сообщением пользователя. Теперь файл хранится у нас, а file_id —
+/// только кэш: пока Telegram его принимает, картинку не перезаливаем, а если перестал
+/// (файл удалён, сменился токен бота) — заливаем блоб заново и обновляем кэш.
+/// </summary>
 public class MediaItemModel
 {
     [Key] public int MediaItemId { get; set; }
 
-    [Required] public string FileId { get; set; }
-    public int MessageId { get; set; }
+    /// <summary>
+    /// Стабильный ключ, на который ссылаются виши, черновики и рассылки.
+    /// У старых записей это telegram file_id, с которого началось хранение.
+    /// </summary>
+    [Required] public string Key { get; set; }
+
+    /// <summary>Кэш telegram file_id. null — кэша нет, отправляем блобом.</summary>
+    public string TelegramFileId { get; set; }
+
+    /// <summary>Сжатый JPEG. null — ещё не импортирован (или файл уже недоступен в Telegram).</summary>
+    public byte[] Data { get; set; }
+
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public long SizeBytes { get; set; }
+
+    /// <summary>
+    /// Легаси: сообщение в канале-хранилище, из которого картинка ещё не импортирована.
+    /// После успешного импорта сообщение удаляется, а поле обнуляется.
+    /// </summary>
+    public int? LegacyMessageId { get; set; }
+
+    /// <summary>Сколько раз пытались скачать картинку из Telegram (чтобы не долбить мёртвый file_id).</summary>
+    public int ImportAttempts { get; set; }
+
+    public DateTime CreatedAt { get; set; }
 }

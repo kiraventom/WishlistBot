@@ -2,6 +2,7 @@ using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using WishlistBot.BotMessages.Admin.Broadcasts;
+using WishlistBot.Media;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
 
@@ -28,7 +29,7 @@ public class AdminMessagesListener(ILogger logger, BotMessageSender sender) : IL
     private async Task HandleBroadcastAsync(UserContext userContext, Message message, UserModel user)
     {
         var text = message.Text ?? message.Caption;
-        var fileId = message.Photo?.FirstOrDefault()?.FileId;
+        var photo = message.Photo.Largest();
 
         if (string.IsNullOrEmpty(text))
         {
@@ -42,7 +43,7 @@ public class AdminMessagesListener(ILogger logger, BotMessageSender sender) : IL
         var broadcast = new BroadcastModel()
         {
             Text = text,
-            FileId = fileId
+            MediaKey = photo is null ? null : await MediaStorage.Instance.RegisterAsync(photo)
         };
 
         await SendFinishAddBroadcastMessage(userContext, user, broadcast);

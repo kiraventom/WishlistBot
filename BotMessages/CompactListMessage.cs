@@ -218,7 +218,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         if (!string.IsNullOrEmpty(wish.Description))
             Text.Verbatim(" \U0001f4ac"); // speech bubble
 
-        if (wish.FileId is not null)
+        if (wish.MediaKey is not null)
             Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
 
         if (wish.Links.Any())

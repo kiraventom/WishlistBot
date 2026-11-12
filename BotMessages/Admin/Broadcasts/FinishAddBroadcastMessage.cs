@@ -19,7 +19,7 @@ public class FinishAddBroadcastMessage : BotMessage
         userContext.Broadcasts.Add(_newBroadcastModel);
         userContext.SaveChanges();
 
-        Logger.Information("Broadcast [{id}] '{text}' and fileId [{fileId}] is added to database", _newBroadcastModel.BroadcastId, _newBroadcastModel.Text, _newBroadcastModel.FileId);
+        Logger.Information("Broadcast [{id}] '{text}' and fileId [{fileId}] is added to database", _newBroadcastModel.BroadcastId, _newBroadcastModel.Text, _newBroadcastModel.MediaKey);
 
         Text.Bold("Broadcast created");
 

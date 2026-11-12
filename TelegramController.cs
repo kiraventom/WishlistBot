@@ -5,6 +5,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Polling;
 using WishlistBot.Actions;
 using WishlistBot.Listeners;
+using WishlistBot.Media;
 using WishlistBot.Model.User;
 using WishlistBot.Extra;
 
@@ -55,6 +56,10 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, BotMe
 
                     userContext.SaveChanges();
                     transaction.Commit();
+
+                    // После коммита: скачать только что загруженные картинки и убрать
+                    // блобы, на которые больше никто не ссылается
+                    await MediaStorage.Instance.FlushAsync();
                 }
                 catch (Exception e)
                 {

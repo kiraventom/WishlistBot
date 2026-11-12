@@ -14,16 +14,16 @@ public class SetWishMediaMessage(ILogger logger) : BotMessage(logger)
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var user = userContext.Users.Include(u => u.CurrentWish).First(u => u.UserId == userId);
-        if (user.CurrentWish.FileId is not null)
+        if (user.CurrentWish.MediaKey is not null)
             Keyboard.AddButton<EditWishQuery>("Удалить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Media));
 
         Keyboard
            .NewRow()
            .AddButton<EditWishQuery>("Отмена");
 
-        PhotoFileId = user.CurrentWish.FileId;
+        PhotoMediaKey = user.CurrentWish.MediaKey;
 
-        Text.Verbatim(PhotoFileId is not null ? "Пришлите новое фото или удалите текущее" : "Пришлите фото виша:");
+        Text.Verbatim(PhotoMediaKey is not null ? "Пришлите новое фото или удалите текущее" : "Пришлите фото виша:");
 
         user.BotState = BotState.ListenForWishMedia;
 
