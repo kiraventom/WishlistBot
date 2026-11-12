@@ -7,7 +7,6 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Text;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
-using WishlistBot.Jobs;
 using WishlistBot.Notification;
 
 namespace WishlistBot.BotMessages;

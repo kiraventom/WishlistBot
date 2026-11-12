@@ -1,7 +1,5 @@
 using System.Globalization;
 using Serilog;
-using Telegram.Bot;
-using WishlistBot.BotMessages;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,20 +17,15 @@ public class NotificationService
     private bool _inited;
 
     private ILogger _logger;
-    private ITelegramBotClient _client;
-    private BotMessageSender _sender;
 
     public static NotificationService Instance { get; } = new();
 
-    public void Init(ILogger logger, ITelegramBotClient client)
+    public void Init(ILogger logger)
     {
         if (_inited)
             return;
 
         _logger = logger;
-        _client = client;
-        _sender = new BotMessageSender(logger, client);
-
         _inited = true;
     }
 
@@ -91,11 +84,37 @@ public class NotificationService
         EnqueuePending(userContext, recepientId, PendingNotificationType.WishlistFill,
             payload: ((int)kind).ToString(CultureInfo.InvariantCulture));
 
-    public async Task<int> BroadcastToUser(BotMessage notification, UserContext userContext, int notificationRecepientId)
+    /// <summary>
+    /// Админская рассылка: по строке очереди на каждого получателя. Дальше её разносит
+    /// <see cref="NotificationDispatchService"/> — с той же отложенной доставкой, что и
+    /// остальные уведомления.
+    /// </summary>
+    public void EnqueueBroadcast(UserContext userContext, int broadcastId, IReadOnlyCollection<int> recepientIds) =>
+        EnqueueBroadcastAction(userContext, PendingNotificationType.Broadcast, broadcastId, recepientIds);
+
+    /// <summary>Убрать уже доставленную рассылку из чатов получателей.</summary>
+    public void EnqueueBroadcastDelete(UserContext userContext, int broadcastId, IReadOnlyCollection<int> recepientIds) =>
+        EnqueueBroadcastAction(userContext, PendingNotificationType.BroadcastDelete, broadcastId, recepientIds);
+
+    private static void EnqueueBroadcastAction(UserContext userContext, PendingNotificationType type, int broadcastId, IReadOnlyCollection<int> recepientIds)
     {
-        var notificationRecepient = userContext.Users.First(u => u.UserId == notificationRecepientId);
-        var message = await _sender.SendOrEdit(userContext, notificationRecepientId, notification, forceNewMessage: true);
-        return message.MessageId;
+        if (recepientIds.Count == 0)
+            return;
+
+        var payload = broadcastId.ToString(CultureInfo.InvariantCulture);
+
+        foreach (var recepientId in recepientIds)
+        {
+            userContext.PendingNotifications.Add(new PendingNotificationModel
+            {
+                RecepientId = recepientId,
+                Type = type,
+                Payload = payload,
+                CreatedAt = DateTime.UtcNow,
+            });
+        }
+
+        userContext.SaveChanges();
     }
 
     /// <summary>

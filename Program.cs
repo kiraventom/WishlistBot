@@ -13,7 +13,6 @@ using WishlistBot.BotMessages;
 using WishlistBot.Actions;
 using WishlistBot.Actions.Commands;
 using WishlistBot.Queries;
-using WishlistBot.Jobs;
 
 namespace WishlistBot;
 
@@ -59,9 +58,7 @@ public static class Program
       // Догружает старые картинки в базу блобами и убирает их из старого канала-хранилища
       MediaImportService.Instance.Start(logger);
 
-      NotificationService.Instance.Init(logger, client);
-
-      JobManager.Instance.Init(logger, client);
+      NotificationService.Instance.Init(logger);
 
       NotificationDispatchService.Instance.Init(logger, client);
       NotificationDispatchService.Instance.Start(logger);

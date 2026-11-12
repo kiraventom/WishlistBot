@@ -1,5 +1,5 @@
 using Serilog;
-using WishlistBot.Jobs;
+using WishlistBot.Notification;
 using WishlistBot.Queries.Admin.Broadcasts;
 using WishlistBot.QueryParameters;
 using WishlistBot.Model;
@@ -21,7 +21,16 @@ public class BroadcastMessage(ILogger logger) : UserBotMessage(logger)
 
             if (parameters.Pop(QueryParameterType.CancelJob))
             {
-                JobManager.Instance.StopBroadcastJob(broadcast.BroadcastId);
+                // Отменяем то, что ещё не ушло: строки очереди на эту рассылку
+                var queued = userContext.PendingNotifications
+                    .Where(pending => pending.Type == PendingNotificationType.Broadcast
+                        && pending.Payload == broadcast.BroadcastId.ToString())
+                    .ToList();
+
+                userContext.PendingNotifications.RemoveRange(queued);
+                userContext.SaveChanges();
+
+                Logger.Information("Cancelled broadcast [{id}], {count} queued messages dropped", broadcast.BroadcastId, queued.Count);
             }
 
             Text.Bold("Broadcast ")
@@ -36,17 +45,20 @@ public class BroadcastMessage(ILogger logger) : UserBotMessage(logger)
 
                 var totalUsersCount = userContext.Users.Count();
 
-                var isJobActive = JobManager.Instance.IsBroadcastJobActive(broadcast.BroadcastId);
-                if (isJobActive)
+                var queuedCount = userContext.PendingNotifications
+                    .Count(pending => pending.Type == PendingNotificationType.Broadcast
+                        && pending.Payload == broadcast.BroadcastId.ToString());
+
+                if (queuedCount > 0)
                 {
                     Text
-                       .Bold(" has attached job \"")
-                       .Monospace(JobManager.Instance.GetActiveBroadcastJobName(broadcast.BroadcastId))
-                       .Bold("\"!");
+                       .Bold(" is being sent, ")
+                       .Monospace(queuedCount.ToString())
+                       .Bold(" users are still waiting");
 
                     Keyboard
                        .NewRow()
-                       .AddButton<BroadcastQuery>("Cancel job!",
+                       .AddButton<BroadcastQuery>("Cancel sending!",
                              new QueryParameter(QueryParameterType.SetBroadcastTo, broadcastId),
                              QueryParameter.CancelJob);
                 }
