@@ -1,4 +1,5 @@
 using Serilog;
+using WishlistBot.Queries.Admin;
 using WishlistBot.Model.User;
 using WishlistBot.Queries.Admin.Broadcasts;
 using WishlistBot.Queries.Admin.Users;
@@ -6,6 +7,7 @@ using WishlistBot.QueryParameters;
 
 namespace WishlistBot.BotMessages.Admin;
 
+[MessageFor(typeof(AdminMenuQuery))]
 public class AdminMenuMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

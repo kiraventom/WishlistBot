@@ -10,6 +10,7 @@ namespace WishlistBot.BotMessages.EditWish;
 
 [ChildMessage(typeof(EditWishMessage))]
 [AllowedTypes(QueryParameterType.ForceNewWish)]
+[MessageFor(typeof(SetWishNameQuery))]
 public class SetWishNameMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

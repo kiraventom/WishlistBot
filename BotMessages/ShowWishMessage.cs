@@ -14,6 +14,7 @@ namespace WishlistBot.BotMessages;
 // TODO REFACTOR
 [AllowedTypes(QueryParameterType.WishId, QueryParameterType.ClaimWish, QueryParameterType.ReturnToMyClaims, QueryParameterType.SaveDraft)]
 [ChildMessage(typeof(CompactListMessage))]
+[MessageFor(typeof(ShowWishQuery))]
 public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override async Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

@@ -8,6 +8,7 @@ using WishlistBot.Queries.Profile;
 namespace WishlistBot.BotMessages.Profile;
 
 [ChildMessage(typeof(EditProfileMessage))]
+[MessageFor(typeof(SetProfileNotesQuery))]
 public class SetProfileNotesMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

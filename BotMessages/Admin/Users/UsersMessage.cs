@@ -9,6 +9,7 @@ namespace WishlistBot.BotMessages.Admin.Users;
 
 [AllowedListPositions(ListPosition.AdminUserPage)]
 [AllowedTypes(QueryParameterType.SetListPageTo)]
+[MessageFor(typeof(UsersQuery))]
 public class UsersMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

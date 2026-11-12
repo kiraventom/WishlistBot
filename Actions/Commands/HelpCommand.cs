@@ -5,12 +5,12 @@ using WishlistBot.Model.User;
 
 namespace WishlistBot.Actions.Commands;
 
-public class HelpCommand(ILogger logger, ITelegramBotClient client) : Command(logger, client)
+public class HelpCommand(ILogger logger, BotMessageSender sender) : Command(logger, sender)
 {
    public override string Name => "/help";
 
    public override async Task ExecuteAsync(UserContext userContext, UserModel user, string actionText)
    {
-      await Client.SendOrEditBotMessage(Logger, userContext, user.UserId, new HelpMessage(Logger), forceNewMessage: true);
+      await Sender.SendOrEdit(userContext, user.UserId, new HelpMessage(Logger), forceNewMessage: true);
    }
 }

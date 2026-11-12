@@ -1,13 +1,12 @@
-using Telegram.Bot;
 using Serilog;
 using WishlistBot.Model.User;
 
 namespace WishlistBot.Actions;
 
-public abstract class UserAction(ILogger logger, ITelegramBotClient client)
+public abstract class UserAction(ILogger logger, BotMessageSender sender)
 {
    protected ILogger Logger { get; } = logger;
-   protected ITelegramBotClient Client { get; } = client;
+   protected BotMessageSender Sender { get; } = sender;
 
    public abstract string Name { get; }
 

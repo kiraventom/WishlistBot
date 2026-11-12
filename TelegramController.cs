@@ -10,7 +10,7 @@ using WishlistBot.Extra;
 
 namespace WishlistBot;
 
-public class TelegramController(ILogger logger, ITelegramBotClient client, IReadOnlyCollection<UserAction> actions, IReadOnlyCollection<IListener> listeners)
+public class TelegramController(ILogger logger, ITelegramBotClient client, BotMessageSender messageSender, IReadOnlyCollection<UserAction> actions, IReadOnlyCollection<IListener> listeners)
 {
     private bool _started;
 
@@ -113,7 +113,7 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
 
         if (callbackQuery.Message is null || callbackQuery.Message.MessageId < user.LastBotMessageId)
         {
-            await client.ClearKeyboard(logger, user.TelegramId, callbackQuery.Message.MessageId);
+            await messageSender.ClearKeyboard(user.TelegramId, callbackQuery.Message.MessageId);
             await client.AnswerCallbackQuery(callbackQuery.Id, "Управление из старых сообщений не\u00a0поддерживается.\nИспользуйте последнее сообщение или\u00a0отправьте\u00a0/start", showAlert: true);
             logger.Warning("Attempt to use old message [{oldMessageId}] (last is [{lastMessageId}]. Cleared the keyboard and showed alert to user [{userId}]", callbackQuery.Message.MessageId, user.LastBotMessageId, user.UserId);
             return;
@@ -138,7 +138,7 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, IRead
 
         user.LastQueryId = callbackQuery.Id;
         await HandleUserActionAsync(userContext, user, callbackQuery.Data, callbackQuery.Data);
-        KeyboardCleaner.Instance.CleanAll(logger, client, userContext, user);
+        KeyboardCleaner.Instance.CleanAll(logger, messageSender, userContext, user);
     }
 
     private async Task<HandleResult> HandleBotCommandAsync(UserContext userContext, UserModel userModel, MessageEntity botCommand, string messageText)

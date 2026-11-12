@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
 [ChildMessage(typeof(ConfirmDeleteBroadcastMessage))]
+[MessageFor(typeof(DeleteBroadcastQuery))]
 public class DeleteBroadcastMessage(ILogger logger) : UserBotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)

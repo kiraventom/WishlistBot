@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace WishlistBot.BotMessages.Admin.Broadcasts;
 
 [ChildMessage(typeof(BroadcastMessage))]
+[MessageFor(typeof(ConfirmBroadcastQuery))]
 public class ConfirmBroadcastMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
