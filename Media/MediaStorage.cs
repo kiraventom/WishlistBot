@@ -332,12 +332,17 @@ public class MediaStorage
     }
 
     /// <summary>
-    /// Убирает сообщение из старого канала-хранилища: картинка уже лежит у нас блобом.
+    /// Пробует убрать сообщение из старого канала-хранилища: картинка уже лежит у нас блобом.
+    ///
+    /// Возвращает false, если Telegram удалять не дал — обычно потому, что бот не админ
+    /// с правом «удалять сообщения» в канале, либо сообщению больше 48 часов. Тогда
+    /// <see cref="MediaItemModel.LegacyMessageId"/> остаётся: по нему видно, что в канале
+    /// всё ещё лежит копия, и её можно убрать руками.
     /// </summary>
-    public async Task DeleteLegacyChannelMessageAsync(int mediaItemId, int messageId)
+    public async Task<bool> TryDeleteLegacyChannelMessageAsync(int mediaItemId, int messageId)
     {
         if (_client is null)
-            return;
+            return false;
 
         try
         {
@@ -345,17 +350,20 @@ public class MediaStorage
         }
         catch (Exception e)
         {
-            _logger.Warning("Failed to delete legacy media message [{messageId}]: {error}", messageId, e.Message);
+            _logger.Debug("Failed to delete legacy media message [{messageId}]: {error}", messageId, e.Message);
+            return false;
         }
 
         using var storageContext = MediaStorageContext.Create();
         var stored = storageContext.StoredMedia.FirstOrDefault(m => m.MediaItemId == mediaItemId);
 
         if (stored is null)
-            return;
+            return true;
 
         stored.LegacyMessageId = null;
         storageContext.SaveChanges();
+
+        return true;
     }
 
     /// <summary>

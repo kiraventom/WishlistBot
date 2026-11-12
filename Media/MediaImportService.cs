@@ -22,7 +22,11 @@ public class MediaImportService
 
     private bool _started;
 
+    private ILogger _logger;
+
     public static MediaImportService Instance { get; } = new();
+
+    public void Init(ILogger logger) => _logger = logger;
 
     public void Start(ILogger logger)
     {
@@ -30,6 +34,7 @@ public class MediaImportService
             return;
 
         _started = true;
+        Init(logger);
         _ = Task.Run(() => RunLoop(logger));
     }
 
@@ -84,6 +89,7 @@ public class MediaImportService
         }
 
         var imported = 0;
+        var leftInChannel = 0;
 
         foreach (var mediaItem in pending)
         {
@@ -96,8 +102,18 @@ public class MediaImportService
             ++imported;
 
             // Картинка уже у нас — сообщение в старом канале больше не нужно
-            if (mediaItem.LegacyMessageId is { } messageId)
-                await MediaStorage.Instance.DeleteLegacyChannelMessageAsync(mediaItem.MediaItemId, messageId);
+            if (mediaItem.LegacyMessageId is { } messageId
+                && !await MediaStorage.Instance.TryDeleteLegacyChannelMessageAsync(mediaItem.MediaItemId, messageId))
+            {
+                ++leftInChannel;
+            }
+        }
+
+        if (leftInChannel > 0)
+        {
+            _logger.Warning("{count} imported pictures are still in the storage channel: Telegram refused to delete them. " +
+                "Give the bot the 'Delete messages' admin right in the channel to clean it up, or delete the messages by hand",
+                leftInChannel);
         }
 
         return imported;
