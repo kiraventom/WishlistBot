@@ -28,7 +28,18 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         var target = userContext.Users
             .Include(u => u.Wishes)
             .Include(u => u.Profile)
-            .First(u => u.UserId == targetId);
+            .FirstOrDefault(u => u.UserId == targetId);
+
+        // Профиль мог не прийти вместе с параметром (старая кнопка, устаревшая ссылка):
+        // лучше показать понятный экран, чем упасть на Sequence contains no elements
+        if (target is null)
+        {
+            Text.Bold("Профиль не найден");
+            Text.BlockBreak().Italic("Возможно, пользователь удалил аккаунт или ссылка устарела");
+
+            Keyboard.AddButton<MainMenuQuery>("В главное меню");
+            return Task.CompletedTask;
+        }
 
         var isSelf = sender.UserId == target.UserId;
         var isFriend = sender.IsFriendOf(target.UserId);

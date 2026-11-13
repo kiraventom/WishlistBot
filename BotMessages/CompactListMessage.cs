@@ -90,11 +90,18 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 .AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish);
         }
 
-        // Пришли из списка друзей — туда и возвращаемся, иначе — в профиль друга
-        var page = parameters.Peek(QueryParameterType.ReturnToFriends)
-            ? TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(
-                Keyboard, parameters, sortedWishes.Count, wishViewSettings, buttonCaption: "Страница", WishesPerPage)
-            : TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(
+        // Куда ведёт «Назад»: свой список — в главное меню, чужой — в профиль друга,
+        // а если пришли из списка друзей — обратно в список
+        ListPage page;
+
+        if (!isReadOnly)
+            page = TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(
+                Keyboard, parameters, sortedWishes.Count, wishViewSettings, buttonCaption: "Страница", WishesPerPage);
+        else if (parameters.Peek(QueryParameterType.ReturnToFriends))
+            page = TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(
+                Keyboard, parameters, sortedWishes.Count, wishViewSettings, buttonCaption: "Страница", WishesPerPage);
+        else
+            page = TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(
                 Keyboard, parameters, sortedWishes.Count, wishViewSettings, buttonCaption: "Страница", WishesPerPage);
 
         AddWishTable(userContext, sortedWishes, targetUser.SubscribeId, isReadOnly, wishViewSettings, page);
