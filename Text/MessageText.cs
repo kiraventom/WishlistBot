@@ -177,7 +177,11 @@ public sealed class MessageText
         if (text.Contains('\n'))
         {
             EnsureBlockStart();
-            _sb.Append("```\n").Append(text).Append("\n```");
+
+            // Текст в блоке кода не экранируется, поэтому ``` внутри него закрыл бы блок
+            // раньше времени: ограничитель длиннее самого длинного ряда кавычек в тексте
+            var blockFence = new string('`', Math.Max(3, LongestBacktickRun(text) + 1));
+            _sb.Append(blockFence).Append('\n').Append(text).Append('\n').Append(blockFence);
             return BlockBreak();
         }
 
