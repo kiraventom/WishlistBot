@@ -71,8 +71,10 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 
         Text.Divider();
 
-        // Ссылка на вишлист — кнопка, которая копирует её в буфер
-        Text.CopyButton("\U0001f517 Ссылка на вишлист", sender.GetSubscribeLink());
+        // Ссылка на вишлист — та же строка, что в главном меню: подпись + кнопка,
+        // которая копирует ссылку в буфер
+        Text.Verbatim("Ссылка на вишлист: ");
+        Text.CopyButton("\U0001f517 Скопировать", sender.GetSubscribeLink());
 
         return Task.CompletedTask;
     }

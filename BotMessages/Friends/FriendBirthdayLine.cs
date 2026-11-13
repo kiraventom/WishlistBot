@@ -37,25 +37,46 @@ public static class FriendBirthdayLine
     /// Дата ближайшего ДР (через tg-time — клиент покажет её в своём формате) и сколько
     /// лет будет: «05.03.2027, 32 года через 113 дней».
     /// </summary>
-    public static void AddBirthdayCell(MessageText text, FriendBirthday friend)
+    public static void AddBirthdayCell(MessageText text, FriendBirthday friend) =>
+        AddBirthdayCell(text, friend.NextBirthday, friend.DaysUntil, friend.Age);
+
+    /// <summary>
+    /// То же для строк, где есть только дата рождения (список броней: строка — виш,
+    /// а ДР принадлежит его владельцу).
+    /// </summary>
+    public static void AddBirthdayCell(MessageText text, DateOnly? birthday, DateOnly today)
     {
-        if (friend.NextBirthday is not { } nextBirthday)
+        if (birthday is not { } date)
+        {
+            AddBirthdayCell(text, null, null, null);
+            return;
+        }
+
+        var nextBirthday = BirthdayUtils.GetNextBirthday(date, today);
+
+        AddBirthdayCell(
+            text,
+            nextBirthday,
+            BirthdayUtils.GetDaysUntil(nextBirthday, today),
+            BirthdayUtils.GetAge(date, nextBirthday));
+    }
+
+    private static void AddBirthdayCell(MessageText text, DateOnly? nextBirthday, int? daysUntil, int? age)
+    {
+        if (nextBirthday is not { } date)
         {
             text.Verbatim("(ДР не указан)");
             return;
         }
 
-        var age = friend.Age!.Value;
-        var daysUntil = friend.DaysUntil!.Value;
-
         var relativeText = daysUntil == 0
             ? "сегодня"
-            : $"через {daysUntil} {PluralUtils.Days(daysUntil)}";
+            : $"через {daysUntil} {PluralUtils.Days(daysUntil.Value)}";
 
         text
-            .Date(nextBirthday, "d", nextBirthday.ToString("dd.MM.yyyy"))
-            .Verbatim($", {age} {PluralUtils.Years(age)} ")
-            .RelativeDate(nextBirthday, relativeText);
+            .Date(date, "d", date.ToString("dd.MM.yyyy"))
+            .Verbatim($", {age} {PluralUtils.Years(age.Value)} ")
+            .RelativeDate(date, relativeText);
     }
 
     /// <summary>Текстовая версия для тестов и логов.</summary>

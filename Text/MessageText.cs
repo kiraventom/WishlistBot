@@ -301,12 +301,34 @@ public sealed class MessageText
     /// </summary>
     public MessageText DateTime(long unixTime, string format, string text)
     {
+        // Telegram принимает <tg-time> не для любой даты: unix вне диапазона
+        // [1970-01-01, «сейчас» + 3 года] валит отправку целого сообщения
+        // (400 Bad Request: RICH_MESSAGE_DATE_INVALID). Проверено вживую бинарным
+        // поиском границ (rich-probe). Такие даты выводим запасным текстом: тег всё
+        // равно нужен только для формата пользователя.
+        if (!IsTelegramTimeSupported(unixTime))
+            return Verbatim(text);
+
         _sb.Append("<tg-time unix=\"").Append(unixTime).Append("\" format=\"").Append(format).Append("\">");
         Verbatim(text);
         _sb.Append("</tg-time>");
 
         return this;
     }
+
+    /// <summary>Нижняя граница tg-time — начало эпохи Unix (проверено: 0 — ок, −1 — отказ).</summary>
+    private const long MinTimeUnix = 0;
+
+    /// <summary>
+    /// Верхняя граница — «сейчас + 3 года» (проверено: 2029-11-15 ещё принимается,
+    /// следующая секунда — уже нет). Берём два года с запасом: даты дальше в боте
+    /// не встречаются, а расхождение часов клиента не должно ломать отправку.
+    /// </summary>
+    private static readonly TimeSpan MaxTimeAhead = TimeSpan.FromDays(2 * 365);
+
+    private static bool IsTelegramTimeSupported(long unixTime) =>
+        unixTime >= MinTimeUnix &&
+        unixTime <= DateTimeOffset.UtcNow.Add(MaxTimeAhead).ToUnixTimeSeconds();
 
     /// <summary>Дата в формате пользователя (см. <see cref="DateTime(long, string, string)"/>).</summary>
     public MessageText Date(DateOnly date, string format, string text) =>
@@ -335,11 +357,32 @@ public sealed class MessageText
         return this;
     }
 
+    /// <summary>
+    /// Горизонтальная черта. Если текст уже кончается чертой (например, её поставил
+    /// <see cref="Heading"/>), вторая подряд не рисуется: две черты без содержимого
+    /// между ними выглядят как случайная линия.
+    /// </summary>
     public MessageText Divider()
     {
+        if (EndsWithDivider())
+            return this;
+
         EnsureBlockStart();
         _sb.Append("---");
         return BlockBreak();
+    }
+
+    private bool EndsWithDivider()
+    {
+        var length = _sb.Length;
+
+        while (length > 0 && _sb[length - 1] == '\n')
+            --length;
+
+        if (length < 3 || _sb[length - 1] != '-' || _sb[length - 2] != '-' || _sb[length - 3] != '-')
+            return false;
+
+        return length == 3 || _sb[length - 4] == '\n';
     }
 
     /// <summary>Обычная цитата. Внутри можно форматировать текст, но не вставлять блоки.</summary>

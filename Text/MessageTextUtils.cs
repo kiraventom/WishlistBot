@@ -96,7 +96,8 @@ public static partial class MessageTextUtils
     {
         return priceRange switch
         {
-            Price.NotSet => string.Empty,
+            // Длинное тире, а не пустая ячейка: без него строка таблицы выглядит повисшей
+            Price.NotSet => "\u2014",
             Price.Under500 => "<500₽",
             Price.Under1000 => "500-1к ₽",
             Price.Under3000 => "1-3к ₽",

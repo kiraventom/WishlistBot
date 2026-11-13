@@ -26,8 +26,8 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
 
         Text.Heading("Настройки уведомлений");
 
-        // Чекбокс-список: состояние видно галочкой, а название настройки — инлайн-ссылка,
-        // которая переключает флаг (диплинк a=st_s=<значение>). Кнопок-тумблеров нет.
+        // Чекбокс-список: состояние видно галочкой, а название настройки — кнопка в тексте
+        // (tg-button), которая переключает флаг. Отдельных кнопок-тумблеров нет.
         var settings = new (SettingsEnum Flag, bool IsEnabled, string Name)[]
         {
             (SettingsEnum.ReceiveFriendWishNotifications, user.Settings.ReceiveFriendWishNotifications,
@@ -45,7 +45,8 @@ public class SettingsMessage(ILogger logger) : UserBotMessage(logger)
         Text.TaskList(
             settings.Length,
             index => settings[index].IsEnabled,
-            (line, index) => line.InlineUrl(settings[index].Name, DeepLink.BuildSettings(settingsEnum ^ settings[index].Flag)));
+            (line, index) => line.Button(settings[index].Name, Keyboard.AddTextButton<SettingsQuery>(
+                parameters: new QueryParameter(QueryParameterType.SetSettingsTo, (long)(settingsEnum ^ settings[index].Flag)))));
 
         Keyboard.AddButton<MainMenuQuery>("В главное меню");
 

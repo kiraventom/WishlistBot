@@ -3,6 +3,7 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 using WishlistBot.Queries;
 using WishlistBot.Text;
+using WishlistBot.BotMessages.Friends;
 using Microsoft.EntityFrameworkCore;
 
 namespace WishlistBot.BotMessages;
@@ -16,7 +17,7 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
     {
         var users = userContext.Users
             .Include(u => u.ListPositions).ThenInclude(u => u.ClaimPage)
-            .Include(u => u.ClaimedWishes).ThenInclude(cw => cw.Owner);
+            .Include(u => u.ClaimedWishes).ThenInclude(cw => cw.Owner).ThenInclude(owner => owner.Profile);
 
         var (sender, _) = GetSenderAndTarget(users, userId, parameters);
 
@@ -30,7 +31,7 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 
         var claimedWishes = sender.GetSortedClaimedWishes();
 
-        Text.Italic("Здесь отображаются забронированные вами виши.");
+        Text.Heading("Ваши брони");
 
         var page = TextListMessageUtils.AddListControls<MyClaimsQuery, MainMenuQuery>(
             Keyboard, parameters, claimedWishes.Count, sender.ListPositions.ClaimPage, buttonCaption: "Страница");
@@ -38,11 +39,13 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
         if (page.Count == 0)
             return Task.CompletedTask;
 
+        var today = DateOnly.FromDateTime(DateTime.Now);
+
         Text.Table(table =>
         {
             table
-                .Header("Друг", "Виш")
-                .Align(TableAlign.Left, TableAlign.Left);
+                .Header("Друг", "Виш", "Ближайший ДР")
+                .Align(TableAlign.Left, TableAlign.Left, TableAlign.Left);
 
             for (var i = 0; i < page.Count; ++i)
             {
@@ -50,7 +53,8 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 
                 table.Row(
                     cell => cell.InlineMention(claimedWish.Owner),
-                    cell => cell.InlineUrl(claimedWish.Name, claimedWish.BuildLink(claimedWish.Owner.SubscribeId, returnToClaims: true)));
+                    cell => cell.InlineUrl(claimedWish.Name, claimedWish.BuildLink(claimedWish.Owner.SubscribeId, returnToClaims: true)),
+                    cell => FriendBirthdayLine.AddBirthdayCell(cell, claimedWish.Owner.Profile?.Birthday, today));
             }
         });
 

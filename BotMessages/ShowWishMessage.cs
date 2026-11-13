@@ -191,7 +191,11 @@ $@"
         if (parameters.Peek(QueryParameterType.ReturnToMyClaims))
         {
             userContext.Entry(wish).Reference(w => w.Claimer).Load();
-            userContext.Entry(wish.Claimer).Collection(c => c.ClaimedWishes).Load();
+
+            // Владелец виша и его профиль нужны для того же порядка, что в списке броней
+            // (сортировка по ближайшему ДР) — иначе стрелки ходили бы не по тому списку
+            userContext.Entry(wish.Claimer).Collection(c => c.ClaimedWishes)
+                .Query().Include(cw => cw.Owner).ThenInclude(owner => owner.Profile).Load();
 
             var claimedWishes = wish.Claimer.GetSortedClaimedWishes();
 

@@ -51,12 +51,22 @@ public static class UserModelExtensions
         return new WishListLocation(wishes, index);
     }
 
+    /// <summary>
+    /// Брони в том порядке, в котором их показывает экран «Брони»: ближайший ДР владельца
+    /// виша, затем его имя, затем порядок виша в вишлисте. Тот же порядок нужен экрану виша
+    /// — по нему считаются стрелки «предыдущий/следующий» и страница возврата.
+    /// </summary>
     public static List<WishModel> GetSortedClaimedWishes(this UserModel userModel)
     {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+
         // Брони постоянных вишей в базе остаются, но в «Моих бронях» не показываются
-        var claims = userModel.ClaimedWishes.Where(wish => wish.HasVisibleClaim).ToList();
-        claims.Sort((w0, w1) => w0.Order.CompareTo(w1.Order));
-        return claims;
+        return userModel.ClaimedWishes
+            .Where(wish => wish.HasVisibleClaim)
+            .OrderBy(wish => BirthdayUtils.GetNextBirthdayOrMax(wish.Owner, today))
+            .ThenBy(wish => wish.Owner.FirstName)
+            .ThenBy(wish => wish.Order)
+            .ToList();
     }
 
     public static string GetSubscribeLink(this UserModel userModel) => $"https://t.me/{Config.Instance.Username}?start={userModel.SubscribeId}";
