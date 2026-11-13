@@ -137,10 +137,32 @@ public sealed class TableBuilder
         for (var i = 0; i < columnsCount; ++i)
         {
             sb.Append(' ');
-            sb.Append(i < cells.Count ? cells[i] : string.Empty);
+            sb.Append(i < cells.Count ? ToCellText(cells[i]) : string.Empty);
             sb.Append(" |");
         }
 
         sb.Append('\n');
+    }
+
+    /// <summary>
+    /// Текст ячейки в том виде, в каком его переживёт таблица. Литеральный перевод строки
+    /// обрывает строку таблицы: всё, что после него, Telegram считает уже другой строкой
+    /// (а остаток — ещё и следующей ячейкой), поэтому таблица разваливается на куски и
+    /// остальные строки уходят в абзац сырой разметкой. Проверено живой отправкой:
+    /// <c>rich-probe/table_newline_probe.py</c>. Внутри ячейки перенос — только <c>&lt;br&gt;</c>
+    /// (см. <see cref="MessageText.CellLineBreak"/>), пустые строки при этом выбрасываем:
+    /// в таблице они не нужны и только растягивают высоту строки.
+    /// </summary>
+    private static string ToCellText(string cell)
+    {
+        if (string.IsNullOrEmpty(cell) || !cell.Contains('\n'))
+            return cell;
+
+        var lines = cell
+            .Split('\n')
+            .Select(line => line.Trim())
+            .Where(line => line.Length != 0);
+
+        return string.Join("<br>", lines);
     }
 }
