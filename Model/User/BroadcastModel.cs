@@ -24,6 +24,9 @@ public class BroadcastModel
         if (Text is null)
             return "<empty>";
 
+        // null вместо набора разделителей — «резать по любому пробельному символу»
+        // (задокументированное поведение string.Split): переводы строк и повторные
+        // пробелы превращаются в один пробел между словами.
         var text = string.Join(' ', Text.Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
 
         if (text.Length == 0)
