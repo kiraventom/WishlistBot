@@ -180,7 +180,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             table.Header([.. headerCells]);
 
             if (page.PageIndex > 0)
-                AddJumpRow(table, page.FirstIndex, 0, showPrice);
+                AddRemainingRow(table, page.FirstIndex, showPrice);
 
             foreach (var wish in wishesOnPage)
             {
@@ -198,18 +198,20 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             // Дальше есть ещё виши — строка-многоточие с числом оставшихся
             var remaining = sortedWishes.Count - (page.FirstIndex + page.Count);
             if (remaining > 0)
-                AddJumpRow(table, remaining, page.PageIndex + 1, showPrice);
+                AddRemainingRow(table, remaining, showPrice);
         });
     }
 
-    private void AddJumpRow(TableBuilder table, int wishesCount, int targetPage, bool showPrice)
+    /// <summary>
+    /// Строка «ещё N вишей…» — обычный текст, а не кнопка: нажатие на неё приходило
+    /// битыми callback-данными (HTML-экранирование '&amp;' в tg-button), а листание и так
+    /// есть кнопками клавиатуры «Страница N ➡️» / «⬅️ N».
+    /// </summary>
+    private static void AddRemainingRow(TableBuilder table, int wishesCount, bool showPrice)
     {
-        var data = Keyboard.AddTextButton<CompactListQuery>(
-            parameters: new QueryParameter(QueryParameterType.SetListPageTo, targetPage));
-
         table.Row(cells =>
         {
-            cells.Add(cell => cell.Button($"ещё {wishesCount} {PluralUtils.WishesGenitive}", data));
+            cells.Add(cell => cell.Verbatim($"ещё {wishesCount} {PluralUtils.WishesGenitive}").Verbatim(Dot));
 
             if (showPrice)
                 cells.Add(cell => cell.Verbatim(Dot));
