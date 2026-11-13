@@ -149,9 +149,7 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             Text.Button("Что это?", Keyboard.AddTextButton<ShowWishQuery>(parameters: QueryParameter.ShowHelp), style: "primary");
 
             if (parameters.Pop(QueryParameterType.ShowHelp))
-                AlertText = "Постоянный виш — это подарок, которому вы рады всегда!\n\n" +
-                            "Например: испанское полусладкое вино, хорошая книга, сертификат в Золотое Яблоко.\n\n" +
-                            "Постоянный виш нельзя забронировать, поэтому любой из друзей сможет порадовать вас им!";
+                AlertText = PermanentWishHelp;
         }
 
         if (readOnly && !wish.IsPermanent)

@@ -30,8 +30,35 @@ public abstract class BotMessage(ILogger logger)
     /// <summary>
     /// Пояснение, которое показывается модальным алертом поверх чата (кнопка «Что это?»).
     /// В отличие от <see cref="ToastText"/> не исчезает само и требует нажатия «ОК».
+    /// У Telegram на текст callback-ответа лимит 200 символов (иначе
+    /// <c>Bad Request: MESSAGE_TOO_LONG</c>), поэтому длинный текст режем.
     /// </summary>
-    public string AlertText { get; protected set; }
+    public string AlertText
+    {
+        get => _alertText;
+        protected set
+        {
+            if (value is not null && value.Length > MaxAlertLength)
+            {
+                Logger.Warning("Alert text is too long ({length} chars), truncating to {limit}: {text}", value.Length, MaxAlertLength, value);
+                _alertText = value[..MaxAlertLength];
+                return;
+            }
+
+            _alertText = value;
+        }
+    }
+
+    private const int MaxAlertLength = 200;
+    private string _alertText;
+
+    /// <summary>
+    /// Пояснение про постоянный виш. Держим в одном месте: текст уходит в алерт
+    /// (<c>AnswerCallbackQuery</c>), а там лимит Telegram — 200 символов.
+    /// </summary>
+    protected const string PermanentWishHelp =
+        "Постоянный виш — подарок, которому вы рады всегда (любимое вино, хорошая книга, сертификат). " +
+        "Он не бронируется — его смогут подарить несколько друзей.";
 
     public bool ForceNewMessage { get; private set; }
 

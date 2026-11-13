@@ -126,9 +126,7 @@ public abstract class WishDraftMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         if (parameters.Pop(QueryParameterType.ShowHelp))
-            AlertText = "Постоянный виш — это подарок, которому вы рады всегда!\n\n" +
-                        "Например: испанское полусладкое вино, хорошая книга, сертификат в Золотое Яблоко.\n\n" +
-                        "Постоянный виш нельзя забронировать, поэтому любой из ваших друзей сможет порадовать вас им!";
+            AlertText = PermanentWishHelp;
 
         var name = wishDraft.Name;
         var description = wishDraft.Description;
