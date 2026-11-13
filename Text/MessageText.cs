@@ -88,6 +88,48 @@ public sealed class MessageText
     /// <summary>Курсив вокруг содержимого с вложенной разметкой (ссылки, tg-time).</summary>
     public MessageText Italic(Action<MessageText> content) => Wrap("_", "_", content);
 
+    /// <summary>
+    /// Курсив на многострочный текст. Одними маркерами такой текст не выделить: выделение
+    /// не переживает пустую строку — Telegram оставляет подчёркивания в тексте
+    /// как обычные символы (проверено живой отправкой: <c>rich-probe/italic_probe.py</c>).
+    /// Поэтому каждый абзац выделяется отдельно, а строки внутри абзаца разделяются
+    /// жёстким переносом: разметка цела, а авторский layout сохраняется.
+    /// </summary>
+    public MessageText ItalicMultiline(string text)
+    {
+        if (text is null)
+            return this;
+
+        var lines = text.Replace("\r\n", "\n").Split('\n');
+        var isInsideParagraph = false;
+
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.Trim();
+
+            // Пустая строка — граница абзацев: через неё выделение не тянется,
+            // поэтому абзац закрывается и следующий начинается своим курсивом
+            if (line.Length == 0)
+            {
+                if (isInsideParagraph)
+                {
+                    BlockBreak();
+                    isInsideParagraph = false;
+                }
+
+                continue;
+            }
+
+            if (isInsideParagraph)
+                LineBreak();
+
+            Italic(line);
+            isInsideParagraph = true;
+        }
+
+        return this;
+    }
+
     /// <summary>Жирный вокруг содержимого с вложенной разметкой.</summary>
     public MessageText Bold(Action<MessageText> content) => Wrap("**", "**", content);
 
@@ -135,7 +177,11 @@ public sealed class MessageText
         if (text.Contains('\n'))
         {
             EnsureBlockStart();
-            _sb.Append("```\n").Append(text).Append("\n```");
+
+            // Текст в блоке кода не экранируется, поэтому ``` внутри него закрыл бы блок
+            // раньше времени: ограничитель длиннее самого длинного ряда кавычек в тексте
+            var blockFence = new string('`', Math.Max(3, LongestBacktickRun(text) + 1));
+            _sb.Append(blockFence).Append('\n').Append(text).Append('\n').Append(blockFence);
             return BlockBreak();
         }
 

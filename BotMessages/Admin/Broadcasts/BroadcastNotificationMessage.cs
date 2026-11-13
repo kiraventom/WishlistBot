@@ -24,9 +24,11 @@ public class BroadcastNotificationMessage : BotMessage, INotificationMessage
 
         Text.Media(broadcast.MediaKey);
 
+        // Текст рассылки многострочный, а курсив через пустую строку не тянется:
+        // подчёркивания уехали бы в текст пользователям
         Text.Bold("Рассылка от разработчика:")
             .LineBreak()
-            .Italic(broadcast.Text);
+            .ItalicMultiline(broadcast.Text);
 
         return Task.CompletedTask;
     }
