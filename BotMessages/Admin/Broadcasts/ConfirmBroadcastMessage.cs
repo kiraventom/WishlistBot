@@ -16,12 +16,11 @@ public class ConfirmBroadcastMessage(ILogger logger) : BotMessage(logger)
 
         var broadcast = userContext.Broadcasts.AsNoTracking().First(b => b.BroadcastId == broadcastId);
 
-        Text.Italic("Are you sure you want to broadcast this?")
-           .LineBreak()
-           .LineBreak()
-           .ExpandableQuote(broadcast.Text);
+        Text.Italic("Are you sure you want to broadcast this?");
 
-        PhotoMediaKey = broadcast.MediaKey;
+        Text.Media(broadcast.MediaKey);
+
+        Text.ExpandableQuote(broadcast.Text);
 
         Keyboard
            .AddButton<FinishBroadcastQuery>("Send")

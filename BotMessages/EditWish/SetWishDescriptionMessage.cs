@@ -33,7 +33,7 @@ public class SetWishDescriptionMessage(ILogger logger) : BotMessage(logger)
                 Keyboard.AddCopyTextButton("Скопировать описание", user.CurrentWish.Description);
             }
 
-            Text.LineBreak().LineBreak().Verbatim("Укажите новое описание или удалите текущее:");
+            Text.BlockBreak().Verbatim("Укажите новое описание или удалите текущее:");
         }
 
         if (!string.IsNullOrEmpty(user.CurrentWish.Description))

@@ -20,7 +20,7 @@ public class ConfirmDeleteWishMessage(ILogger logger) : BotMessage(logger)
         var user = userContext.Users.Include(u => u.CurrentWish).AsNoTracking().First(u => u.UserId == userId);
         if (user.CurrentWish.HasVisibleClaim)
         {
-            Text.ItalicBold("\u203c\ufe0f Будьте осторожны! Кто-то забронировал этот виш! \u203c\ufe0f").LineBreak().LineBreak();
+            Text.ItalicBold("\u203c\ufe0f Будьте осторожны! Кто-то забронировал этот виш! \u203c\ufe0f").BlockBreak();
         }
 
         Text.Italic("Действительно удалить виш \"")

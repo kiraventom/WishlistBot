@@ -21,9 +21,9 @@ public class SetWishMediaMessage(ILogger logger) : BotMessage(logger)
            .NewRow()
            .AddButton<EditWishQuery>("Отмена");
 
-        PhotoMediaKey = user.CurrentWish.MediaKey;
+        Text.Media(user.CurrentWish.MediaKey);
 
-        Text.Verbatim(PhotoMediaKey is not null ? "Пришлите новое фото или удалите текущее" : "Пришлите фото виша:");
+        Text.Verbatim(user.CurrentWish.MediaKey is not null ? "Пришлите новое фото или удалите текущее" : "Пришлите фото виша:");
 
         user.BotState = BotState.ListenForWishMedia;
 

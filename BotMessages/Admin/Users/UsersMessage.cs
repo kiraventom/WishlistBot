@@ -4,6 +4,7 @@ using WishlistBot.Model.User;
 using WishlistBot.Queries.Admin;
 using WishlistBot.Queries.Admin.Users;
 using WishlistBot.QueryParameters;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.Admin.Users;
 
@@ -14,7 +15,7 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        Text.Bold("Users menu").LineBreak().LineBreak();
+        Text.Heading("Users menu");
 
         var users = userContext.Users
             .Include(u => u.Wishes)
@@ -26,24 +27,33 @@ public class UsersMessage(ILogger logger) : BotMessage(logger)
             .Include(u => u.ListPositions).ThenInclude(l => l.AdminUserPage)
             .First(u => u.UserId == userId);
 
-        var totalCount = users.Count;
+        var page = TextListMessageUtils.AddListControls<UsersQuery, AdminMenuQuery>(
+            Keyboard, parameters, users.Count, sender.ListPositions.AdminUserPage);
 
-        TextListMessageUtils.AddListControls<UsersQuery, AdminMenuQuery>(Text, Keyboard, parameters, totalCount, sender.ListPositions.AdminUserPage, itemIndex =>
+        if (page.Count == 0)
+            return Task.CompletedTask;
+
+        Text.Table(table =>
         {
-            var user = users[itemIndex];
-            AddUserText(userContext, user, itemIndex);
+            table
+                .Header("Пользователь", "Виши", "Друзья")
+                .Align(TableAlign.Left, TableAlign.Left, TableAlign.Right);
+
+            for (var i = 0; i < page.Count; ++i)
+                AddUserRow(table, users[page.FirstIndex + i]);
         });
 
         return Task.CompletedTask;
     }
 
-    private void AddUserText(UserContext userContext, UserModel user, int itemIndex)
+    private static void AddUserRow(TableBuilder table, UserModel user)
     {
-        Text.Bold($"{itemIndex + 1}. ");
-        Text.InlineUrl(user.FirstName, DeepLink.BuildAdminUser(user.UserId));
-        Text.Verbatim($" W: {user.Wishes.Count} (")
-            .Spoiler(user.Wishes.Count(w => w.HasVisibleClaim).ToString())
-            .Verbatim(")");
-        Text.Verbatim($" F: {user.Friends.Count}");
+        table.Row(
+            cell => cell.InlineUrl(user.FirstName, DeepLink.BuildAdminUser(user.UserId)),
+            cell => cell
+                .Verbatim($"{user.Wishes.Count} (")
+                .Spoiler(user.Wishes.Count(w => w.HasVisibleClaim).ToString())
+                .Verbatim(")"),
+            cell => cell.Verbatim(user.Friends.Count.ToString()));
     }
 }

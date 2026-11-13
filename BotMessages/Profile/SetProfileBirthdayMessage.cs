@@ -25,8 +25,7 @@ public class SetProfileBirthdayMessage(ILogger logger) : BotMessage(logger)
         {
             Text
                .Bold("Указанная дата рождения: ").Monospace(user.Profile.Birthday.Value.ToString("dd.MM.yyyy"))
-               .LineBreak()
-               .LineBreak().Verbatim("Введите новое значение:");
+               .BlockBreak().Verbatim("Введите новое значение:");
 
             Keyboard.AddCopyTextButton("Скопировать дату рождения", user.Profile.Birthday.Value.ToString("dd.MM.yyyy"));
         }

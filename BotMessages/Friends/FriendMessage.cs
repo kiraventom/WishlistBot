@@ -53,29 +53,20 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
 
         const string link = "\U0001f517";
 
-        Keyboard
-           .NewRow()
-           .AddCopyTextButton($"{link} Ссылка на вишлист", target.GetSubscribeLink())
-           .NewRow()
-           .AddButton<MyFriendsQuery>("К друзьям");
+        Keyboard.AddButton<MyFriendsQuery>("К друзьям");
 
-        // имя отбивается пустой строкой; пустую строку даёт LineBreak первой секции ниже
+        // Имя — заголовком экрана: в MarkdownV2 заголовков не было, имя было просто жирным
         if (isSelf)
-            Text.Bold("Это вы");
+            Text.Heading("Это вы");
         else
-            Text.InlineMention(target);
-
-        Text.LineBreak();
+            Text.Heading(text => text.InlineMention(target));
 
         const string calendar = "\U0001f4c5 ";
         const string writingHand = "\u270d\ufe0f ";
 
         // Плашка показывается всегда: иначе у профиля без заметок и ДР получается
         // слишком узкое сообщение и кнопки не помещаются в один ряд
-        Text
-            .LineBreak()
-            .Verbatim(calendar)
-            .Bold("Дата рождения: ");
+        Text.Verbatim(calendar).Bold("Дата рождения: ");
 
         if (target.Profile.Birthday is not { } birthday)
         {
@@ -83,35 +74,39 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
-            Text.Monospace(birthday.ToString("dd.MM.yyyy"));
+            Text.Date(birthday, "d", birthday.ToString("dd.MM.yyyy"));
 
             var today = DateOnly.FromDateTime(DateTime.Now);
             var nextBirthday = BirthdayUtils.GetNextBirthday(birthday, today);
             var daysBeforeBirthday = BirthdayUtils.GetDaysUntil(nextBirthday, today);
             var nextAge = BirthdayUtils.GetAge(birthday, nextBirthday);
 
-            Text.Italic($" ({nextAge}-{PluralUtils.YearsOrdinalEnding(nextAge)} ДР через " +
-                        $"{daysBeforeBirthday} {PluralUtils.Days(daysBeforeBirthday)})");
+            var relativeText = daysBeforeBirthday == 0
+                ? "сегодня"
+                : $"через {daysBeforeBirthday} {PluralUtils.Days(daysBeforeBirthday)}";
+
+            // Тот же формат, что в списке друзей и дайджесте: «32 года через 113 дней»
+            Text.Italic(line => line
+                .Verbatim($" ({nextAge} {PluralUtils.Years(nextAge)} ")
+                .RelativeDate(nextBirthday, relativeText)
+                .Verbatim(")"));
         }
 
         if (target.Profile.Notes != null)
         {
-            var notes = target.Profile.Notes;
-
-            Text
-                .LineBreak()
-                .Verbatim(writingHand)
-                .Bold("Заметки: ")
-                .LineBreak();
-
-            Text.Quote(notes);
+            Text.BlockBreak().Verbatim(writingHand).Bold("Заметки:").BlockBreak();
+            Text.ExpandableQuote(target.Profile.Notes);
         }
+
+        // Футер: ссылка на вишлист с кнопкой копирования
+        Text.Divider();
+        Text.Verbatim("Ссылка на вишлист: ");
+        Text.CopyButton($"{link} Скопировать", target.GetSubscribeLink());
 
         // Если виши есть — их количество показано на кнопке «Открыть вишлист»
         if (target.Wishes.Count == 0)
         {
-            Text
-               .LineBreak()
+            Text.BlockBreak()
                .Verbatim(gift)
                .Bold("Вишей в вишлисте: ")
                .Monospace(target.Wishes.Count.ToString());

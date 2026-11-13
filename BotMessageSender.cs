@@ -9,6 +9,7 @@ using WishlistBot.BotMessages;
 using WishlistBot.Media;
 using WishlistBot.Model.User;
 using WishlistBot.Notification;
+using WishlistBot.Text;
 
 namespace WishlistBot;
 
@@ -17,8 +18,10 @@ namespace WishlistBot;
 /// новое, хранит <see cref="UserModel.LastBotMessageId"/>, убирает клавиатуру со старого
 /// сообщения и прячет тексты вида «что-то пошло не так» в <see cref="InvalidMessage"/>.
 ///
-/// Раньше это были extension-методы на <see cref="ITelegramBotClient"/>; теперь клиент
-/// живёт здесь, чтобы экраны и действия не таскали его через конструкторы.
+/// Экраны уходят rich-сообщениями (<c>sendRichMessage</c> / <c>editMessageText</c> с полем
+/// <c>rich_message</c>): текст собирается в Rich Markdown, а картинка — медиа-блок внутри
+/// того же сообщения. Из-за этого пропали отдельные ветки для фото (sendPhoto,
+/// editMessageMedia, editMessageCaption) и лимит подписи в 1024 символа.
 /// </summary>
 public class BotMessageSender(ILogger logger, ITelegramBotClient client)
 {
@@ -63,12 +66,8 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
 
         try
         {
-            var text = botMessage.Text.ToString();
-
+            var text = botMessage.Text;
             var keyboardMarkup = botMessage.Keyboard.ToInlineKeyboardMarkup();
-            var photo = botMessage.PhotoMediaKey is null
-                ? null
-                : await MediaStorage.Instance.PrepareAsync(botMessage.PhotoMediaKey);
 
             var shouldSendNewMessage =
                 userModel.LastBotMessageId < 0
@@ -81,48 +80,37 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
 
             if (shouldSendNewMessage)
             {
-                if (photo is null)
-                {
-                    message = await client.SendMessage(chatId: userModel.TelegramId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: LinkPreviewOptions.Disabled);
-                }
-                else
-                {
-                    message = await SendPhotoAsync(userModel.TelegramId, photo, text, keyboardMarkup);
-                }
-
+                message = await SendRichMessage(userModel.TelegramId, text, keyboardMarkup);
                 logger.Information("Sent '{text}' to [{id}] with inline keyboard, messageId [{messageId}]", text, userModel.UserId, message.MessageId);
             }
             else
             {
-                if (photo is null)
+                try
                 {
+                    message = await EditRichMessage(userModel.TelegramId, userModel.LastBotMessageId.Value, text, keyboardMarkup);
+                }
+                catch (Exception e)
+                {
+                    // Сообщение могло быть отправлено старой версией бота (обычный текст или
+                    // фото с подписью) и не принять rich-разметку — тогда шлём новое и убираем старое
+                    logger.Information("Failed to edit message [{messageId}] into a rich message ({error}), sending a new one", userModel.LastBotMessageId, e.Message);
+
+                    message = await SendRichMessage(userModel.TelegramId, text, keyboardMarkup);
+
                     try
                     {
-                        message = await client.EditMessageText(chatId: userModel.TelegramId, messageId: userModel.LastBotMessageId.Value, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: LinkPreviewOptions.Disabled);
+                        await client.DeleteMessage(chatId: userModel.TelegramId, messageId: userModel.LastBotMessageId.Value);
                     }
-                    catch (Exception) // Message contains media
+                    catch (Exception)
                     {
-                        logger.Information("Failed to edit text of message [{messageId}], looks like it contains media", userModel.LastBotMessageId);
-
-                        message = await client.SendMessage(chatId: userModel.TelegramId, text: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2, linkPreviewOptions: LinkPreviewOptions.Disabled);
-
-                        try
-                        {
-                            await client.DeleteMessage(chatId: userModel.TelegramId, messageId: userModel.LastBotMessageId.Value);
-                        }
-                        catch (Exception)
-                        {
-                            logger.Information("Failed to delete message [{messageId}], looks like it was sent more than 48 hours ago", userModel.LastBotMessageId);
-                        }
+                        logger.Information("Failed to delete message [{messageId}], looks like it was sent more than 48 hours ago", userModel.LastBotMessageId);
                     }
-                }
-                else
-                {
-                    message = await ReplacePhotoAsync(userModel.TelegramId, userModel.LastBotMessageId.Value, photo, text, keyboardMarkup);
                 }
 
                 logger.Information("Edited [{messageId}] for [{userId}] to '{text}'", userModel.LastBotMessageId, userModel.UserId, text);
             }
+
+            await RememberFileIds(text, message);
 
             // Уведомление не владеет интерфейсом: экран остаётся тем же, его клавиатуру
             // не гасим, а LastBotMessageId продолжает указывать на сообщение-интерфейс.
@@ -144,67 +132,107 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
         return message;
     }
 
+    private Task<Message> SendRichMessage(long chatId, MessageText text, InlineKeyboardMarkup keyboardMarkup) =>
+        SendWithMediaRetry(chatId, text, keyboardMarkup, (richMessage, markup) =>
+            client.SendRichMessage(chatId: chatId, richMessage: richMessage, replyMarkup: markup));
+
+    private Task<Message> EditRichMessage(long chatId, int messageId, MessageText text, InlineKeyboardMarkup keyboardMarkup) =>
+        SendWithMediaRetry(chatId, text, keyboardMarkup, (richMessage, markup) =>
+            client.EditMessageText(chatId: chatId, messageId: messageId, text: null, richMessage: richMessage, replyMarkup: markup));
+
+    /// <summary>
+    /// Собирает rich-сообщение и отправляет его. Если Telegram отверг закэшированный file_id
+    /// (файл удалён, сменился токен бота), картинки заливаются блобом заново — ровно один раз.
+    /// </summary>
+    private async Task<Message> SendWithMediaRetry(
+        long chatId,
+        MessageText text,
+        InlineKeyboardMarkup keyboardMarkup,
+        Func<InputRichMessage, InlineKeyboardMarkup, Task<Message>> send)
+    {
+        var prepared = await PrepareMedia(text);
+
+        try
+        {
+            return await send(BuildRichMessage(text, prepared), keyboardMarkup);
+        }
+        catch (ApiRequestException e) when (e.ErrorCode == 400 && prepared.Any(media => media.Photo.FileId is not null && MediaStorage.Instance.HasData(media.Photo.Key)))
+        {
+            logger.Warning("Telegram rejected cached file ids for [{keys}] ({error}), re-uploading stored pictures",
+                string.Join(", ", prepared.Select(media => media.Photo.Key)), e.Message);
+
+            var reuploaded = prepared
+                .Select(media => new PreparedMedia(media.Key, PreparedPhoto.FromData(media.Key, MediaStorage.Instance.GetData(media.Key))))
+                .ToList();
+
+            return await send(BuildRichMessage(text, reuploaded), keyboardMarkup);
+        }
+    }
+
+    private static InputRichMessage BuildRichMessage(MessageText text, IReadOnlyList<PreparedMedia> media)
+    {
+        var markdown = text.ToString();
+
+        // Картинки, для которых нет ни file_id, ни блоба, выкидываем вместе со ссылкой:
+        // иначе Telegram ответит RICH_MESSAGE_PHOTO_INVALID и экран не уйдёт вообще
+        foreach (var missing in media.Where(m => m.Photo is null))
+            markdown = markdown.Replace($"![]({MessageTextUtils.GetMediaLink(missing.Key)})", string.Empty);
+
+        var attachments = media
+            .Where(m => m.Photo is not null)
+            .Select(m => new InputRichMessageMedia
+            {
+                Id = MessageTextUtils.GetMediaId(m.Key),
+                Media = new InputMediaPhoto(ToInputFile(m.Photo))
+            })
+            .ToList();
+
+        return new InputRichMessage
+        {
+            Markdown = markdown,
+            Media = attachments.Count == 0 ? null : attachments
+        };
+    }
+
+    private static async Task<List<PreparedMedia>> PrepareMedia(MessageText text)
+    {
+        var prepared = new List<PreparedMedia>();
+
+        foreach (var key in text.MediaKeys.Distinct())
+            prepared.Add(new PreparedMedia(key, await MediaStorage.Instance.PrepareAsync(key)));
+
+        return prepared;
+    }
+
+    /// <summary>
+    /// Telegram отдаёт file_id картинок только в самом сообщении, поэтому кэш обновляем
+    /// по ответу: фото-блоки идут в том же порядке, что и медиа в тексте.
+    /// </summary>
+    private async Task RememberFileIds(MessageText text, Message message)
+    {
+        var photoBlocks = message.RichMessage?.Blocks?
+            .Where(block => block.Type == RichBlockType.Photo)
+            .OfType<RichBlockPhoto>()
+            .ToList();
+
+        if (photoBlocks is null || photoBlocks.Count == 0)
+            return;
+
+        var keys = text.MediaKeys.Distinct().ToList();
+
+        for (var i = 0; i < Math.Min(keys.Count, photoBlocks.Count); ++i)
+        {
+            var fileId = photoBlocks[i].Photo?.Largest()?.FileId;
+
+            if (fileId is not null)
+                await MediaStorage.Instance.RememberFileIdAsync(keys[i], fileId);
+        }
+    }
+
     private static InputFile ToInputFile(PreparedPhoto photo) =>
         photo.FileId is not null
             ? InputFile.FromFileId(photo.FileId)
             : InputFile.FromStream(new MemoryStream(photo.Data), "photo.jpg");
-
-    /// <summary>
-    /// Можно ли перезалить картинку: отправляли по file_id, Telegram ответил 400 и у нас
-    /// есть сохранённый блоб. Причину отказа не разбираем по тексту — если блоб есть,
-    /// дешевле залить его и получить новый file_id, чем гадать.
-    /// </summary>
-    private static bool CanReupload(ApiRequestException exception, PreparedPhoto photo) =>
-        photo.FileId is not null
-        && exception.ErrorCode == 400
-        && MediaStorage.Instance.HasData(photo.Key);
-
-    private async Task<Message> SendPhotoAsync(long chatId, PreparedPhoto photo, string text, InlineKeyboardMarkup keyboardMarkup)
-    {
-        try
-        {
-            return await client.SendPhoto(chatId: chatId, photo: ToInputFile(photo), caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
-        }
-        catch (ApiRequestException e) when (CanReupload(e, photo))
-        {
-            logger.Warning("Telegram rejected cached file id for media '{key}' ({error}), re-uploading the stored picture",
-                photo.Key, e.Message);
-
-            var reuploaded = PreparedPhoto.FromData(photo.Key, MediaStorage.Instance.GetData(photo.Key));
-            var message = await client.SendPhoto(chatId: chatId, photo: ToInputFile(reuploaded), caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
-
-            var newFileId = message.Photo.Largest()?.FileId;
-            await MediaStorage.Instance.RememberFileIdAsync(photo.Key, newFileId);
-
-            logger.Warning("Media '{key}' is re-uploaded and cached a new file id '{fileId}'", photo.Key, newFileId);
-            return message;
-        }
-    }
-
-    private async Task<Message> ReplacePhotoAsync(long chatId, int messageId, PreparedPhoto photo, string text, InlineKeyboardMarkup keyboardMarkup)
-    {
-        Message edited;
-
-        try
-        {
-            edited = await client.EditMessageMedia(chatId: chatId, messageId: messageId, media: new InputMediaPhoto(ToInputFile(photo)), replyMarkup: keyboardMarkup);
-        }
-        catch (ApiRequestException e) when (CanReupload(e, photo))
-        {
-            logger.Warning("Telegram rejected cached file id for media '{key}' ({error}), re-uploading the stored picture",
-                photo.Key, e.Message);
-
-            var reuploaded = PreparedPhoto.FromData(photo.Key, MediaStorage.Instance.GetData(photo.Key));
-            edited = await client.EditMessageMedia(chatId: chatId, messageId: messageId, media: new InputMediaPhoto(ToInputFile(reuploaded)), replyMarkup: keyboardMarkup);
-
-            var newFileId = edited?.Photo.Largest()?.FileId;
-            await MediaStorage.Instance.RememberFileIdAsync(photo.Key, newFileId);
-
-            logger.Warning("Media '{key}' is re-uploaded and cached a new file id '{fileId}'", photo.Key, newFileId);
-        }
-
-        return await client.EditMessageCaption(chatId: chatId, messageId: messageId, caption: text, replyMarkup: keyboardMarkup, parseMode: ParseMode.MarkdownV2);
-    }
 
     public async Task ClearKeyboard(long chatId, long telegramMessageId, bool suppressLog = false)
     {
@@ -226,4 +254,6 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
     /// <summary>Короткий ответ на нажатие кнопки: тост по умолчанию, алерт — по запросу.</summary>
     public Task AnswerCallbackQuery(string callbackQueryId, string text, bool showAlert = false) =>
         client.AnswerCallbackQuery(callbackQueryId, text, showAlert: showAlert);
+
+    private sealed record PreparedMedia(string Key, PreparedPhoto Photo);
 }

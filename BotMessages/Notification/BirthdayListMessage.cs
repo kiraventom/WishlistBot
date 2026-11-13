@@ -9,24 +9,21 @@ using WishlistBot.QueryParameters;
 namespace WishlistBot.BotMessages.Notification;
 
 /// <summary>
-/// Дайджест дней рождения друзей — приходит 1 и 15 числа, одним списком.
+/// Дайджест дней рождения друзей — приходит 1 и 15 числа, одной таблицей.
 /// </summary>
 public class BirthdayListMessage(ILogger logger, IReadOnlyList<FriendBirthday> friends) : BotMessage(logger), INotificationMessage
 {
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        Text.Bold("Дни рождения друзей в ближайшие 30 дней:")
-            .LineBreak()
-            .LineBreak();
+        Text.Heading("Дни рождения друзей в ближайшие 30 дней");
 
-        for (var i = 0; i < friends.Count; ++i)
+        Text.Table(table =>
         {
-            FriendBirthdayLine.Append(Text, i + 1, friends[i]);
+            FriendBirthdayLine.AddColumns(table);
 
-            // перевод строки только между элементами: футер сам добавляет пустую строку
-            if (i < friends.Count - 1)
-                Text.LineBreak();
-        }
+            for (var i = 0; i < friends.Count; ++i)
+                FriendBirthdayLine.AppendRow(table, friends[i]);
+        });
 
         Text.AddNotificationsSettingsLink();
 

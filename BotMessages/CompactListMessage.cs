@@ -15,10 +15,17 @@ namespace WishlistBot.BotMessages;
 [MessageFor(typeof(CompactListQuery))]
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
+    /// <summary>Виши в таблице крупнее, чем строки остальных списков: 10 на страницу.</summary>
+    public const int WishesPerPage = 10;
+
+    private const string ClockEmoji = "\U0001f551";
+    private const string AscendingTriangle = "\U0001F53A";
+    private const string DescendingTriangle = "\U0001F53B";
+    private const string PlusEmoji = "\u2795";
+    private const string Dot = "…";
+
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
-        const string plusEmoji = "\u2795";
-
         var users = userContext.Users
             .Include(u => u.CurrentWish)
             .Include(u => u.Wishes).ThenInclude(w => w.Links)
@@ -59,7 +66,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             else
             {
                 Keyboard
-                    .AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish)
+                    .AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish)
                     .NewRow()
                     .AddButton<MainMenuQuery>("Назад");
             }
@@ -68,163 +75,171 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         var sortedWishes = targetUser.GetSortedWishes(wishViewSettings).ToList();
-        var sortedCount = sortedWishes.Count;
-
-        var countText = totalCount == sortedCount
-            ? $"{sortedCount} {PluralUtils.Wishes(sortedCount)}"
-            : $"{sortedCount} из {totalCount} {PluralUtils.WishesGenitive}";
 
         if (isReadOnly)
-        {
-            Text.Bold("Виши ").InlineMention(targetUser);
-        }
+            Text.Heading(text => text.Verbatim("Виши ").InlineMention(targetUser));
         else
+            Text.Heading("Ваши виши");
+
+        // «Добавить виш» — над рядом листания, чтобы не искать её под «Назад»
+        if (!isReadOnly)
         {
-            Text.Bold($"Ваши виши");
-        }
-
-        Text.Bold($" ({countText})");
-
-        var sortPropertyText = wishViewSettings.SortProperty switch
-        {
-            SortProperty.Default when wishViewSettings.Descending => "От новых к старым",
-            SortProperty.Price when wishViewSettings.Descending => "От дорогих к дешёвым",
-            SortProperty.Default => "От старых к новым",
-            SortProperty.Price => "От дешёвых к дорогим",
-            _ => "ERROR"
-        };
-
-        const string ascendingEmoji = "\U0001F53A";
-        const string descsendingEmoji = "\U0001F53B";
-        const string calendarEmoji = "\U0001F4C5";
-        const string dollarEmoji = "\U0001F4B2";
-
-        var sortPropertyButton = wishViewSettings.SortProperty switch
-        {
-            SortProperty.Default => $"{calendarEmoji} По дате",
-            SortProperty.Price => $"{dollarEmoji} По цене",
-            _ => "ERROR"
-        };
-
-        var sortOrderButton = wishViewSettings.Descending switch
-        {
-            false => $"{ascendingEmoji}",
-                  true => $"{descsendingEmoji}",
-        };
-
-        // Сортировка и её кнопки не нужны, когда показывать нечего сортировать
-        var showSorting = sortedCount > 1;
-
-        if (showSorting)
-            Text.LineBreak().Italic("Сортировка: ").Verbatim(sortPropertyText);
-
-        if (isReadOnly)
-        {
-            const string unclaimedWishesEmoji = "\U0001F513";
-            const string allWishesEmoji = "\U0001F539";
-
-            var toggleUnclaimedButton = wishViewSettings.OnlyUnclaimed 
-                ? $"{unclaimedWishesEmoji} Без брони"
-                : $"{allWishesEmoji} Все виши";
-
-            if (wishViewSettings.OnlyUnclaimed)
-            {
-                Text.LineBreak()
-                    .Italic("Фильтр: ").Verbatim("Только виши без брони");
-            }
-
-            Text.LineBreak().LineBreak();
-
-            Keyboard.NewRow();
-
-            if (wishViewSettings.OnlyUnclaimed || sortedWishes.Any(sw => sw.HasVisibleClaim))
-                Keyboard.AddButton<CompactListQuery>(toggleUnclaimedButton, QueryParameter.WishFilterToggleUnclaimed);
-
-            if (showSorting)
-            {
-                Keyboard
-                    .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty)
-                    .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
-            }
-
-            // Пришли из списка друзей — туда и возвращаемся, иначе — в профиль друга
-            if (parameters.Peek(QueryParameterType.ReturnToFriends))
-            {
-                TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
-                {
-                    var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-                }, buttonCaption: "Страница");
-            }
-            else
-            {
-                TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
-                {
-                    var wish = sortedWishes[itemIndex];
-                    AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-                }, buttonCaption: "Страница");
-            }
-        }
-        else
-        {
-            Text.LineBreak().LineBreak();
-
-            if (showSorting)
-            {
-                Keyboard
-                    .NewRow()
-                    .AddButton<CompactListQuery>(sortPropertyButton, QueryParameter.ChangeWishSortProperty)
-                    .AddButton<CompactListQuery>(sortOrderButton, QueryParameter.ChangeWishSortOrder);
-            }
-
-            Keyboard.NewRow()
-                .AddButton<SetWishNameQuery>($"{plusEmoji} Добавить виш", QueryParameter.ForceNewWish);
-
             sender.CurrentWish = null;
-
-            TextListMessageUtils.AddListControls<CompactListQuery, MainMenuQuery>(Text, Keyboard, parameters, sortedCount, wishViewSettings, itemIndex =>
-            {
-                var wish = sortedWishes[itemIndex];
-                AddWishText(userContext, wish, targetUser.SubscribeId, itemIndex, isReadOnly);
-            }, buttonCaption: "Страница");
+            Keyboard
+                .NewRow()
+                .AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish);
         }
+
+        // Пришли из списка друзей — туда и возвращаемся, иначе — в профиль друга
+        var page = parameters.Peek(QueryParameterType.ReturnToFriends)
+            ? TextListMessageUtils.AddListControls<CompactListQuery, MyFriendsQuery>(
+                Keyboard, parameters, sortedWishes.Count, wishViewSettings, buttonCaption: "Страница", WishesPerPage)
+            : TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(
+                Keyboard, parameters, sortedWishes.Count, wishViewSettings, buttonCaption: "Страница", WishesPerPage);
+
+        AddWishTable(userContext, sortedWishes, targetUser.SubscribeId, isReadOnly, wishViewSettings, page);
 
         return Task.CompletedTask;
     }
 
-    private void AddWishText(UserContext userContext, WishModel wish, string subscribeId, int itemIndex, bool isReadonly)
+    /// <summary>
+    /// Таблица вишей: номер, название (со словом БРОНЬ и метками) и цена.
+    ///
+    /// Сортировка, её направление и фильтр — кнопки внутри шапки таблицы: часы в первой
+    /// колонке сортируют по дате, слово «Цена» — по цене, кнопка справа от «Виш» —
+    /// фильтр «Все / Без брони». Активная колонка становится обычным текстом, а рядом
+    /// появляется треугольник — он же кнопка смены направления.
+    /// </summary>
+    private void AddWishTable(
+        UserContext userContext,
+        IReadOnlyList<WishModel> sortedWishes,
+        string subscribeId,
+        bool isReadOnly,
+        WishViewSettingsModel viewSettings,
+        ListPage page)
     {
-        Text.Bold($"{itemIndex + 1}. ");
+        var wishesOnPage = Enumerable.Range(page.FirstIndex, page.Count)
+            .Select(index => sortedWishes[index])
+            .ToList();
 
-        // If user isn't looking at its own wishes
-        if (wish.HasVisibleClaim && isReadonly)
+        var showPrice = wishesOnPage.Any(wish => wish.PriceRange != Price.NotSet);
+        var sortByDate = viewSettings.SortProperty == SortProperty.Default;
+
+        var directionData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortOrder);
+        var switchSortData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortProperty);
+        var filterData = isReadOnly
+            ? Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.WishFilterToggleUnclaimed)
+            : null;
+
+        // Сортировка — строкой над таблицей: кнопки в шапке выглядели чужеродно
+        var sortPropertyCaption = sortByDate ? "По дате добавления" : "По цене";
+
+        var sortOrderCaption = (sortByDate, viewSettings.Descending) switch
+        {
+            (true, false) => "От старых к новым",
+            (true, true) => "От новых к старым",
+            (false, false) => "От дешёвых к дорогим",
+            (false, true) => "От дорогих к дешёвым",
+        };
+
+        Text.Verbatim("Сортировка: ");
+        Text.Button(sortPropertyCaption, switchSortData);
+        Text.Verbatim(" ").Button(sortOrderCaption, directionData);
+        Text.BlockBreak();
+
+        Text.Table(table =>
+        {
+            var headerCells = new List<Action<MessageText>>
+            {
+                cell =>
+                {
+                    cell.Verbatim("Виш ");
+
+                    if (filterData is not null)
+                        cell.Button(viewSettings.OnlyUnclaimed ? "Без брони" : "Все", filterData);
+                },
+            };
+
+            if (showPrice)
+            {
+                table.Align(TableAlign.Left, TableAlign.Right);
+                headerCells.Add(cell => cell.Verbatim("Цена"));
+            }
+            else
+            {
+                table.Align(TableAlign.Left);
+            }
+
+            table.Header([.. headerCells]);
+
+            if (page.PageIndex > 0)
+                AddJumpRow(table, page.FirstIndex, 0, showPrice);
+
+            foreach (var wish in wishesOnPage)
+            {
+                var isBooked = wish.HasVisibleClaim && isReadOnly;
+
+                table.Row(cells =>
+                {
+                    cells.Add(cell => AddWishName(cell, userContext, wish, subscribeId, isBooked));
+
+                    if (showPrice)
+                        cells.Add(cell => cell.Verbatim(MessageTextUtils.PriceToShortString(wish.PriceRange)));
+                });
+            }
+
+            // Дальше есть ещё виши — строка-многоточие с числом оставшихся
+            var remaining = sortedWishes.Count - (page.FirstIndex + page.Count);
+            if (remaining > 0)
+                AddJumpRow(table, remaining, page.PageIndex + 1, showPrice);
+        });
+    }
+
+    private void AddJumpRow(TableBuilder table, int wishesCount, int targetPage, bool showPrice)
+    {
+        var data = Keyboard.AddTextButton<CompactListQuery>(
+            parameters: new QueryParameter(QueryParameterType.SetListPageTo, targetPage));
+
+        table.Row(cells =>
+        {
+            cells.Add(cell => cell.Button($"ещё {wishesCount} {PluralUtils.WishesGenitive}", data));
+
+            if (showPrice)
+                cells.Add(cell => cell.Verbatim(Dot));
+        });
+    }
+
+    /// <summary>
+    /// Название ссылкой. У забронированного виша над названием идёт слово БРОНЬ
+    /// (ссылка на забронировавшего), а само название зачёркнуто.
+    /// </summary>
+    private static void AddWishName(MessageText text, UserContext userContext, WishModel wish, string subscribeId, bool isBooked)
+    {
+        if (isBooked)
         {
             userContext.Entry(wish).Reference(w => w.Claimer).Load();
-            Text.Bold("[").InlineMention(wish.Claimer, "БРОНЬ").Bold("] ");
+            text.Verbatim("\U0001f512 ").InlineMention("БРОНЬ", wish.Claimer.TelegramId).CellLineBreak();
         }
 
         // Постоянный виш помечаем звёздочкой перед названием
         if (wish.IsPermanent)
-            Text.Verbatim("\u2b50 ");
+            text.Verbatim("\u2b50 ");
 
-        // TODO strikethrough if claimed
-        Text.InlineUrl(wish.Name, wish.BuildLink(subscribeId));
-
-        if (wish.PriceRange != Price.NotSet)
+        text.InlineUrl(name =>
         {
-            Text.Verbatim(" [").Bold(MessageTextUtils.PriceToShortString(wish.PriceRange)).Verbatim("] ");
-        }
+            if (isBooked)
+                name.Strikethrough(wish.Name);
+            else
+                name.Verbatim(wish.Name);
+        }, wish.BuildLink(subscribeId));
 
         if (!string.IsNullOrEmpty(wish.Description))
-            Text.Verbatim(" \U0001f4ac"); // speech bubble
+            text.Verbatim(" \U0001f4ac"); // speech bubble
 
         if (wish.MediaKey is not null)
-            Text.Verbatim(" \U0001f5bc\ufe0f"); // picture
+            text.Verbatim(" \U0001f5bc\ufe0f"); // picture
 
         if (wish.Links.Any())
-        {
-            var firstLink = wish.Links.First().Url;
-            Text.InlineUrl(" \U0001f310", firstLink); // globe
-        }
+            text.Verbatim(" ").InlineUrl("\U0001f310", wish.Links.First().Url); // globe
     }
 }

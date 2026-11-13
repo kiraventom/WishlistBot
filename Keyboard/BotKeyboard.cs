@@ -9,11 +9,34 @@ public class BotKeyboard()
     private readonly List<List<IBotButton>> _rows = [];
     private QueryParameterCollection _commonParameters = new();
 
+    /// <summary>
+    /// Callback-данные кнопок, которые живут в тексте сообщения (&lt;tg-button&gt;),
+    /// а не в reply_markup. В клавиатуру они не попадают, но экран должен их разрешить.
+    /// </summary>
+    private readonly List<string> _textQueries = [];
+
     public IEnumerable<string> EnumerateQueries()
     {
-        return this.ToInlineKeyboardMarkup().InlineKeyboard
+        var keyboardQueries = this.ToInlineKeyboardMarkup().InlineKeyboard
            .SelectMany(b => b)
            .Select(b => b.CallbackData);
+
+        return _textQueries.Concat(keyboardQueries);
+    }
+
+    /// <summary>
+    /// Кнопка внутри текста: возвращает callback-данные, которые экран передаёт
+    /// в <c>MessageText.Button</c>. Регистрируется как разрешённый запрос экрана.
+    /// </summary>
+    public string AddTextButton<T>(string caption = null, params QueryParameter[] parameters) where T : IQuery, new()
+    {
+        var query = new T();
+        var mergedParameters = QueryParameterCollection.Merge(_commonParameters, new QueryParameterCollection(parameters));
+        var data = QueryUtils.BuildQueryStr(query.Data, mergedParameters);
+
+        _textQueries.Add(data);
+
+        return data;
     }
 
     public void InitCommonParameters(QueryParameterCollection commonParameters) => _commonParameters = commonParameters;

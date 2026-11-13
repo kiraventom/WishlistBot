@@ -19,9 +19,9 @@ public class BroadcastModel
         if (Text is null)
             return "<empty>";
 
-        return Text.Length <= 20
+        return Text.Length <= 50
            ? Text
-           : Text[..19] + "…";
+           : Text[..49] + "…";
     }
 }
 

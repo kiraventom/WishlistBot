@@ -39,7 +39,7 @@ public class EditWishNotificationMessage : BotMessage, INotificationMessage
 
         var wishViewSettings = sender.GetOrCreateViewerTarget<WishViewSettingsModel>(_notificationSourceId);
 
-        var pageIndex = TextListMessageUtils.GetPageIndex(notificationSource.LocateWish(wishViewSettings, editedWish).Index);
+        var pageIndex = TextListMessageUtils.GetPageIndex(notificationSource.LocateWish(wishViewSettings, editedWish).Index, CompactListMessage.WishesPerPage);
 
         Keyboard
            .AddButton<ShowWishQuery>("Перейти к вишу",

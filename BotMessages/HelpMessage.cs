@@ -13,8 +13,7 @@ public class HelpMessage(ILogger logger) : BotMessage(logger)
            .AddButton<MainMenuQuery>("В главное меню");
 
         Text.Italic("Ответы на вопросы:")
-           .LineBreak()
-           .LineBreak()
+           .BlockBreak()
            .InlineUrl("Перейти", @"https://telegra.ph/FAQ-Wishlist-BOT-12-27");
 
         return Task.CompletedTask;

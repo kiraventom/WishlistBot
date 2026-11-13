@@ -29,7 +29,8 @@ public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
             const string downArrow = "\u2b07\ufe0f";
             const string link = "\U0001f517";
 
-            Text.Bold("У вас пока нет друзей :(")
+            Text
+                .Bold("У вас пока нет друзей :(")
                 .LineBreak()
                 .Italic($"Пригласите друзей, прислав им ссылку на свой вишлист {downArrow}");
 
@@ -39,13 +40,22 @@ public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
-            Text.Bold("Ваши друзья:").LineBreak().LineBreak();
+            Text.Heading("Ваши друзья");
         }
 
-        TextListMessageUtils.AddListControls<MyFriendsQuery, MainMenuQuery>(Text, Keyboard, parameters, totalCount, user.ListPositions.FriendPage, itemIndex =>
+        var page = TextListMessageUtils.AddListControls<MyFriendsQuery, MainMenuQuery>(
+            Keyboard, parameters, totalCount, user.ListPositions.FriendPage, buttonCaption: "Страница");
+
+        if (page.Count != 0)
         {
-            FriendBirthdayLine.Append(Text, itemIndex + 1, friends[itemIndex]);
-        }, buttonCaption: "Страница");
+            Text.Table(table =>
+            {
+                FriendBirthdayLine.AddColumns(table);
+
+                for (var i = 0; i < page.Count; ++i)
+                    FriendBirthdayLine.AppendRow(table, friends[page.FirstIndex + i]);
+            });
+        }
 
         return Task.CompletedTask;
     }

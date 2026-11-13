@@ -24,6 +24,11 @@ public enum QueryParameterType
    WishFilterToggleUnclaimed = 0x16,
    ReturnToFriends = 0x17,
    ToggleWishPermanence = 0x18,
+   /// <summary>
+   /// Нажали «Что это?»: экран рисуется как обычно, но вместо тоста показывает алерт
+   /// с пояснением (<c>BotMessage.AlertText</c>).
+   /// </summary>
+   ShowHelp = 0x19,
 
    // Admin
    SetBroadcastTo = -0x1,

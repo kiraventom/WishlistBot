@@ -18,32 +18,26 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
         if (user.CurrentWish.Links.Count == 0)
         {
             Text.Verbatim("Пришлите ссылки одним сообщением:")
-               .LineBreak()
-               .LineBreak().Italic("(Некорректные ссылки будут проигнорированы)");
+               .BlockBreak().Italic("(Некорректные ссылки будут проигнорированы)");
         }
         else
         {
-            Text.Bold("Текущие ссылки: ");
+            Text.Bold("Текущие ссылки:");
 
-            var linksJoined = string.Join("\n", user.CurrentWish.Links.Select(l => l.Url));
+            var links = user.CurrentWish.Links;
+            var linksJoined = string.Join("\n", links.Select(l => l.Url));
+
+            // Длинный список идёт моноширинным (monospace сохраняет ссылку как есть),
+            // короткий — обычным текстом, чтобы его можно было скопировать кнопкой
             if (linksJoined.Length >= 256)
-            {
-                foreach (var link in user.CurrentWish.Links)
-                {
-                    Text.LineBreak().Monospace(link.Url);
-                }
-            }
+                Text.Bullets(links.Count, (line, index) => line.Monospace(links[index].Url));
             else
             {
-                foreach (var link in user.CurrentWish.Links)
-                {
-                    Text.LineBreak().Verbatim(link.Url);
-                }
-
+                Text.Bullets(links.Count, (line, index) => line.Verbatim(links[index].Url));
                 Keyboard.AddCopyTextButton("Скопировать ссылки", linksJoined);
             }
 
-            Text.LineBreak().LineBreak().Verbatim("Пришлите новые ссылки или удалите текущие:");
+            Text.BlockBreak().Verbatim("Пришлите новые ссылки или удалите текущие:");
         }
 
         if (user.CurrentWish.Links.Any())
