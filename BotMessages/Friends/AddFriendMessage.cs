@@ -1,4 +1,5 @@
 using Serilog;
+using WishlistBot.Queries;
 using WishlistBot.Queries.Friends;
 using WishlistBot.Notification;
 using WishlistBot.BotMessages.Notification;
@@ -21,7 +22,14 @@ public class AddFriendMessage(ILogger logger) : UserBotMessage(logger)
         var sender = userContext.Users.Include(u => u.Friends).First(u => u.UserId == userId);
 
         parameters.Peek(QueryParameterType.UserId, out var targetId);
-        var target = userContext.Users.First(u => u.UserId == targetId);
+        var target = userContext.Users.FirstOrDefault(u => u.UserId == targetId);
+
+        if (target is null)
+        {
+            Text.Italic("Некорректная ссылка на вишлист :(");
+            Keyboard.AddButton<MainMenuQuery>("В главное меню");
+            return;
+        }
 
         if (sender.IsFriendOf(target.UserId))
         {
