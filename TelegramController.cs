@@ -8,6 +8,7 @@ using WishlistBot.Listeners;
 using WishlistBot.Media;
 using WishlistBot.Model.User;
 using WishlistBot.Extra;
+using WishlistBot.Queries;
 
 namespace WishlistBot;
 
@@ -130,19 +131,27 @@ public class TelegramController(ILogger logger, ITelegramBotClient client, BotMe
             return;
         }
 
+        // Данные tg-кнопок в тексте приходят HTML-экранированными ('&' → '&amp;'),
+        // поэтому и сверка с разрешёнными запросами, и разбор параметров — по
+        // расэкранированному виду
+        var callbackData = QueryUtils.NormalizeCallbackData(callbackQuery.Data);
+
+        if (callbackData != callbackQuery.Data)
+            logger.Debug("Normalized callback data '{raw}' to '{normalized}'", callbackQuery.Data, callbackData);
+
         if (!string.IsNullOrEmpty(user.AllowedQueries))
         {
             var allowedQueries = user.AllowedQueries.Split(';');
-            if (!allowedQueries.Contains(callbackQuery.Data))
+            if (!allowedQueries.Contains(callbackData))
             {
-                logger.Warning("Unexpected query [{queryId}] '{query}', allowed queries: '{allowed}'", callbackQuery.Id, callbackQuery.Data, user.AllowedQueries);
+                logger.Warning("Unexpected query [{queryId}] '{query}', allowed queries: '{allowed}'", callbackQuery.Id, callbackData, user.AllowedQueries);
                 await client.AnswerCallbackQuery(callbackQuery.Id, "Произошла ошибка.\nИспользуйте\u00a0команду\u00a0/start и напишите разработчику\n(контакт в профиле бота)", showAlert: true);
                 return;
             }
         }
 
         user.LastQueryId = callbackQuery.Id;
-        await HandleUserActionAsync(userContext, user, callbackQuery.Data, callbackQuery.Data);
+        await HandleUserActionAsync(userContext, user, callbackData, callbackData);
         KeyboardCleaner.Instance.CleanAll(logger, messageSender, userContext, user);
     }
 
