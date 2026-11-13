@@ -21,6 +21,8 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
         const string mutedBell = "\U0001f515";
         const string plusEmoji = "\u2795";
         const string linkEmoji = "\U0001f517";
+        const string lockEmoji = "\U0001F512";
+        const string friendsEmoji = "\U0001f465";
 
         var user = userContext.Users
             .Include(u => u.Wishes)
@@ -46,7 +48,7 @@ public class MainMenuMessage(ILogger logger) : BotMessage(logger)
             Keyboard.AddButton<CompactListQuery>($"{giftEmoji} Виши ({wishesCount})");
 
         if (claimsCount != 0)
-            Keyboard.NewRow().AddButton<MyClaimsQuery>($"Брони ({claimsCount})");
+            Keyboard.NewRow().AddButton<MyClaimsQuery>($"{lockEmoji} Брони ({claimsCount})");
 
         // Друзья: без друзей вместо списка — «поделиться вишлистом»
         Keyboard.NewRow();
@@ -59,7 +61,7 @@ $@"
 {user.GetSubscribeLink()}");
         }
         else
-            Keyboard.AddButton<MyFriendsQuery>($"Друзья ({friendsCount})");
+            Keyboard.AddButton<MyFriendsQuery>($"{friendsEmoji} Друзья ({friendsCount})");
 
         Keyboard
            .NewRow()
