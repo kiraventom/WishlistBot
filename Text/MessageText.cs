@@ -256,6 +256,13 @@ public sealed class MessageText
         return this;
     }
 
+    /// <summary>
+    /// Лимит Telegram на текст, который копирует кнопка (copy_text): 256 символов —
+    /// и в тексте сообщения, и в клавиатуре. Длиннее кнопку копирования не рисуем,
+    /// а значение показываем моноширинным.
+    /// </summary>
+    public const int MaxCopyTextLength = 256;
+
     /// <summary>Кнопка «скопировать в буфер» внутри текста.</summary>
     public MessageText CopyButton(string text, string textToCopy, string style = null)
     {

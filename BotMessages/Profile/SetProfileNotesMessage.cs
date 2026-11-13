@@ -4,6 +4,7 @@ using WishlistBot.Model;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries.Profile;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.Profile;
 
@@ -11,6 +12,8 @@ namespace WishlistBot.BotMessages.Profile;
 [MessageFor(typeof(SetProfileNotesQuery))]
 public class SetProfileNotesMessage(ILogger logger) : BotMessage(logger)
 {
+    private const string CopyCaption = "Скопировать";
+
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var user = userContext.Users.Include(u => u.Profile).First(u => u.UserId == userId);
@@ -21,16 +24,20 @@ public class SetProfileNotesMessage(ILogger logger) : BotMessage(logger)
         }
         else
         {
-            Text.Bold("Текущие заметки:").LineBreak();
+            Text.Bold("Текущие заметки:");
 
-            if (user.Profile.Notes.Length >= 256)
+            // Копирование — кнопкой в тексте: кнопки в клавиатуре забирают место
+            // у «Отмены» и расходятся с остальными окнами правки
+            if (user.Profile.Notes.Length < MessageText.MaxCopyTextLength)
+                Text.Verbatim(" ").CopyButton(CopyCaption, user.Profile.Notes);
+
+            if (user.Profile.Notes.Length >= MessageText.MaxCopyTextLength)
             {
-                Text.Monospace(user.Profile.Notes);
+                Text.BlockBreak().Monospace(user.Profile.Notes);
             }
             else
             {
                 Text.ExpandableQuote(user.Profile.Notes);
-                Keyboard.AddCopyTextButton("Скопировать заметки", user.Profile.Notes);
             }
 
             Text.BlockBreak().Verbatim("Введите новое значение:");

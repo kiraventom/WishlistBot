@@ -4,6 +4,7 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.EditWish;
 
@@ -28,22 +29,20 @@ public class SetWishLinksMessage(ILogger logger) : BotMessage(logger)
             var linksJoined = string.Join("\n", links.Select(l => l.Url));
 
             // Длинный список идёт моноширинным (monospace сохраняет ссылку как есть),
-            // короткий — обычным текстом, чтобы его можно было скопировать кнопкой
-            if (linksJoined.Length >= 256)
+            // короткий — обычным текстом, рядом с ним кнопка «Скопировать»
+            if (linksJoined.Length >= MessageText.MaxCopyTextLength)
+            {
                 Text.Bullets(links.Count, (line, index) => line.Monospace(links[index].Url));
+            }
             else
             {
+                Text.Verbatim(" ").CopyButton("Скопировать", linksJoined);
                 Text.Bullets(links.Count, (line, index) => line.Verbatim(links[index].Url));
-                Keyboard.AddCopyTextButton("Скопировать ссылки", linksJoined);
             }
 
-            Text.BlockBreak().Verbatim("Пришлите новые ссылки или удалите текущие:");
+            // Убрать ссылки можно в окне виша («Удалить» у поля), здесь только правка
+            Text.BlockBreak().Verbatim("Пришлите новые ссылки:");
         }
-
-        if (user.CurrentWish.Links.Any())
-            Keyboard
-                .NewRow()
-                .AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Links));
 
         Keyboard
            .NewRow()
