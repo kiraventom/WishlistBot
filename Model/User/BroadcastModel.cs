@@ -14,14 +14,27 @@ public class BroadcastModel
 
     public string BuildLink() => DeepLink.BuildBroadcast(BroadcastId);
 
+    /// <summary>
+    /// Превью текста рассылки — одной строкой. Текст рассылки пишется свободно и бывает
+    /// многострочным, а превью идёт в ячейку таблицы, где перевод строки рвёт строку
+    /// на две (см. <c>TableBuilder.ToCellText</c>).
+    /// </summary>
     public string GetShortText()
     {
         if (Text is null)
             return "<empty>";
 
-        return Text.Length <= 50
-           ? Text
-           : Text[..49] + "…";
+        // null вместо набора разделителей — «резать по любому пробельному символу»
+        // (задокументированное поведение string.Split): переводы строк и повторные
+        // пробелы превращаются в один пробел между словами.
+        var text = string.Join(' ', Text.Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
+
+        if (text.Length == 0)
+            return "<empty>";
+
+        return text.Length <= 50
+           ? text
+           : text[..49] + "…";
     }
 }
 
