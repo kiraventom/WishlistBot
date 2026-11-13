@@ -142,13 +142,21 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
             Text.BlockBreak().Bold("Цена: ").Monospace(priceRangeString);
         }
 
+        // Параметр вынимаем всегда, даже если кнопки нет: иначе он останется в QueryParams
+        // и уедет в кнопки следующего экрана
+        var showHelp = parameters.Pop(QueryParameterType.ShowHelp);
+
         if (wish.IsPermanent)
         {
             Text.BlockBreak().Verbatim("\u2b50 Постоянный виш ");
 
-            Text.Button("Что это?", Keyboard.AddTextButton<ShowWishQuery>(parameters: QueryParameter.ShowHelp), style: "primary");
+            // WishId передаём явно: его вынули из параметров в начале InitInternal,
+            // и без него кнопка открывала «Виш не найден»
+            Text.Button("Что это?", Keyboard.AddTextButton<ShowWishQuery>(
+                parameters: [new QueryParameter(QueryParameterType.WishId, wish.WishId), QueryParameter.ShowHelp]),
+                style: "primary");
 
-            if (parameters.Pop(QueryParameterType.ShowHelp))
+            if (showHelp)
                 AlertText = PermanentWishHelp;
         }
 

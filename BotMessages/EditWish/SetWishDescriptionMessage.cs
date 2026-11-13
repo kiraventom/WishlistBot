@@ -4,6 +4,7 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.EditWish;
 
@@ -23,23 +24,21 @@ public class SetWishDescriptionMessage(ILogger logger) : BotMessage(logger)
         {
             Text.Bold("Текущее описание виша:");
 
-            if (user.CurrentWish.Description.Length >= 256)
+            if (user.CurrentWish.Description.Length < MessageText.MaxCopyTextLength)
+                Text.Verbatim(" ").CopyButton("Скопировать", user.CurrentWish.Description);
+
+            if (user.CurrentWish.Description.Length >= MessageText.MaxCopyTextLength)
             {
-                Text.Monospace(user.CurrentWish.Description);
+                Text.BlockBreak().Monospace(user.CurrentWish.Description);
             }
             else
             {
-                Text.LineBreak().ExpandableQuote(user.CurrentWish.Description);
-                Keyboard.AddCopyTextButton("Скопировать описание", user.CurrentWish.Description);
+                Text.ExpandableQuote(user.CurrentWish.Description);
             }
 
-            Text.BlockBreak().Verbatim("Укажите новое описание или удалите текущее:");
+            // Убрать описание можно в окне виша («Удалить» у поля), здесь только правка
+            Text.BlockBreak().Verbatim("Укажите новое описание:");
         }
-
-        if (!string.IsNullOrEmpty(user.CurrentWish.Description))
-            Keyboard
-                .NewRow()
-                .AddButton<EditWishQuery>("Очистить", new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Description));
 
         Keyboard
            .NewRow()

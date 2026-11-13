@@ -4,6 +4,7 @@ using WishlistBot.Model;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries.Profile;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.Profile;
 
@@ -23,11 +24,12 @@ public class SetProfileBirthdayMessage(ILogger logger) : BotMessage(logger)
         }
         else
         {
-            Text
-               .Bold("Указанная дата рождения: ").Monospace(user.Profile.Birthday.Value.ToString("dd.MM.yyyy"))
-               .BlockBreak().Verbatim("Введите новое значение:");
+            var birthdayString = user.Profile.Birthday.Value.ToString("dd.MM.yyyy");
 
-            Keyboard.AddCopyTextButton("Скопировать дату рождения", user.Profile.Birthday.Value.ToString("dd.MM.yyyy"));
+            Text
+               .Bold("Указанная дата рождения: ").Monospace(birthdayString)
+               .Verbatim(" ").CopyButton("Скопировать", birthdayString)
+               .BlockBreak().Verbatim("Введите новое значение:");
         }
 
         Keyboard

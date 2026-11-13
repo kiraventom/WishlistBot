@@ -5,6 +5,7 @@ using WishlistBot.Model;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages.EditWish;
 
@@ -30,11 +31,12 @@ public class SetWishNameMessage(ILogger logger) : UserBotMessage(logger)
         {
             Text
                .Bold("Текущее название виша: ")
-               .Monospace(user.CurrentWish.Name)
-               .BlockBreak().Verbatim("Укажите новое название виша:");
+               .Monospace(user.CurrentWish.Name);
 
-            if (user.CurrentWish.Name.Length < 256)
-                Keyboard.AddCopyTextButton("Скопировать название", user.CurrentWish.Name);
+            if (user.CurrentWish.Name.Length < MessageText.MaxCopyTextLength)
+                Text.Verbatim(" ").CopyButton("Скопировать", user.CurrentWish.Name);
+
+            Text.BlockBreak().Verbatim("Укажите новое название виша:");
 
             Keyboard.NewRow().AddButton<EditWishQuery>("Отмена");
         }

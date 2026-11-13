@@ -89,6 +89,14 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
                 {
                     message = await EditRichMessage(userModel.TelegramId, userModel.LastBotMessageId.Value, text, keyboardMarkup);
                 }
+                catch (Exception e) when (IsMessageNotModified(e))
+                {
+                    // «Что это?» и подобные запросы перерисовывают тот же экран: править
+                    // нечего, и пересылать новое сообщение тоже не надо — Telegram уже
+                    // показывает ровно то, что мы собрали
+                    logger.Debug("Screen of [{userId}] did not change, nothing to edit", userModel.UserId);
+                    return null;
+                }
                 catch (Exception e)
                 {
                     // Сообщение могло быть отправлено старой версией бота (обычный текст или
@@ -131,6 +139,14 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
 
         return message;
     }
+
+    /// <summary>
+    /// Telegram отвечает этим на правку, которая ничего не меняет. Это не ошибка:
+    /// экран уже такой, какой нужен.
+    /// </summary>
+    private static bool IsMessageNotModified(Exception exception) =>
+        exception is ApiRequestException { ErrorCode: 400 } &&
+        exception.Message.Contains("message is not modified", StringComparison.OrdinalIgnoreCase);
 
     private Task<Message> SendRichMessage(long chatId, MessageText text, InlineKeyboardMarkup keyboardMarkup) =>
         SendWithMediaRetry(chatId, text, keyboardMarkup, (richMessage, markup) =>

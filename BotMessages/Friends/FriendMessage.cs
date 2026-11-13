@@ -60,6 +60,9 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
                 Keyboard.AddButton<ConfirmRemoveFriendQuery>("Удалить из друзей");
             else
                 Keyboard.AddButton<AddFriendQuery>();
+
+            // «К друзьям» — отдельной строкой: две кнопки в ряд не помещались
+            Keyboard.NewRow();
         }
 
         const string link = "\U0001f517";
