@@ -34,6 +34,12 @@ public class MediaStorage
     /// <summary>Только что загруженные картинки: их надо скачать и сжать сразу после коммита.</summary>
     private static readonly List<string> _uploadedKeys = [];
 
+    /// <summary>
+    /// Ключи, у которых блоб — превью, а Telegram показал размер покрупнее: перекачать надо
+    /// после коммита (ключ → file_id крупного размера и его размеры).
+    /// </summary>
+    private static readonly Dictionary<string, (string FileId, int Width, int Height)> _upgradeQueue = [];
+
     public static MediaStorage Instance { get; } = new();
 
     public void Init(ILogger logger, ITelegramBotClient client, long storageChannelId)
@@ -112,8 +118,24 @@ public class MediaStorage
                 _logger.Warning("Uploaded media '{key}' is stored without a blob yet, it stays a file id only", key);
         }
 
+        foreach (var (key, fileId, width, height) in TakeQueuedUpgrades())
+        {
+            if (!await UpgradeAsync(key, fileId, width, height))
+                _logger.Warning("Failed to upgrade media '{key}' to {width}x{height}, blob stays as is", key, width, height);
+        }
+
         foreach (var key in TakeQueued(_releasedKeys))
             await DeleteIfUnused(key);
+    }
+
+    private static List<(string Key, string FileId, int Width, int Height)> TakeQueuedUpgrades()
+    {
+        lock (_upgradeQueue)
+        {
+            var queued = _upgradeQueue.Select(pair => (pair.Key, pair.Value.FileId, pair.Value.Width, pair.Value.Height)).ToList();
+            _upgradeQueue.Clear();
+            return queued;
+        }
     }
 
     private static List<string> TakeQueued(List<string> queue)
@@ -177,6 +199,157 @@ public class MediaStorage
         _logger.Information("Dropped media '{key}': nothing references it anymore", key);
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Просит перекачать блоб, если Telegram показал размер крупнее того, что у нас лежит.
+    /// Легаси-картинки импортированы превью: старый бот хранил file_id самого маленького
+    /// размера, а <c>getFile</c> по такому file_id отдаёт именно превью, хотя сам file_id
+    /// в сообщении Telegram разворачивает в полную фотографию. Скачивание — после коммита
+    /// (<see cref="FlushAsync"/>), внутри транзакции сеть не трогаем.
+    /// </summary>
+    public void RequestUpgradeIfPreview(string key, string fileId, int width, int height)
+    {
+        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(fileId) || width <= 0 || height <= 0)
+            return;
+
+        using var storageContext = MediaStorageContext.Create();
+
+        var stored = storageContext.StoredMedia
+            .Where(m => m.Key == key)
+            .Select(m => new { m.Width, m.Height, HasData = m.Data != null })
+            .FirstOrDefault();
+
+        if (stored is null || !stored.HasData)
+            return;
+
+        if ((long)width * height <= (long)stored.Width * stored.Height)
+            return;
+
+        lock (_upgradeQueue)
+            _upgradeQueue[key] = (fileId, width, height);
+    }
+
+    /// <summary>
+    /// Перекачивает блоб по file_id крупного размера и кэширует этот file_id.
+    /// Ставит <see cref="MediaItemModel.SizeChecked"/>: картинка уже в полном размере.
+    /// </summary>
+    public async Task<bool> UpgradeAsync(string key, string fileId, int width, int height)
+    {
+        if (_client is null || string.IsNullOrEmpty(fileId))
+            return false;
+
+        MediaItemModel mediaItem;
+
+        using (var storageContext = MediaStorageContext.Create())
+        {
+            mediaItem = storageContext.StoredMedia.FirstOrDefault(m => m.Key == key);
+
+            if (mediaItem is null)
+                return false;
+
+            // Уже не мельче — достаточно обновить кэш file_id
+            if ((long)mediaItem.Width * mediaItem.Height >= (long)width * height)
+            {
+                mediaItem.TelegramFileId = fileId;
+                mediaItem.SizeChecked = true;
+                storageContext.SaveChanges();
+                return true;
+            }
+        }
+
+        var compressed = await DownloadAndCompressAsync(fileId, key);
+
+        if (compressed is null)
+            return false;
+
+        using (var storageContext = MediaStorageContext.Create())
+        {
+            var stored = storageContext.StoredMedia.First(m => m.MediaItemId == mediaItem.MediaItemId);
+            var oldWidth = stored.Width;
+            var oldHeight = stored.Height;
+
+            stored.Data = compressed.Data;
+            stored.Width = compressed.Width;
+            stored.Height = compressed.Height;
+            stored.SizeBytes = compressed.Data.Length;
+            stored.TelegramFileId = fileId;
+            stored.SizeChecked = true;
+            stored.ImportAttempts = 0;
+
+            storageContext.SaveChanges();
+
+            _logger.Information("Upgraded media '{key}': {oldWidth}x{oldHeight} → {width}x{height}, {size} bytes",
+                key, oldWidth, oldHeight, compressed.Width, compressed.Height, compressed.Data.Length);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Полный размер картинки: отправляет её в канал-хранилище по file_id и читает размеры
+    /// из ответа (другого способа узнать file_id крупного размера нет: <c>getFile</c>
+    /// по file_id превью отдаёт именно превью). Сообщение сразу удаляется.
+    /// null — канал не настроен или Telegram не дал отправить.
+    /// </summary>
+    public async Task<(string FileId, int Width, int Height)?> ResolveLargestSizeAsync(string fileId)
+    {
+        // Канал может быть не настроен (в конфиге пустышка вроде -1): тогда Telegram
+        // откажет в отправке, а мы вернём null и проход по блобам просто остановится
+        if (_client is null || string.IsNullOrEmpty(fileId))
+            return null;
+
+        try
+        {
+            var message = await _client.SendPhoto(chatId: _storageChannelId, photo: InputFile.FromFileId(fileId));
+            var largest = message.Photo?.Largest();
+
+            try
+            {
+                await _client.DeleteMessage(chatId: _storageChannelId, messageId: message.MessageId);
+            }
+            catch (Exception e)
+            {
+                _logger.Debug("Failed to delete size-probe message [{messageId}]: {error}", message.MessageId, e.Message);
+            }
+
+            return largest is null ? null : (largest.FileId, largest.Width, largest.Height);
+        }
+        catch (Exception e)
+        {
+            _logger.Warning("Failed to resolve full size of media '{fileId}': {error}", fileId, e.Message);
+            return null;
+        }
+    }
+
+    /// <summary>Скачивает файл из Telegram и сжимает; null — не вышло (или это не картинка).</summary>
+    private async Task<CompressedImage> DownloadAndCompressAsync(string fileId, string key)
+    {
+        try
+        {
+            var file = await _client.GetFile(fileId);
+
+            if (file.FilePath is null)
+            {
+                _logger.Warning("Telegram returned no path for media '{key}'", key);
+                return null;
+            }
+
+            using var stream = new MemoryStream();
+            await _client.DownloadFile(file.FilePath, stream);
+
+            var compressed = ImageCompressor.Compress(stream.ToArray());
+
+            if (compressed is null)
+                _logger.Warning("Media '{key}' is not a picture we can re-encode, skipping", key);
+
+            return compressed;
+        }
+        catch (Exception e)
+        {
+            _logger.Warning("Failed to import media '{key}': {error}", key, e.Message);
+            return null;
+        }
     }
 
     /// <summary>Есть ли блоб для ключа (нужно, чтобы решить, можно ли перезалить картинку).</summary>
@@ -273,49 +446,27 @@ public class MediaStorage
 
         var fileId = mediaItem.TelegramFileId ?? mediaItem.Key;
 
-        try
-        {
-            var file = await _client.GetFile(fileId);
+        var compressed = await DownloadAndCompressAsync(fileId, mediaItem.Key);
 
-            if (file.FilePath is null)
-            {
-                _logger.Warning("Telegram returned no path for media '{key}'", mediaItem.Key);
-                return false;
-            }
-
-            using var stream = new MemoryStream();
-            await _client.DownloadFile(file.FilePath, stream);
-
-            var compressed = ImageCompressor.Compress(stream.ToArray());
-
-            if (compressed is null)
-            {
-                _logger.Warning("Media '{key}' is not a picture we can re-encode, skipping", mediaItem.Key);
-                return false;
-            }
-
-            using var storageContext = MediaStorageContext.Create();
-            var stored = storageContext.StoredMedia.First(m => m.MediaItemId == mediaItem.MediaItemId);
-
-            stored.Data = compressed.Data;
-            stored.Width = compressed.Width;
-            stored.Height = compressed.Height;
-            stored.SizeBytes = compressed.Data.Length;
-            stored.TelegramFileId = fileId;
-            stored.ImportAttempts = 0;
-
-            storageContext.SaveChanges();
-
-            _logger.Information("Imported media '{key}': {width}x{height}, {size} bytes",
-                mediaItem.Key, compressed.Width, compressed.Height, compressed.Data.Length);
-
-            return true;
-        }
-        catch (Exception e)
-        {
-            _logger.Warning("Failed to import media '{key}': {error}", mediaItem.Key, e.Message);
+        if (compressed is null)
             return false;
-        }
+
+        using var storageContext = MediaStorageContext.Create();
+        var stored = storageContext.StoredMedia.First(m => m.MediaItemId == mediaItem.MediaItemId);
+
+        stored.Data = compressed.Data;
+        stored.Width = compressed.Width;
+        stored.Height = compressed.Height;
+        stored.SizeBytes = compressed.Data.Length;
+        stored.TelegramFileId = fileId;
+        stored.ImportAttempts = 0;
+
+        storageContext.SaveChanges();
+
+        _logger.Information("Imported media '{key}': {width}x{height}, {size} bytes",
+            mediaItem.Key, compressed.Width, compressed.Height, compressed.Data.Length);
+
+        return true;
     }
 
     /// <summary>Считает неудачную попытку импорта, чтобы не долбить мёртвый file_id вечно.</summary>

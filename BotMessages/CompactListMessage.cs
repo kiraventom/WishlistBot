@@ -74,6 +74,16 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             return Task.CompletedTask;
         }
 
+        // Фильтр «Все / Без брони» имеет смысл только когда в списке есть и забронированные,
+        // и незабронированные: если все забронированы или ни один — он ничего не меняет
+        var bookedCount = targetUser.Wishes.Count(wish => wish.HasVisibleClaim);
+        var showFilter = isReadOnly && bookedCount > 0 && bookedCount < totalCount;
+
+        // Недоступный фильтр не должен оставлять список отфильтрованным: иначе выйдет
+        // пустой экран без кнопки, чтобы вернуться к полному списку
+        if (!showFilter)
+            wishViewSettings.OnlyUnclaimed = false;
+
         var sortedWishes = targetUser.GetSortedWishes(wishViewSettings).ToList();
 
         if (isReadOnly)
@@ -104,24 +114,28 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             page = TextListMessageUtils.AddListControls<CompactListQuery, FriendQuery>(
                 Keyboard, parameters, sortedWishes.Count, wishViewSettings, buttonCaption: "Страница", WishesPerPage);
 
-        AddWishTable(userContext, sortedWishes, targetUser.SubscribeId, isReadOnly, wishViewSettings, page);
+        // Сортировка одного виша ничего не решает — прячем строку вместе с кнопками
+        AddWishTable(userContext, sortedWishes, targetUser.SubscribeId, isReadOnly, showFilter,
+            showSort: totalCount > 1, wishViewSettings, page);
 
         return Task.CompletedTask;
     }
 
     /// <summary>
-    /// Таблица вишей: номер, название (со словом БРОНЬ и метками) и цена.
+    /// Таблица вишей: название (со словом БРОНЬ и метками) и цена.
     ///
-    /// Сортировка, её направление и фильтр — кнопки внутри шапки таблицы: часы в первой
-    /// колонке сортируют по дате, слово «Цена» — по цене, кнопка справа от «Виш» —
-    /// фильтр «Все / Без брони». Активная колонка становится обычным текстом, а рядом
-    /// появляется треугольник — он же кнопка смены направления.
+    /// Сортировка — строкой над таблицей (кнопка свойства и кнопка направления),
+    /// фильтр «Все / Без брони» — кнопкой в шапке колонки «Виш». Строка сортировки
+    /// скрыта, когда виш всего один, фильтр — когда в списке нет смеси забронированных
+    /// и незабронированных: там кнопки ничего не меняют.
     /// </summary>
     private void AddWishTable(
         UserContext userContext,
         IReadOnlyList<WishModel> sortedWishes,
         string subscribeId,
         bool isReadOnly,
+        bool showFilter,
+        bool showSort,
         WishViewSettingsModel viewSettings,
         ListPage page)
     {
@@ -130,29 +144,13 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             .ToList();
 
         var showPrice = wishesOnPage.Any(wish => wish.PriceRange != Price.NotSet);
-        var sortByDate = viewSettings.SortProperty == SortProperty.Default;
 
-        var directionData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortOrder);
-        var switchSortData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortProperty);
-        var filterData = isReadOnly
+        var filterData = showFilter
             ? Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.WishFilterToggleUnclaimed)
             : null;
 
-        // Сортировка — строкой над таблицей: кнопки в шапке выглядели чужеродно
-        var sortPropertyCaption = sortByDate ? "По дате добавления" : "По цене";
-
-        var sortOrderCaption = (sortByDate, viewSettings.Descending) switch
-        {
-            (true, false) => "От старых к новым",
-            (true, true) => "От новых к старым",
-            (false, false) => "От дешёвых к дорогим",
-            (false, true) => "От дорогих к дешёвым",
-        };
-
-        Text.Verbatim("Сортировка: ");
-        Text.Button(sortPropertyCaption, switchSortData);
-        Text.Verbatim(" ").Button(sortOrderCaption, directionData);
-        Text.BlockBreak();
+        if (showSort)
+            AddSortLine(viewSettings);
 
         Text.Table(table =>
         {
@@ -207,6 +205,33 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
     /// битыми callback-данными (HTML-экранирование '&amp;' в tg-button), а листание и так
     /// есть кнопками клавиатуры «Страница N ➡️» / «⬅️ N».
     /// </summary>
+    /// <summary>
+    /// Строка «Сортировка: [свойство] [направление]» — кнопки переключают режим.
+    /// Обе кнопки живут в тексте, поэтому регистрируются через <c>AddTextButton</c>.
+    /// </summary>
+    private void AddSortLine(WishViewSettingsModel viewSettings)
+    {
+        var sortByDate = viewSettings.SortProperty == SortProperty.Default;
+
+        var switchSortData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortProperty);
+        var directionData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortOrder);
+
+        var sortPropertyCaption = sortByDate ? "По дате добавления" : "По цене";
+
+        var sortOrderCaption = (sortByDate, viewSettings.Descending) switch
+        {
+            (true, false) => "От старых к новым",
+            (true, true) => "От новых к старым",
+            (false, false) => "От дешёвых к дорогим",
+            (false, true) => "От дорогих к дешёвым",
+        };
+
+        Text.Verbatim("Сортировка: ");
+        Text.Button(sortPropertyCaption, switchSortData);
+        Text.Verbatim(" ").Button(sortOrderCaption, directionData);
+        Text.BlockBreak();
+    }
+
     private static void AddRemainingRow(TableBuilder table, int wishesCount, bool showPrice)
     {
         table.Row(cells =>

@@ -63,5 +63,12 @@ public class MediaItemModel
     /// <summary>Сколько раз пытались скачать картинку из Telegram (чтобы не долбить мёртвый file_id).</summary>
     public int ImportAttempts { get; set; }
 
+    /// <summary>
+    /// Блоб проверен на «это превью?». Старый бот хранил file_id самого маленького размера,
+    /// поэтому у легаси-картинок в базе лежит превью; <see cref="WishlistBot.Media.MediaUpgradeService"/>
+    /// находит такие блобы и перекачивает их в полном размере один раз.
+    /// </summary>
+    public bool SizeChecked { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }
