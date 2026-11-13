@@ -25,6 +25,13 @@ public static class BirthdayUtils
     public static int GetDaysUntil(DateOnly nextBirthday, DateOnly today) =>
         nextBirthday.DayNumber - today.DayNumber;
 
+    /// <summary>
+    /// Ближайший ДР пользователя; <see cref="DateOnly.MaxValue"/>, если дата не указана —
+    /// так «без даты» само уезжает в конец любой сортировки по ближайшему ДР.
+    /// </summary>
+    public static DateOnly GetNextBirthdayOrMax(UserModel user, DateOnly today) =>
+        user.Profile?.Birthday is { } birthday ? GetNextBirthday(birthday, today) : DateOnly.MaxValue;
+
     /// <summary>Сколько лет исполнится в ближайший день рождения.</summary>
     public static int GetAge(DateOnly birthday, DateOnly nextBirthday) =>
         nextBirthday.Year - birthday.Year;
