@@ -45,6 +45,9 @@ namespace WishlistBot.Migrations
                     b.Property<long>("SizeBytes")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("SizeChecked")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("TelegramFileId")
                         .HasColumnType("TEXT");
 

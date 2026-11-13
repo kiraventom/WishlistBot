@@ -172,7 +172,12 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
         {
             return await send(BuildRichMessage(text, prepared), keyboardMarkup);
         }
-        catch (ApiRequestException e) when (e.ErrorCode == 400 && prepared.Any(media => media.Photo.FileId is not null && MediaStorage.Instance.HasData(media.Photo.Key)))
+        // «message is not modified» — это не отказ file_id, а «экран не изменился».
+        // Перезаливка блоба в этом случае заменяла картинку в сообщении (у легаси-вишей
+        // блоб — превью, так что картинка становилась крошечной — см. «Что это?»)
+        catch (ApiRequestException e) when (e.ErrorCode == 400
+                && !IsMessageNotModified(e)
+                && prepared.Any(media => media.Photo.FileId is not null && MediaStorage.Instance.HasData(media.Photo.Key)))
         {
             logger.Warning("Telegram rejected cached file ids for [{keys}] ({error}), re-uploading stored pictures",
                 string.Join(", ", prepared.Select(media => media.Photo.Key)), e.Message);
@@ -238,10 +243,17 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
 
         for (var i = 0; i < Math.Min(keys.Count, photoBlocks.Count); ++i)
         {
-            var fileId = photoBlocks[i].Photo?.Largest()?.FileId;
+            var largest = photoBlocks[i].Photo?.Largest();
 
-            if (fileId is not null)
-                await MediaStorage.Instance.RememberFileIdAsync(keys[i], fileId);
+            if (largest?.FileId is null)
+                continue;
+
+            await MediaStorage.Instance.RememberFileIdAsync(keys[i], largest.FileId);
+
+            // Легаси-картинки импортированы превью (старый бот хранил file_id самого
+            // маленького размера): если Telegram показал размер крупнее нашего блоба,
+            // полный блоб докачивается после коммита апдейта
+            MediaStorage.Instance.RequestUpgradeIfPreview(keys[i], largest.FileId, largest.Width, largest.Height);
         }
     }
 

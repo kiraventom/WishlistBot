@@ -58,6 +58,9 @@ public static class Program
       // Догружает старые картинки в базу блобами и убирает их из старого канала-хранилища
       MediaImportService.Instance.Start(logger);
 
+      // Разовая починка легаси-превью: старый бот хранил file_id самого маленького размера
+      MediaUpgradeService.Instance.Start(logger);
+
       NotificationService.Instance.Init(logger);
 
       NotificationDispatchService.Instance.Init(logger, client);
