@@ -222,7 +222,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         var switchSortData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortProperty);
         var directionData = Keyboard.AddTextButton<CompactListQuery>(parameters: QueryParameter.ChangeWishSortOrder);
 
-        var sortPropertyCaption = sortByDate ? "По дате добавления" : "По цене";
+        var sortPropertyCaption = sortByDate ? "По дате" : "По цене";
 
         var sortOrderCaption = (sortByDate, viewSettings.Descending) switch
         {
