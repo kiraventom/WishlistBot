@@ -167,10 +167,25 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
         Func<InputRichMessage, InlineKeyboardMarkup, Task<Message>> send)
     {
         var prepared = await PrepareMedia(text);
+        var markdown = text.ToString();
 
         try
         {
-            return await send(BuildRichMessage(text, prepared), keyboardMarkup);
+            return await send(BuildRichMessage(markdown, prepared), keyboardMarkup);
+        }
+        // Миниатюры вишей — кастомные эмодзи. Если Telegram отверг id стикера (набор
+        // удалили, кончился Premium, бот переехал на другой токен), он валит ВСЁ сообщение:
+        // RICH_MESSAGE_EMOJI_DOC_INVALID. Пользователь должен увидеть экран любой ценой,
+        // поэтому перерисовываем его без эмодзи — с маркерами 🖼️ — и гасим миниатюры
+        // на сутки (проверено: rich-probe/dead_emoji_set_probe.py).
+        catch (ApiRequestException e) when (IsEmojiRejected(e))
+        {
+            logger.Warning("Telegram rejected custom emoji ids in the screen for chat [{chatId}] ({error}), resending it without thumbnails",
+                chatId, e.Message);
+
+            EmojiPackService.Instance.Disable();
+
+            return await send(BuildRichMessage(MessageTextUtils.StripEmojiLinks(markdown), prepared), keyboardMarkup);
         }
         // «message is not modified» — это не отказ file_id, а «экран не изменился».
         // Перезаливка блоба в этом случае заменяла картинку в сообщении (у легаси-вишей
@@ -186,14 +201,17 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
                 .Select(media => new PreparedMedia(media.Key, PreparedPhoto.FromData(media.Key, MediaStorage.Instance.GetData(media.Key))))
                 .ToList();
 
-            return await send(BuildRichMessage(text, reuploaded), keyboardMarkup);
+            return await send(BuildRichMessage(markdown, reuploaded), keyboardMarkup);
         }
     }
 
-    private static InputRichMessage BuildRichMessage(MessageText text, IReadOnlyList<PreparedMedia> media)
-    {
-        var markdown = text.ToString();
+    /// <summary>Telegram отверг id кастомного эмодзи — падает всё сообщение, а не одна иконка.</summary>
+    private static bool IsEmojiRejected(Exception exception) =>
+        exception is ApiRequestException { ErrorCode: 400 } &&
+        exception.Message.Contains("RICH_MESSAGE_EMOJI_DOC_INVALID", StringComparison.OrdinalIgnoreCase);
 
+    private static InputRichMessage BuildRichMessage(string markdown, IReadOnlyList<PreparedMedia> media)
+    {
         // Картинки, для которых нет ни file_id, ни блоба, выкидываем вместе со ссылкой:
         // иначе Telegram ответит RICH_MESSAGE_PHOTO_INVALID и экран не уйдёт вообще
         foreach (var missing in media.Where(m => m.Photo is null))

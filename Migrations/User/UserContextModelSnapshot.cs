@@ -406,6 +406,31 @@ namespace WishlistBot.Migrations.User
                     b.ToTable("WishDrafts");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.WishEmojiPackModel", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsBroken")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastCheckedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SetName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StickerCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("EmojiPacks");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.WishModel", b =>
                 {
                     b.Property<int>("WishId")
@@ -685,6 +710,17 @@ namespace WishlistBot.Migrations.User
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.WishEmojiPackModel", b =>
+                {
+                    b.HasOne("WishlistBot.Model.User.UserModel", "User")
+                        .WithOne("EmojiPack")
+                        .HasForeignKey("WishlistBot.Model.User.WishEmojiPackModel", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.WishModel", b =>
                 {
                     b.HasOne("WishlistBot.Model.User.UserModel", "Claimer")
@@ -749,6 +785,8 @@ namespace WishlistBot.Migrations.User
                     b.Navigation("ClaimedWishes");
 
                     b.Navigation("CurrentWish");
+
+                    b.Navigation("EmojiPack");
 
                     b.Navigation("Friends");
 

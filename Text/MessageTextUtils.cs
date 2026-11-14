@@ -109,6 +109,34 @@ public static partial class MessageTextUtils
 
     public static string GetMediaLink(string key) => $"tg://photo?id={GetMediaId(key)}";
 
+    /// <summary>
+    /// Запасной эмодзи для миниатюры виша. Он же идёт в <c>emoji_list</c> стикера: Telegram
+    /// показывает именно его вместо картинки в уведомлениях и при пересылке от
+    /// не-Premium пользователя, и свой текст туда подставить нельзя.
+    /// </summary>
+    public const string WishThumbnailEmoji = "\U0001f5bc\ufe0f";
+
+    public static string GetEmojiLink(string emojiId) => $"tg://emoji?id={emojiId}";
+
+    /// <summary>
+    /// Миниатюра виша как инлайн-картинка: <c>![🖼️](tg://emoji?id=...)</c>.
+    /// В ячейке таблицы единственный рисованный инлайн — именно кастомный эмодзи
+    /// (<c>tg://photo</c> там молча выбрасывается, проверено живой отправкой).
+    /// </summary>
+    public static string GetEmojiMarkdown(string emojiId) =>
+        $"![{WishThumbnailEmoji}]({GetEmojiLink(emojiId)})";
+
+    /// <summary>
+    /// Убирает из готового Rich Markdown все миниатюры-эмодзи, оставляя запасной эмодзи.
+    /// Нужно, когда Telegram отверг id стикера (набор удалён, кончился Premium): он валит
+    /// ВСЁ сообщение целиком с <c>RICH_MESSAGE_EMOJI_DOC_INVALID</c>, а не деградирует сам.
+    /// </summary>
+    public static string StripEmojiLinks(string markdown) =>
+        markdown is null ? null : EmojiLinkRegex().Replace(markdown, WishThumbnailEmoji);
+
+    [GeneratedRegex(@"!\[[^\]]*\]\(tg://emoji\?id=[^)]*\)")]
+    private static partial Regex EmojiLinkRegex();
+
     public static string PriceToString(Price priceRange)
     {
         return priceRange switch

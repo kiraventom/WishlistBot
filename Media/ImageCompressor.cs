@@ -18,7 +18,70 @@ public static class ImageCompressor
     public const int MaxSide = 1280;
     public const long MaxBytes = 1024 * 1024;
 
+    /// <summary>
+    /// Сторона миниатюры-эмодзи. Telegram требует ровно 100×100 для статичных
+    /// кастомных эмодзи и отвечает <c>STICKER_PNG_DIMENSIONS</c> на любой другой размер
+    /// (проверено живой отправкой: <c>rich-probe/custom_emoji_set_probe.py</c>).
+    /// </summary>
+    public const int EmojiSize = 100;
+
+    private const int EmojiQuality = 90;
+
     private static readonly int[] Qualities = [85, 75, 65];
+
+    /// <summary>
+    /// Миниатюра виша для ячейки таблицы: центральный квадрат картинки, сжатый до
+    /// <see cref="EmojiSize"/>×<see cref="EmojiSize"/> в WEBP. Квадрат берём из центра,
+    /// а не растягиваем: фото 1000×800 отдаёт всё, что левее и правее x=100, и не теряет
+    /// пропорции.
+    /// </summary>
+    /// <returns>null, если это не картинка или она мельче 100 пикселей по меньшей стороне.</returns>
+    public static byte[] CompressEmoji(byte[] source)
+    {
+        if (source is null || source.Length == 0)
+            return null;
+
+        try
+        {
+            using var data = SKData.CreateCopy(source);
+            using var decoded = SKImage.FromEncodedData(data);
+
+            if (decoded is null)
+                return null;
+
+            using var bitmap = SKBitmap.FromImage(decoded);
+
+            var side = Math.Min(bitmap.Width, bitmap.Height);
+
+            // Мелкие картинки не растягиваем: из превью 90×67 ничего, кроме мыла, не выйдет
+            if (side < EmojiSize)
+                return null;
+
+            var left = (bitmap.Width - side) / 2;
+            var top = (bitmap.Height - side) / 2;
+
+            using var square = new SKBitmap(new SKImageInfo(EmojiSize, EmojiSize, SKColorType.Rgba8888, SKAlphaType.Premul));
+
+            using (var canvas = new SKCanvas(square))
+            {
+                canvas.DrawBitmap(
+                    bitmap,
+                    new SKRect(left, top, left + side, top + side),
+                    new SKRect(0, 0, EmojiSize, EmojiSize),
+                    new SKSamplingOptions(SKCubicResampler.Mitchell),
+                    null);
+            }
+
+            using var image = SKImage.FromBitmap(square);
+            using var encoded = image.Encode(SKEncodedImageFormat.Webp, EmojiQuality);
+
+            return encoded?.ToArray();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 
     /// <returns>null, если данные не являются картинкой, которую можно перекодировать.</returns>
     public static CompressedImage Compress(byte[] source)

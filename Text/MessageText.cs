@@ -596,6 +596,26 @@ public sealed class MessageText
         return BlockBreak();
     }
 
+    /// <summary>
+    /// Миниатюра виша инлайн — то, что рисуется в ячейке таблицы вишей. В отличие от
+    /// <see cref="Media"/> это не блок, а эмодзи в размер шрифта, и живёт он в ячейке.
+    /// </summary>
+    /// <param name="emojiId">
+    /// id стикера из набора пользователя (см. <c>MediaItemModel.CustomEmojiId</c>).
+    /// null — миниатюры нет, рисуем просто маркер, как раньше.
+    /// </param>
+    public MessageText MediaEmoji(string emojiId)
+    {
+        if (string.IsNullOrEmpty(emojiId))
+        {
+            _sb.Append(MessageTextUtils.WishThumbnailEmoji);
+            return this;
+        }
+
+        _sb.Append(MessageTextUtils.GetEmojiMarkdown(emojiId));
+        return this;
+    }
+
     public override string ToString()
     {
         TrimTrailingSpaces();

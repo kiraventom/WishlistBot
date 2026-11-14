@@ -26,8 +26,17 @@ namespace WishlistBot.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CustomEmojiFileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomEmojiId")
+                        .HasColumnType("TEXT");
+
                     b.Property<byte[]>("Data")
                         .HasColumnType("BLOB");
+
+                    b.Property<int?>("EmojiOwnerUserId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Height")
                         .HasColumnType("INTEGER");
@@ -50,6 +59,9 @@ namespace WishlistBot.Migrations
 
                     b.Property<string>("TelegramFileId")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("ThumbAttempts")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Width")
                         .HasColumnType("INTEGER");
