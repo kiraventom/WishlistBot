@@ -58,6 +58,38 @@ public static partial class MessageTextUtils
     public static string EscapeString(string str) => EscapeString(str, null).ToString();
 
     /// <summary>
+    /// Текст внутри HTML-блока rich-сообщения (<c>&lt;blockquote expandable&gt;</c>).
+    /// Markdown там не разбирается вообще: <c>_курсив_</c>, <c>**жирный**</c> и
+    /// <c>`код`</c> остаются символами, а обратный слэш — обратным слэшем. Поэтому
+    /// markdown-экранирование здесь вредно (именно из-за него в подтверждении рассылки
+    /// было видно «Всем привет\!» и «\(взамен\)»), а нужно только HTML-экранирование:
+    /// <c>&lt;</c> и <c>&amp;</c> уходят сущностями, остальное — как есть.
+    /// Проверено живой отправкой: <c>rich-probe/html_block_markdown_probe.py</c>,
+    /// <c>rich-probe/quote_html_escape_probe.py</c>.
+    /// </summary>
+    public static StringBuilder EscapeHtml(string str, StringBuilder stringBuilder = null)
+    {
+        var sb = stringBuilder ?? new StringBuilder();
+
+        foreach (var ch in str)
+        {
+            switch (ch)
+            {
+                case '<':
+                    sb.Append("&lt;");
+                    continue;
+                case '&':
+                    sb.Append("&amp;");
+                    continue;
+            }
+
+            sb.Append(ch);
+        }
+
+        return sb;
+    }
+
+    /// <summary>
     /// Ссылка внутри <c>[...](...)</c>: экранировать надо только то, что может закрыть
     /// саму ссылку.
     /// </summary>
