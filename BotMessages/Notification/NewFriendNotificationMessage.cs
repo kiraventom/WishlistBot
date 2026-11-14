@@ -37,7 +37,8 @@ public class NewFriendNotificationMessage : BotMessage, INotificationMessage
         var friends = notificationTarget.GetSortedFriends(today);
 
         var friendIndex = friends.FindIndex(friend => friend.Friend.UserId == _notificationSourceId);
-        var pageIndex = TextListMessageUtils.GetPageIndex(friendIndex);
+        // Список друзей — таблица, поэтому страницы по TableRowsPerPage, а не по ItemsPerPage
+        var pageIndex = TextListMessageUtils.GetPageIndex(friendIndex, TextListMessageUtils.TableRowsPerPage);
 
         Keyboard
            .AddButton<FriendQuery>("Перейти к другу",

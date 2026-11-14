@@ -16,7 +16,7 @@ public class SetProfileBirthdayMessage(ILogger logger) : BotMessage(logger)
     {
         var user = userContext.Users.Include(u => u.Profile).First(u => u.UserId == userId);
 
-        if (user.Profile.Birthday is null)
+        if (user.Profile.Birthday is not { } birthday)
         {
             Text.Verbatim("Укажите дату рождения в формате ").Monospace("ДД.ММ.ГГГГ")
                 .LineBreak()
@@ -24,7 +24,8 @@ public class SetProfileBirthdayMessage(ILogger logger) : BotMessage(logger)
         }
         else
         {
-            var birthdayString = user.Profile.Birthday.Value.ToString("dd.MM.yyyy");
+            // У скрытого года в дате его нет: «10.03»
+            var birthdayString = birthday.ToString();
 
             Text
                .Bold("Указанная дата рождения: ").Monospace(birthdayString)

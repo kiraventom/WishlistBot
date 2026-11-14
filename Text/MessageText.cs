@@ -380,6 +380,16 @@ public sealed class MessageText
     public MessageText Date(DateOnly date, string format, string text) =>
         DateTime(ToUnixTime(date), format, text);
 
+    /// <summary>
+    /// Дата, которую клиент показывает нашим текстом (пустой формат), но при этом она
+    /// остаётся интерактивной: по нажатию человек видит дату в своём формате и поясе.
+    /// Нужно там, где тег не годится: у всех его форматов есть год, а «10 марта» — нет.
+    /// Проверено живой отправкой: <c>rich-probe/time_format_probe.py</c> (пустой
+    /// <c>format=""</c> и отсутствие атрибута дают entity <c>date_time</c> с нашим
+    /// текстом; в ячейке таблицы тоже работает).
+    /// </summary>
+    public MessageText DateAsText(DateOnly date, string text) => Date(date, string.Empty, text);
+
     /// <summary>Дата и время в формате пользователя.</summary>
     public MessageText Date(DateTime date, string format, string text) =>
         DateTime(new DateTimeOffset(date).ToUnixTimeSeconds(), format, text);
@@ -390,8 +400,16 @@ public sealed class MessageText
     /// <summary>«через 3 дня» / «сегодня» для момента времени.</summary>
     public MessageText RelativeDate(DateTime date, string text) => Date(date, "r", text);
 
+    /// <summary>
+    /// Пояс, в котором считаем «начало дня» для дат без времени. День рождения — это
+    /// дата, а не момент, поэтому полночь берём московскую: с UTC клиент в МСК показывал
+    /// 03:00, а живущий западнее видел бы вообще предыдущий день. См. «Грабли»
+    /// в CONTEXT.md.
+    /// </summary>
+    private static readonly TimeSpan DateBaseOffset = TimeSpan.FromHours(3);
+
     private static long ToUnixTime(DateOnly date) =>
-        new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue)).ToUnixTimeSeconds();
+        new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue), DateBaseOffset).ToUnixTimeSeconds();
 
     /// <summary>
     /// Перенос строки внутри ячейки таблицы: обычный <c>\n</c> разваливает таблицу,

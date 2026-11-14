@@ -7,8 +7,8 @@ namespace WishlistBot.BotMessages.Friends;
 /// Строка списка друзей: имя ссылкой на профиль, ближайший ДР и число вишей.
 /// Раньше это была строка текста <c>1. Имя 05.03 (через 12 дней, 36 лет): 3 виша</c>,
 /// теперь — строка таблицы: дата ушла в свою колонку, в «Виши» осталось только число.
-/// В «ДР» — «10 октября, 32 года»: год ничего не решает (он всегда этот или следующий),
-/// а относительное время («через 12 дней») — задача напоминаний, не списка.
+/// В «ДР» — «10 марта, 32 года»: год рождения ничего не решает (он всегда этот или
+/// следующий), а относительное время («через 12 дней») — задача напоминаний, не списка.
 /// </summary>
 public static class FriendBirthdayLine
 {
@@ -41,7 +41,10 @@ public static class FriendBirthdayLine
             });
     }
 
-    /// <summary>Дата ближайшего ДР и сколько лет будет: «10 октября, 32 года».</summary>
+    /// <summary>
+    /// Дата ближайшего ДР и сколько лет будет: «10 марта, 32 года». Возраста нет, если
+    /// человек скрыл год рождения: «10 марта».
+    /// </summary>
     public static void AddBirthdayCell(MessageText text, FriendBirthday friend) =>
         AddBirthdayCell(text, friend.NextBirthday, friend.Age);
 
@@ -49,22 +52,23 @@ public static class FriendBirthdayLine
     /// То же для строк, где есть только дата рождения (список броней: строка — виш,
     /// а ДР принадлежит его владельцу).
     /// </summary>
-    public static void AddBirthdayCell(MessageText text, DateOnly? birthday, DateOnly today)
+    public static void AddBirthdayCell(MessageText text, Birthday? birthday, DateOnly today)
     {
-        if (birthday is not { } date)
+        if (birthday is not { } value)
         {
             AddBirthdayCell(text, null, null);
             return;
         }
 
-        var nextBirthday = BirthdayUtils.GetNextBirthday(date, today);
+        var nextBirthday = BirthdayUtils.GetNextBirthday(value, today);
 
-        AddBirthdayCell(text, nextBirthday, BirthdayUtils.GetAge(date, nextBirthday));
+        AddBirthdayCell(text, nextBirthday, BirthdayUtils.GetAge(value, nextBirthday));
     }
 
     /// <summary>
-    /// Дата — текстом, без <c>tg-time</c>: у тега всегда есть год (формат «d» — это
-    /// ДД.ММ.ГГГГ), а в колонке он лишний. Месяц — длинным названием в родительном падеже.
+    /// Дата — своим текстом через <c>tg-time</c> с пустым форматом: в списке видно
+    /// «10 марта» без года, а нажатие всё равно показывает дату в формате и поясе
+    /// пользователя (<see cref="MessageText.DateAsText"/>).
     /// </summary>
     private static void AddBirthdayCell(MessageText text, DateOnly? nextBirthday, int? age)
     {
@@ -74,14 +78,22 @@ public static class FriendBirthdayLine
             return;
         }
 
-        text.Verbatim($"{RussianDate.DayMonth(date)}, {AgeText(age.Value)}");
+        text.DateAsText(date, RussianDate.DayMonth(date));
+
+        if (age is { } years)
+            text.Verbatim($", {AgeText(years)}");
     }
 
     private static string AgeText(int age) => $"{age} {PluralUtils.Years(age)}";
 
     /// <summary>Текстовая версия для тестов и логов.</summary>
-    public static string Describe(FriendBirthday friend) =>
-        friend.NextBirthday is { } nextBirthday
-            ? $"{RussianDate.DayMonth(nextBirthday)}, {AgeText(friend.Age!.Value)}"
-            : NoBirthday;
+    public static string Describe(FriendBirthday friend)
+    {
+        if (friend.NextBirthday is not { } nextBirthday)
+            return NoBirthday;
+
+        var dateText = RussianDate.DayMonth(nextBirthday);
+
+        return friend.Age is { } age ? $"{dateText}, {AgeText(age)}" : dateText;
+    }
 }

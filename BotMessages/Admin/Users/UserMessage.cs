@@ -60,10 +60,12 @@ public class UserMessage(ILogger logger) : UserBotMessage(logger)
             table.Row("Receive", cell => cell.Monospace(target.Settings.ReceiveFriendWishNotifications.ToString()));
             table.Row("Birthday", cell =>
             {
-                if (target.Profile.Birthday is { } birthday)
-                    cell.Date(birthday, "d", birthday.ToString("dd.MM.yyyy"));
-                else
+                if (target.Profile.Birthday is not { } birthday)
                     cell.Monospace("null");
+                else if (birthday.BirthDate is { } birthDate)
+                    cell.Date(birthDate, "d", birthDate.ToString("dd.MM.yyyy"));
+                else
+                    cell.Monospace($"{birthday} (без года)");
             });
             table.Row("Notes", cell => cell.Monospace(target.Profile.Notes ?? "null"));
         });
