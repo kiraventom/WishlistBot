@@ -492,7 +492,9 @@ public sealed class MessageText
             if (i > 0)
                 _sb.Append("<br>");
 
-            Verbatim(lines[i]);
+            // Внутри HTML-блока Markdown не разбирается: экранируем только < и &,
+            // иначе в тексте остаются сырые обратные слэши (\! \( \)_ — см. EscapeHtml)
+            MessageTextUtils.EscapeHtml(lines[i], _sb);
         }
 
         _sb.Append("</blockquote>");
