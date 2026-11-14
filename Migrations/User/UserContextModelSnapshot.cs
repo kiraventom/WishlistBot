@@ -200,8 +200,14 @@ namespace WishlistBot.Migrations.User
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateOnly?>("Birthday")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("BirthdayDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("BirthdayMonth")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("BirthdayYear")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Notes")
                         .HasColumnType("TEXT");

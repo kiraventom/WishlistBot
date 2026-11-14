@@ -51,7 +51,7 @@ public class ProfileMessagesListener(ILogger logger, BotMessageSender sender) : 
             return Task.CompletedTask;
         }
 
-        user.Profile.Birthday = birthday;
+        user.Profile.Birthday = new Birthday(birthday.Day, birthday.Month, birthday.Year);
 
         logger.Information("'{birthday}' is set as {firstName} [{userId}] birthday", birthday.ToString("dd.MM/yyyy"), user.FirstName, user.UserId);
         return Task.CompletedTask;

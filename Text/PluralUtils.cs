@@ -28,6 +28,15 @@ public static class PluralUtils
     /// <summary>Родительный падеж множественного числа — для «2 из 3 вишей».</summary>
     public static string WishesGenitive => "вишей";
 
+    /// <summary>Строка «ещё N друзей…» в списке друзей.</summary>
+    public static string Friends(int count) => Ru(count, "друг", "друга", "друзей");
+
+    /// <summary>Строка «ещё N броней…» в списке броней.</summary>
+    public static string Claims(int count) => Ru(count, "бронь", "брони", "броней");
+
+    /// <summary>Строка «ещё N рассылок…» в админском списке рассылок.</summary>
+    public static string Broadcasts(int count) => Ru(count, "рассылка", "рассылки", "рассылок");
+
     /// <summary>Окончание порядкового числительного: 21-ый, 22-ой, 23-ий.</summary>
     public static string YearsOrdinalEnding(int year)
     {

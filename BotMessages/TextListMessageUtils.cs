@@ -2,6 +2,7 @@ using WishlistBot.Keyboard;
 using WishlistBot.Model.User;
 using WishlistBot.Queries;
 using WishlistBot.QueryParameters;
+using WishlistBot.Text;
 
 namespace WishlistBot.BotMessages;
 
@@ -14,6 +15,38 @@ public readonly record struct ListPage(int PageIndex, int FirstIndex, int Count)
 public static class TextListMessageUtils
 {
     public const int ItemsPerPage = 15;
+
+    /// <summary>
+    /// Строк таблицы на странице. Таблицы крупнее простых строк (15), поэтому 10:
+    /// остаток за пределами страницы показывает строка «ещё N …» над ней и под ней
+    /// (<see cref="AddRemainingRow"/>), листают кнопки клавиатуры.
+    /// </summary>
+    public const int TableRowsPerPage = 10;
+
+    /// <summary>Многоточие в строке-остатке: «ещё 3 друга…».</summary>
+    private const string Ellipsis = "…";
+
+    /// <summary>
+    /// Строка «ещё N друзей…» — остаток списка, не влезший на страницу (сверху — то,
+    /// что осталось до текущей страницы, снизу — после). Обычный текст, а не кнопка:
+    /// нажатие на такую кнопку приходило битыми callback-данными, а листание и так
+    /// есть кнопками клавиатуры. Подпись собирает экран — склонения из
+    /// <see cref="PluralUtils"/>. Лишние ячейки справа добивает <see cref="TableBuilder"/>.
+    /// </summary>
+    public static void AddRemainingRow(TableBuilder table, string caption, int cellsCount = 1)
+    {
+        table.Row(cells =>
+        {
+            cells.Add(cell => cell.Verbatim(caption).Verbatim(Ellipsis));
+
+            for (var i = 1; i < cellsCount; ++i)
+                cells.Add(cell => cell.Verbatim(Ellipsis));
+        });
+    }
+
+    /// <summary>Подпись строки-остатка: «ещё 3 друга».</summary>
+    public static string RemainingCaption(int remaining, string itemForms) =>
+        $"ещё {remaining} {itemForms}";
 
     public static int GetPagesCount(int totalCount, int itemsPerPage = ItemsPerPage) =>
         (int)Math.Ceiling((double)totalCount / itemsPerPage);

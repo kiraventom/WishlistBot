@@ -88,20 +88,25 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         }
         else
         {
-            Text.Date(birthday, "d", birthday.ToString("dd.MM.yyyy"));
-
             var today = DateOnly.FromDateTime(DateTime.Now);
             var nextBirthday = BirthdayUtils.GetNextBirthday(birthday, today);
             var daysBeforeBirthday = BirthdayUtils.GetDaysUntil(nextBirthday, today);
             var nextAge = BirthdayUtils.GetAge(birthday, nextBirthday);
 
-            var relativeText = daysBeforeBirthday == 0
-                ? "сегодня"
-                : $"через {daysBeforeBirthday} {PluralUtils.Days(daysBeforeBirthday)}";
+            // Год рождения известен — показываем саму дату рождения через tg-time.
+            // Год скрыт — день и месяц текстом: подставить туда ближайший ДР значило бы
+            // показать чужой год в строке «дата рождения».
+            if (birthday.BirthDate is { } birthDate)
+                Text.Date(birthDate, "d", birthDate.ToString("dd.MM.yyyy"));
+            else
+                Text.Verbatim(RussianDate.DayMonth(nextBirthday));
 
-            // Тот же формат, что в списке друзей и дайджесте: «32 года через 113 дней»
+            var relativeText = BirthdayUtils.DescribeDaysUntil(daysBeforeBirthday);
+
+            // Тот же формат, что в списке друзей и дайджесте: «32 года через 113 дней»;
+            // без года рождения — без возраста
             Text.Italic(line => line
-                .Verbatim($" ({nextAge} {PluralUtils.Years(nextAge)} ")
+                .Verbatim(nextAge is { } years ? $" ({years} {PluralUtils.Years(years)} " : " (")
                 .RelativeDate(nextBirthday, relativeText)
                 .Verbatim(")"));
         }

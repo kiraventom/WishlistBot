@@ -27,7 +27,7 @@ public static class WishlistCleanupSchedule
     /// Праздники, от которых считается срок: Новый год за текущий и прошлый год,
     /// плюс день рождения пользователя в тех же годах.
     /// </summary>
-    public static List<DateOnly> GetHolidays(DateOnly? birthday, DateOnly today)
+    public static List<DateOnly> GetHolidays(Birthday? birthday, DateOnly today)
     {
         var holidays = new List<DateOnly>();
 
@@ -36,7 +36,7 @@ public static class WishlistCleanupSchedule
             holidays.Add(new DateOnly(year, 1, 1));
 
             if (birthday is { } date)
-                holidays.Add(BirthdayUtils.InYear(date, year));
+                holidays.Add(date.InYear(year));
         }
 
         return holidays;
@@ -46,7 +46,7 @@ public static class WishlistCleanupSchedule
     /// Срок напоминания, который действует сегодня. Берём последний наступивший срок
     /// в пределах окна; если все сроки уже просрочены — напоминать не о чем.
     /// </summary>
-    public static DateOnly? GetDueTriggerDate(DateOnly? birthday, DateOnly today)
+    public static DateOnly? GetDueTriggerDate(Birthday? birthday, DateOnly today)
     {
         var due = GetHolidays(birthday, today)
             .Select(holiday => holiday.AddDays(DaysAfterHoliday))
@@ -60,7 +60,7 @@ public static class WishlistCleanupSchedule
     /// Пора ли напоминать этому пользователю: либо он сам попросил напомнить позже
     /// («Напомнить завтра»), либо наступил срок праздника, о котором ему ещё не напоминали.
     /// </summary>
-    public static bool IsDue(DateOnly? birthday, DateOnly today, DateOnly? lastReminderDate, DateOnly? nextReminderDate)
+    public static bool IsDue(Birthday? birthday, DateOnly today, DateOnly? lastReminderDate, DateOnly? nextReminderDate)
     {
         if (nextReminderDate is { } next && next <= today)
             return true;

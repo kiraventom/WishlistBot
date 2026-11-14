@@ -380,6 +380,16 @@ public sealed class MessageText
     public MessageText Date(DateOnly date, string format, string text) =>
         DateTime(ToUnixTime(date), format, text);
 
+    /// <summary>
+    /// Дата, которую клиент показывает нашим текстом (пустой формат), но при этом она
+    /// остаётся интерактивной: по нажатию человек видит дату в своём формате и поясе.
+    /// Нужно там, где тег не годится: у всех его форматов есть год, а «10 марта» — нет.
+    /// Проверено живой отправкой: <c>rich-probe/time_format_probe.py</c> (пустой
+    /// <c>format=""</c> и отсутствие атрибута дают entity <c>date_time</c> с нашим
+    /// текстом; в ячейке таблицы тоже работает).
+    /// </summary>
+    public MessageText DateAsText(DateOnly date, string text) => Date(date, string.Empty, text);
+
     /// <summary>Дата и время в формате пользователя.</summary>
     public MessageText Date(DateTime date, string format, string text) =>
         DateTime(new DateTimeOffset(date).ToUnixTimeSeconds(), format, text);
@@ -390,8 +400,23 @@ public sealed class MessageText
     /// <summary>«через 3 дня» / «сегодня» для момента времени.</summary>
     public MessageText RelativeDate(DateTime date, string text) => Date(date, "r", text);
 
+    /// <summary>
+    /// Пояс, к которому привязываем даты без времени (день рождения — дата, а не момент).
+    /// </summary>
+    private static readonly TimeSpan DateBaseOffset = TimeSpan.FromHours(3);
+
+    /// <summary>
+    /// Время суток для дат без времени — **полдень**, и именно московский.
+    /// У пояса пользователя мы не знаем (Telegram его ботам не отдаёт), а показывать
+    /// дату будет клиент в своём поясе — см. <see cref="DateAsText"/>. Полночь на краю
+    /// диапазона переезжает в соседний день: полночь UTC в МСК показывала 03:00,
+    /// полночь МСК в Калининграде — вчерашний день. Полдень МСК (09:00Z) остаётся тем же
+    /// календарным днём для поясов −9…+14, то есть почти для всех.
+    /// </summary>
+    private static readonly TimeOnly DateBaseTime = new(12, 0);
+
     private static long ToUnixTime(DateOnly date) =>
-        new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue)).ToUnixTimeSeconds();
+        new DateTimeOffset(date.ToDateTime(DateBaseTime), DateBaseOffset).ToUnixTimeSeconds();
 
     /// <summary>
     /// Перенос строки внутри ячейки таблицы: обычный <c>\n</c> разваливает таблицу,

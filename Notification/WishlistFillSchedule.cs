@@ -40,7 +40,7 @@ public static class WishlistFillSchedule
     /// Если сроков наступило несколько (например, Новый год и день рождения рядом),
     /// берём тот, чей срок наступил раньше — напоминание будет про него.
     /// </summary>
-    public static WishlistHoliday GetDueHoliday(DateOnly? birthday, DateOnly today)
+    public static WishlistHoliday GetDueHoliday(Birthday? birthday, DateOnly today)
     {
         var holidays = new List<WishlistHoliday>
         {
@@ -62,7 +62,7 @@ public static class WishlistFillSchedule
     /// Пора ли напоминать: срок праздника наступил и за последние
     /// <see cref="MinDaysBetweenReminders"/> дней напоминаний не было.
     /// </summary>
-    public static bool IsDue(DateOnly? birthday, DateOnly today, DateOnly? lastReminderDate)
+    public static bool IsDue(Birthday? birthday, DateOnly today, DateOnly? lastReminderDate)
     {
         if (GetDueHoliday(birthday, today) is null)
             return false;

@@ -9,6 +9,7 @@ using WishlistBot.Model.User;
 using WishlistBot.Listeners;
 using WishlistBot.Media;
 using WishlistBot.Notification;
+using WishlistBot.Profiles;
 using WishlistBot.BotMessages;
 using WishlistBot.Actions;
 using WishlistBot.Actions.Commands;
@@ -67,6 +68,9 @@ public static class Program
       NotificationDispatchService.Instance.Start(logger);
 
       BackgroundNotificationService.Instance.Start(logger);
+
+      // Дата рождения из профиля Telegram: разово на старте и раз в сутки
+      BirthdaySyncService.Instance.Start(logger, client);
 
       var messagesFactory = new MessageFactory(logger);
 

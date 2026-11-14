@@ -41,7 +41,11 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
 
         if (sender.Profile.Birthday is { } birthday)
         {
-            Text.Date(birthday, "d", birthday.ToString("dd.MM.yyyy")).Verbatim(" ");
+            if (birthday.BirthDate is { } birthDate)
+                Text.Date(birthDate, "d", birthDate.ToString("dd.MM.yyyy")).Verbatim(" ");
+            else
+                Text.Verbatim($"{RussianDate.DayMonth(birthday.InYear(DateTime.Now.Year))} ");
+
             Text.Button(EditCaption, Keyboard.AddTextButton<SetProfileBirthdayQuery>());
         }
         else
