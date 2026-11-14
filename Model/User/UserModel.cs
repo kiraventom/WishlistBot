@@ -14,6 +14,14 @@ public class UserModel
     [Required] public string SubscribeId { get; set; }
     public string Tag { get; set; }
 
+    /// <summary>
+    /// Когда бот последний раз сверял имя и тэг с профилем Telegram (<c>getChat</c>), в UTC.
+    /// Имя и тэг приходят только с апдейтом, а человек меняет их в любой момент, поэтому
+    /// раз в сутки их надо переспрашивать (<see cref="WishlistBot.Profiles.ProfileSyncService"/>).
+    /// null — ни разу: такие пользователи идут в сверке первыми.
+    /// </summary>
+    public DateTime? ProfileCheckedAt { get; set; }
+
     public bool IsAdmin { get; set; }
 
     public BotState BotState { get; set; }

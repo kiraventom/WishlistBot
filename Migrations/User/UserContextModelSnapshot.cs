@@ -342,6 +342,9 @@ namespace WishlistBot.Migrations.User
                     b.Property<bool>("NotifiedSinceLastMessage")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("ProfileCheckedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("QueryParams")
                         .HasColumnType("TEXT");
 

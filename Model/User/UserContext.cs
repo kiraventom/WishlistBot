@@ -92,6 +92,10 @@ public class UserContext : DbContext
         if (userModel.Tag != username)
             userModel.Tag = username;
 
+        // Имя и тэг только что пришли с апдейтом — значит, они свежие: суточной сверке
+        // (ProfileSyncService) этого человека спрашивать незачем
+        userModel.ProfileCheckedAt = DateTime.UtcNow;
+
         if (userModel.Settings is null)
             userModel.Settings = new SettingsModel()
             {

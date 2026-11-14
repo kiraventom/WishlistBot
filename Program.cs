@@ -81,6 +81,10 @@ public static class Program
       // Дата рождения из профиля Telegram: разово на старте и раз в сутки
       BirthdaySyncService.Instance.Start(logger, client);
 
+      // Имя и тэг (@username) из профиля Telegram: раз в сутки — человек меняет их сам,
+      // а с апдейтом они приходят только когда он сам пишет боту
+      ProfileSyncService.Instance.Start(logger, client);
+
       var messagesFactory = new MessageFactory(logger);
 
       var messageSender = new BotMessageSender(logger, client);
