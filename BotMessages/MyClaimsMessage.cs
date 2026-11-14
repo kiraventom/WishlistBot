@@ -13,6 +13,9 @@ namespace WishlistBot.BotMessages;
 [MessageFor(typeof(MyClaimsQuery))]
 public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
 {
+    /// <summary>Колонки таблицы: Друг | Виш | ДР.</summary>
+    private const int ColumnsCount = 3;
+
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var users = userContext.Users
@@ -34,7 +37,8 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
         Text.Heading("Ваши брони");
 
         var page = TextListMessageUtils.AddListControls<MyClaimsQuery, MainMenuQuery>(
-            Keyboard, parameters, claimedWishes.Count, sender.ListPositions.ClaimPage, buttonCaption: "Страница");
+            Keyboard, parameters, claimedWishes.Count, sender.ListPositions.ClaimPage, buttonCaption: "Страница",
+            itemsPerPage: TextListMessageUtils.TableRowsPerPage);
 
         if (page.Count == 0)
             return Task.CompletedTask;
@@ -44,8 +48,12 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
         Text.Table(table =>
         {
             table
-                .Header("Друг", "Виш", "Ближайший ДР")
+                .Header("Друг", "Виш", FriendBirthdayLine.BirthdayColumn)
                 .Align(TableAlign.Left, TableAlign.Left, TableAlign.Left);
+
+            // Над страницей — сколько броней осталось до неё, под ней — сколько после
+            if (page.PageIndex > 0)
+                TextListMessageUtils.AddRemainingRow(table, RemainingCaption(page.FirstIndex), ColumnsCount);
 
             for (var i = 0; i < page.Count; ++i)
             {
@@ -56,8 +64,16 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
                     cell => cell.InlineUrl(claimedWish.Name, claimedWish.BuildLink(claimedWish.Owner.SubscribeId, returnToClaims: true)),
                     cell => FriendBirthdayLine.AddBirthdayCell(cell, claimedWish.Owner.Profile?.Birthday, today));
             }
+
+            var remaining = claimedWishes.Count - (page.FirstIndex + page.Count);
+
+            if (remaining > 0)
+                TextListMessageUtils.AddRemainingRow(table, RemainingCaption(remaining), ColumnsCount);
         });
 
         return Task.CompletedTask;
     }
+
+    private static string RemainingCaption(int count) =>
+        TextListMessageUtils.RemainingCaption(count, PluralUtils.Claims(count));
 }

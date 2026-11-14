@@ -16,13 +16,12 @@ namespace WishlistBot.BotMessages;
 public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
 {
     /// <summary>Виши в таблице крупнее, чем строки остальных списков: 10 на страницу.</summary>
-    public const int WishesPerPage = 10;
+    public const int WishesPerPage = TextListMessageUtils.TableRowsPerPage;
 
     private const string ClockEmoji = "\U0001f551";
     private const string AscendingTriangle = "\U0001F53A";
     private const string DescendingTriangle = "\U0001F53B";
     private const string PlusEmoji = "\u2795";
-    private const string Dot = "…";
 
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
@@ -201,11 +200,6 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
     }
 
     /// <summary>
-    /// Строка «ещё N вишей…» — обычный текст, а не кнопка: нажатие на неё приходило
-    /// битыми callback-данными (HTML-экранирование '&amp;' в tg-button), а листание и так
-    /// есть кнопками клавиатуры «Страница N ➡️» / «⬅️ N».
-    /// </summary>
-    /// <summary>
     /// Строка «Сортировка: [свойство] [направление]» — кнопки переключают режим.
     /// Обе кнопки живут в тексте, поэтому регистрируются через <c>AddTextButton</c>.
     /// </summary>
@@ -232,16 +226,17 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         Text.BlockBreak();
     }
 
-    private static void AddRemainingRow(TableBuilder table, int wishesCount, bool showPrice)
-    {
-        table.Row(cells =>
-        {
-            cells.Add(cell => cell.Verbatim($"ещё {wishesCount} {PluralUtils.WishesGenitive}").Verbatim(Dot));
-
-            if (showPrice)
-                cells.Add(cell => cell.Verbatim(Dot));
-        });
-    }
+    /// <summary>
+    /// Строка «ещё N вишей…» — обычный текст, а не кнопка: нажатие на неё приходило
+    /// битыми callback-данными (HTML-экранирование '&amp;' в tg-button), а листание и так
+    /// есть кнопками клавиатуры «Страница N ➡️» / «⬅️ N». Склонение — родительный падеж
+    /// («ещё 3 вишей»), как в списке было изначально.
+    /// </summary>
+    private static void AddRemainingRow(TableBuilder table, int wishesCount, bool showPrice) =>
+        TextListMessageUtils.AddRemainingRow(
+            table,
+            TextListMessageUtils.RemainingCaption(wishesCount, PluralUtils.WishesGenitive),
+            showPrice ? 2 : 1);
 
     /// <summary>
     /// Название ссылкой. У забронированного виша над названием идёт слово БРОНЬ

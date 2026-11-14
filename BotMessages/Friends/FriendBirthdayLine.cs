@@ -4,15 +4,23 @@ using WishlistBot.Text;
 namespace WishlistBot.BotMessages.Friends;
 
 /// <summary>
-/// Строка списка друзей: номер, имя ссылкой на профиль, ближайший ДР с пояснением и число
-/// вишей. Раньше это была строка текста <c>1. Имя 05.03 (через 12 дней, 36 лет): 3 виша</c>,
+/// Строка списка друзей: имя ссылкой на профиль, ближайший ДР и число вишей.
+/// Раньше это была строка текста <c>1. Имя 05.03 (через 12 дней, 36 лет): 3 виша</c>,
 /// теперь — строка таблицы: дата ушла в свою колонку, в «Виши» осталось только число.
+/// В «ДР» — «10 октября, 32 года»: год ничего не решает (он всегда этот или следующий),
+/// а относительное время («через 12 дней») — задача напоминаний, не списка.
 /// </summary>
 public static class FriendBirthdayLine
 {
+    /// <summary>Подпись колонки ДР. Короткая — таблица иначе расползается на узком экране.</summary>
+    public const string BirthdayColumn = "ДР";
+
+    /// <summary>Что пишем в колонке ДР, когда дата не задана.</summary>
+    public const string NoBirthday = "не указан";
+
     public static void AddColumns(TableBuilder table) =>
         table
-            .Header("Друг", "Ближайший ДР", "Виши")
+            .Header("Друг", BirthdayColumn, "Виши")
             .Align(TableAlign.Left, TableAlign.Left, TableAlign.Right);
 
     public static void AppendRow(TableBuilder table, FriendBirthday friend)
@@ -33,12 +41,9 @@ public static class FriendBirthdayLine
             });
     }
 
-    /// <summary>
-    /// Дата ближайшего ДР (через tg-time — клиент покажет её в своём формате) и сколько
-    /// лет будет: «05.03.2027, 32 года через 113 дней».
-    /// </summary>
+    /// <summary>Дата ближайшего ДР и сколько лет будет: «10 октября, 32 года».</summary>
     public static void AddBirthdayCell(MessageText text, FriendBirthday friend) =>
-        AddBirthdayCell(text, friend.NextBirthday, friend.DaysUntil, friend.Age);
+        AddBirthdayCell(text, friend.NextBirthday, friend.Age);
 
     /// <summary>
     /// То же для строк, где есть только дата рождения (список броней: строка — виш,
@@ -48,40 +53,35 @@ public static class FriendBirthdayLine
     {
         if (birthday is not { } date)
         {
-            AddBirthdayCell(text, null, null, null);
+            AddBirthdayCell(text, null, null);
             return;
         }
 
         var nextBirthday = BirthdayUtils.GetNextBirthday(date, today);
 
-        AddBirthdayCell(
-            text,
-            nextBirthday,
-            BirthdayUtils.GetDaysUntil(nextBirthday, today),
-            BirthdayUtils.GetAge(date, nextBirthday));
+        AddBirthdayCell(text, nextBirthday, BirthdayUtils.GetAge(date, nextBirthday));
     }
 
-    private static void AddBirthdayCell(MessageText text, DateOnly? nextBirthday, int? daysUntil, int? age)
+    /// <summary>
+    /// Дата — текстом, без <c>tg-time</c>: у тега всегда есть год (формат «d» — это
+    /// ДД.ММ.ГГГГ), а в колонке он лишний. Месяц — длинным названием в родительном падеже.
+    /// </summary>
+    private static void AddBirthdayCell(MessageText text, DateOnly? nextBirthday, int? age)
     {
         if (nextBirthday is not { } date)
         {
-            text.Verbatim("(ДР не указан)");
+            text.Verbatim(NoBirthday);
             return;
         }
 
-        var relativeText = daysUntil == 0
-            ? "сегодня"
-            : $"через {daysUntil} {PluralUtils.Days(daysUntil.Value)}";
-
-        text
-            .Date(date, "d", date.ToString("dd.MM.yyyy"))
-            .Verbatim($", {age} {PluralUtils.Years(age.Value)} ")
-            .RelativeDate(date, relativeText);
+        text.Verbatim($"{RussianDate.DayMonth(date)}, {AgeText(age.Value)}");
     }
+
+    private static string AgeText(int age) => $"{age} {PluralUtils.Years(age)}";
 
     /// <summary>Текстовая версия для тестов и логов.</summary>
     public static string Describe(FriendBirthday friend) =>
         friend.NextBirthday is { } nextBirthday
-            ? $"{nextBirthday:dd.MM.yyyy}, {BirthdayUtils.DescribeUpcoming(friend.Age!.Value, friend.DaysUntil!.Value)}"
-            : "(ДР не указан)";
+            ? $"{RussianDate.DayMonth(nextBirthday)}, {AgeText(friend.Age!.Value)}"
+            : NoBirthday;
 }

@@ -14,6 +14,9 @@ namespace WishlistBot.BotMessages.Admin.Broadcasts;
 [MessageFor(typeof(BroadcastsQuery))]
 public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
 {
+    /// <summary>Колонка таблицы: одна — название рассылки ссылкой.</summary>
+    private const int ColumnsCount = 1;
+
     protected override Task InitInternal(UserContext userContext, int userId, QueryParameterCollection parameters)
     {
         var sender = userContext.Users
@@ -41,7 +44,8 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
         }
 
         var page = TextListMessageUtils.AddListControls<BroadcastsQuery, AdminMenuQuery>(
-            Keyboard, parameters, totalCount, sender.ListPositions.AdminBroadcastPage, buttonCaption: "Страница");
+            Keyboard, parameters, totalCount, sender.ListPositions.AdminBroadcastPage, buttonCaption: "Страница",
+            itemsPerPage: TextListMessageUtils.TableRowsPerPage);
 
         if (page.Count != 0)
         {
@@ -51,6 +55,10 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
                     .Header("Рассылка")
                     .Align(TableAlign.Left);
 
+                // Над страницей — сколько рассылок осталось до неё, под ней — сколько после
+                if (page.PageIndex > 0)
+                    TextListMessageUtils.AddRemainingRow(table, RemainingCaption(page.FirstIndex), ColumnsCount);
+
                 for (var i = 0; i < page.Count; ++i)
                 {
                     var broadcast = broadcasts[page.FirstIndex + i];
@@ -58,6 +66,11 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
                     table.Row(
                         cell => cell.InlineUrl(BroadcastName(broadcast), broadcast.BuildLink()));
                 }
+
+                var remaining = totalCount - (page.FirstIndex + page.Count);
+
+                if (remaining > 0)
+                    TextListMessageUtils.AddRemainingRow(table, RemainingCaption(remaining), ColumnsCount);
             });
         }
 
@@ -67,6 +80,9 @@ public class BroadcastsMessage(ILogger logger) : UserBotMessage(logger)
 
         return Task.CompletedTask;
     }
+
+    private static string RemainingCaption(int count) =>
+        TextListMessageUtils.RemainingCaption(count, PluralUtils.Broadcasts(count));
 
     private static string BroadcastName(BroadcastModel broadcast)
     {
