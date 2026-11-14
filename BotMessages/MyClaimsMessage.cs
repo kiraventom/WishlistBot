@@ -3,6 +3,7 @@ using WishlistBot.QueryParameters;
 using WishlistBot.Model.User;
 using WishlistBot.Queries;
 using WishlistBot.Text;
+using WishlistBot.Media;
 using WishlistBot.BotMessages.Friends;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,12 +56,25 @@ public class MyClaimsMessage(ILogger logger) : UserBotMessage(logger)
             if (page.PageIndex > 0)
                 TextListMessageUtils.AddRemainingRow(table, RemainingCaption(page.FirstIndex), ColumnsCount);
 
+            // Аватарки владельцев броней — одним запросом на страницу
+            var avatarIds = AvatarPackService.GetEmojiIds(
+                claimedWishes.Skip(page.FirstIndex).Take(page.Count).Select(wish => wish.OwnerId));
+
             for (var i = 0; i < page.Count; ++i)
             {
                 var claimedWish = claimedWishes[page.FirstIndex + i];
+                var avatarEmojiId = avatarIds.GetValueOrDefault(claimedWish.OwnerId);
 
                 table.Row(
-                    cell => cell.InlineMention(claimedWish.Owner),
+                    cell =>
+                    {
+                        cell.AvatarEmoji(avatarEmojiId, AvatarPackService.FallbackEmoji);
+
+                        if (!string.IsNullOrEmpty(avatarEmojiId))
+                            cell.Verbatim(" ");
+
+                        cell.InlineMention(claimedWish.Owner);
+                    },
                     cell => cell.InlineUrl(claimedWish.Name, claimedWish.BuildLink(claimedWish.Owner.SubscribeId, returnToClaims: true)),
                     cell => FriendBirthdayLine.AddBirthdayCell(cell, claimedWish.Owner.Profile?.Birthday, today));
             }

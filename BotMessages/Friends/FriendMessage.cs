@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using WishlistBot.Media;
 using WishlistBot.Model.User;
 using WishlistBot.Text;
 using WishlistBot.Queries;
@@ -28,6 +29,7 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         var target = userContext.Users
             .Include(u => u.Wishes)
             .Include(u => u.Profile)
+            .Include(u => u.Avatar)
             .FirstOrDefault(u => u.UserId == targetId);
 
         // Профиль мог не прийти вместе с параметром (старая кнопка, устаревшая ссылка):
@@ -74,6 +76,11 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
             Text.Heading("Это вы");
         else
             Text.Heading(text => text.InlineMention(target));
+
+        // Аватарка — картинкой под заголовком, как фото виша в окне виша. Нет аватарки
+        // (или блоб ещё не сохранён) — блока просто не будет
+        if (target.Avatar?.CustomEmojiId is not null && MediaStorage.Instance.HasData(AvatarPackService.BuildMediaKey(target.TelegramId)))
+            Text.Media(AvatarPackService.BuildMediaKey(target.TelegramId));
 
         const string calendar = "\U0001f4c5 ";
         const string writingHand = "\u270d\ufe0f ";

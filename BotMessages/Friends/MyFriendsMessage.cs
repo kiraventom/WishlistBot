@@ -1,4 +1,5 @@
 using Serilog;
+using WishlistBot.Media;
 using WishlistBot.Queries;
 using WishlistBot.Queries.Friends;
 using WishlistBot.QueryParameters;
@@ -61,8 +62,15 @@ public class MyFriendsMessage(ILogger logger) : UserBotMessage(logger)
                 if (page.PageIndex > 0)
                     TextListMessageUtils.AddRemainingRow(table, RemainingCaption(page.FirstIndex), ColumnsCount);
 
+                // Аватарки — одним запросом на всю страницу (без сети: стикеры уже собраны)
+                var avatarIds = AvatarPackService.GetEmojiIds(
+                    friends.Skip(page.FirstIndex).Take(page.Count).Select(friend => friend.Friend.UserId));
+
                 for (var i = 0; i < page.Count; ++i)
-                    FriendBirthdayLine.AppendRow(table, friends[page.FirstIndex + i]);
+                {
+                    var friend = friends[page.FirstIndex + i];
+                    FriendBirthdayLine.AppendRow(table, friend, avatarIds.GetValueOrDefault(friend.Friend.UserId));
+                }
 
                 var remaining = totalCount - (page.FirstIndex + page.Count);
 

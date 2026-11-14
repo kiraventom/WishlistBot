@@ -17,6 +17,9 @@ public class EmojiPackMaintenanceService
     /// <summary>Предохранитель от бесконечного цикла, если Telegram начнёт отказывать на всём.</summary>
     public const int MaxBatches = 200;
 
+    /// <summary>Сколько пользователей за один проход сверяем по аватаркам (1 запрос на человека).</summary>
+    public const int AvatarBatchSize = 50;
+
     /// <summary>
     /// Сколько раз быстро повторить проход после старта. Нужно из-за гонки с фоновой
     /// догрузкой блобов: на старте часть картинок ещё без блобов, они не попадают в очередь.
@@ -73,7 +76,18 @@ public class EmojiPackMaintenanceService
                 await Task.Delay(BatchDelay);
 
             if (checkPacks)
+            {
                 await EmojiPackService.Instance.CheckPacksAsync(retryFailed);
+
+                // Аватарки меняются без уведомления боту, поэтому их опрашиваем:
+                // на старте и раз в сутки, тем же проходом, что и сверку наборов.
+                // Пачками, пока есть кого проверять (устаревшие — по CheckedAt — уходят в конец)
+                var avatarPasses = 0;
+
+                while (avatarPasses++ < MaxBatches
+                    && await AvatarPackService.Instance.SyncAsync(AvatarBatchSize) == AvatarBatchSize)
+                    await Task.Delay(BatchDelay);
+            }
         }
         catch (Exception e)
         {

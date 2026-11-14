@@ -616,6 +616,20 @@ public sealed class MessageText
         return this;
     }
 
+    /// <summary>
+    /// Аватарка пользователя миниатюрой. В отличие от <see cref="MediaEmoji"/> без
+    /// аватарки не рисует **ничего**: у виша маркер 🖼️ осмыслен («есть фото»),
+    /// а пустой силуэт у каждого второго друга — мусор в таблице.
+    /// </summary>
+    public MessageText AvatarEmoji(string emojiId, string fallbackEmoji)
+    {
+        if (string.IsNullOrEmpty(emojiId))
+            return this;
+
+        _sb.Append(MessageTextUtils.GetEmojiMarkdown(emojiId, fallbackEmoji));
+        return this;
+    }
+
     public override string ToString()
     {
         TrimTrailingSpaces();

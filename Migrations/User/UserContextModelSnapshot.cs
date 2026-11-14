@@ -406,6 +406,34 @@ namespace WishlistBot.Migrations.User
                     b.ToTable("WishDrafts");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.WishEmojiAvatarModel", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CheckedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomEmojiFileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomEmojiId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SetName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceUniqueId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Avatars");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.WishEmojiPackModel", b =>
                 {
                     b.Property<int>("UserId")
@@ -710,6 +738,17 @@ namespace WishlistBot.Migrations.User
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("WishlistBot.Model.User.WishEmojiAvatarModel", b =>
+                {
+                    b.HasOne("WishlistBot.Model.User.UserModel", "User")
+                        .WithOne("Avatar")
+                        .HasForeignKey("WishlistBot.Model.User.WishEmojiAvatarModel", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WishlistBot.Model.User.WishEmojiPackModel", b =>
                 {
                     b.HasOne("WishlistBot.Model.User.UserModel", "User")
@@ -782,6 +821,8 @@ namespace WishlistBot.Migrations.User
 
             modelBuilder.Entity("WishlistBot.Model.User.UserModel", b =>
                 {
+                    b.Navigation("Avatar");
+
                     b.Navigation("ClaimedWishes");
 
                     b.Navigation("CurrentWish");

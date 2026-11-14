@@ -262,9 +262,10 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             text.Verbatim("\U0001f512 ").InlineMention("БРОНЬ", wish.Claimer.TelegramId).CellLineBreak();
         }
 
-        // Постоянный виш помечаем звёздочкой перед названием
-        if (wish.IsPermanent)
-            text.Verbatim("\u2b50 ");
+        // Миниатюра — перед названием: так картинки выстраиваются столбцом и название
+        // не съезжает вправо от строки к строке
+        if (wish.MediaKey is not null)
+            text.MediaEmoji(emojiId).Verbatim(" ");
 
         text.InlineUrl(name =>
         {
@@ -274,12 +275,12 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
                 name.Verbatim(wish.Name);
         }, wish.BuildLink(subscribeId));
 
+        // Постоянный виш помечаем звёздочкой — первой среди хвостовых значков
+        if (wish.IsPermanent)
+            text.Verbatim(" \u2b50");
+
         if (!string.IsNullOrEmpty(wish.Description))
             text.Verbatim(" \U0001f4ac"); // speech bubble
-
-        // Картинка: миниатюра-эмодзи, а если её ещё нет — маркер 🖼️
-        if (wish.MediaKey is not null)
-            text.Verbatim(" ").MediaEmoji(emojiId);
 
         if (wish.Links.Any())
             text.Verbatim(" ").InlineUrl("\U0001f310", wish.Links.First().Url); // globe
