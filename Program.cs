@@ -65,6 +65,10 @@ public static class Program
       // Миниатюры вишей: фото → стикер 100×100 в наборе кастомных эмодзи пользователя.
       // Без клиента сервис не работает — тогда экраны просто рисуют маркер 🖼️.
       EmojiPackService.Instance.Init(logger, client);
+
+      // Аватарки друзей: отдельный набор на человека с единственным стикером
+      AvatarPackService.Instance.Init(logger, client);
+
       EmojiPackMaintenanceService.Instance.Start(logger);
 
       NotificationService.Instance.Init(logger);

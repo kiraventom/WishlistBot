@@ -51,6 +51,9 @@ public class UserModel
     /// <summary>Набор кастомных эмодзи с миниатюрами вишей (см. <see cref="WishEmojiPackModel"/>).</summary>
     public WishEmojiPackModel EmojiPack { get; set; }
 
+    /// <summary>Отдельный набор с единственным стикером — аватаркой (см. <see cref="WishEmojiAvatarModel"/>).</summary>
+    public WishEmojiAvatarModel Avatar { get; set; }
+
     [InverseProperty(nameof(WishModel.Owner))]
     public List<WishModel> Wishes { get; } = new();
 

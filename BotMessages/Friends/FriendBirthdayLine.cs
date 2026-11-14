@@ -1,3 +1,4 @@
+using WishlistBot.Media;
 using WishlistBot.Model.User;
 using WishlistBot.Text;
 
@@ -23,10 +24,23 @@ public static class FriendBirthdayLine
             .Header("Друг", BirthdayColumn, "Виши")
             .Align(TableAlign.Left, TableAlign.Left, TableAlign.Right);
 
-    public static void AppendRow(TableBuilder table, FriendBirthday friend)
+    /// <param name="avatarEmojiId">
+    /// Id стикера-аватарки (см. <c>AvatarPackService</c>). null — аватарки нет,
+    /// в ячейке не рисуем ничего: пустой силуэт у половины списка был бы мусором.
+    /// </param>
+    public static void AppendRow(TableBuilder table, FriendBirthday friend, string avatarEmojiId = null)
     {
         table.Row(
-            cell => cell.InlineUrl(friend.Friend.FirstName, friend.Friend.BuildFriendLink()),
+            cell =>
+            {
+                // Аватарка — перед именем, как миниатюра виша в списке вишей
+                cell.AvatarEmoji(avatarEmojiId, AvatarPackService.FallbackEmoji);
+
+                if (!string.IsNullOrEmpty(avatarEmojiId))
+                    cell.Verbatim(" ");
+
+                cell.InlineUrl(friend.Friend.FirstName, friend.Friend.BuildFriendLink());
+            },
             cell => AddBirthdayCell(cell, friend),
             cell =>
             {

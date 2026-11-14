@@ -124,7 +124,14 @@ public static partial class MessageTextUtils
     /// (<c>tg://photo</c> там молча выбрасывается, проверено живой отправкой).
     /// </summary>
     public static string GetEmojiMarkdown(string emojiId) =>
-        $"![{WishThumbnailEmoji}]({GetEmojiLink(emojiId)})";
+        GetEmojiMarkdown(emojiId, WishThumbnailEmoji);
+
+    /// <summary>
+    /// То же с другим запасным эмодзи: у аватарки он свой (👤), потому что это не картинка
+    /// товара, а человек.
+    /// </summary>
+    public static string GetEmojiMarkdown(string emojiId, string fallbackEmoji) =>
+        $"![{fallbackEmoji}]({GetEmojiLink(emojiId)})";
 
     /// <summary>
     /// Убирает из готового Rich Markdown все миниатюры-эмодзи, оставляя запасной эмодзи.
