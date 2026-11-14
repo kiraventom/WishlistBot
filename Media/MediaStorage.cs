@@ -507,6 +507,10 @@ public class MediaStorage
         _logger.Information("Imported media '{key}': {width}x{height}, {size} bytes",
             mediaItem.Key, compressed.Width, compressed.Height, compressed.Data.Length);
 
+        // Блоб появился уже после старта (фоновая догрузка старых картинок): миниатюру можно
+        // собрать — заберёт ближайший FlushAsync, а если апдейтов нет, то догрузчик
+        EmojiPackService.Instance.QueueThumbnail(mediaItem.Key);
+
         return true;
     }
 

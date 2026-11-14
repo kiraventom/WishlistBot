@@ -142,8 +142,14 @@ public class EmojiPackService
 
     /// <summary>
     /// Догружает миниатюры для картинок, у которых их ещё нет: старые виши, картинки,
-    /// импортированные фоном, и всё, что не успело собраться. Возвращает, сколько собралось.
+    /// импортированные фоном, и всё, что не успело собраться.
     /// </summary>
+    /// <returns>
+    /// Сколько картинок **попробовали** (а не сколько собралось). Иначе догрузка
+    /// застревает: первые в очереди картинки могут быть безхозными, и на «собралось = 0»
+    /// цикл решал бы, что делать больше нечего. Каждая попытка увеличивает счётчик,
+    /// поэтому неудачные строки сами выпадают из очереди через три захода.
+    /// </returns>
     public async Task<int> BackfillAsync(int batchSize)
     {
         if (!_inited || !Enabled)
@@ -165,18 +171,87 @@ public class EmojiPackService
                 .ToList();
         }
 
-        var built = 0;
-
         foreach (var key in keys)
         {
             if (!Enabled)
                 break;
 
-            if (await BuildThumbnailAsync(key))
-                ++built;
+            try
+            {
+                await BuildThumbnailAsync(key);
+            }
+            catch (Exception e)
+            {
+                _logger?.Warning("Failed to build a thumbnail for media '{key}': {error}", key, e.Message);
+            }
         }
 
-        return built;
+        return keys.Count;
+    }
+
+    /// <summary>
+    /// Помечает картинки, которые не принадлежат ни вишу, ни черновику (рассылки, хвосты
+    /// удалённых вишей, старый импорт), как «миниатюра не нужна».
+    ///
+    /// Без этого догрузка стоит на месте: в очереди они идут первыми по id, собрать из них
+    /// миниатюру невозможно, и каждый проход упирается в те же строки — именно так на старте
+    /// было «Failed to make a thumbnail … no wish owns this picture» вместо настоящих вишей.
+    /// </summary>
+    /// <returns>Сколько картинок помечено.</returns>
+    public async Task<int> MarkOwnerlessMediaAsync()
+    {
+        HashSet<string> owned;
+
+        using (var userContext = UserContext.Create())
+        {
+            owned = userContext.Wishes
+                .Where(wish => wish.MediaKey != null)
+                .Select(wish => wish.MediaKey)
+                .Concat(userContext.WishDrafts
+                    .Where(draft => draft.MediaKey != null)
+                    .Select(draft => draft.MediaKey))
+                .ToHashSet();
+        }
+
+        List<int> orphanIds;
+        int pending, withoutBlob, tooSmall;
+
+        using (var storageContext = MediaStorageContext.Create())
+        {
+            var candidates = storageContext.StoredMedia
+                .Where(m => m.CustomEmojiId == null && m.ThumbAttempts < MaxThumbAttempts)
+                .Select(m => new { m.MediaItemId, m.Key, m.Width, m.Height, HasBlob = m.Data != null })
+                .ToList();
+
+            pending = candidates.Count;
+            withoutBlob = candidates.Count(c => !c.HasBlob);
+            tooSmall = candidates.Count(c => c.HasBlob
+                && (c.Width < ImageCompressor.EmojiSize || c.Height < ImageCompressor.EmojiSize));
+            orphanIds = candidates
+                .Where(candidate => !owned.Contains(candidate.Key))
+                .Select(candidate => candidate.MediaItemId)
+                .ToList();
+        }
+
+        if (orphanIds.Count > 0)
+        {
+            using var storageContext = MediaStorageContext.Create();
+
+            // Пачками: список параметров в SQLITE ограничен
+            foreach (var chunk in orphanIds.Chunk(200))
+            {
+                var ids = chunk.ToList();
+                await storageContext.StoredMedia
+                    .Where(m => ids.Contains(m.MediaItemId))
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(m => m.ThumbAttempts, MaxThumbAttempts));
+            }
+        }
+
+        _logger?.Information(
+            "Thumbnails: {pending} picture(s) in queue, {orphans} belong to no wish, {withoutBlob} have no blob yet, {tooSmall} have no size or are smaller than {size}px",
+            pending, orphanIds.Count, withoutBlob, tooSmall, ImageCompressor.EmojiSize);
+
+        return orphanIds.Count;
     }
 
     /// <summary>
@@ -184,7 +259,11 @@ public class EmojiPackService
     /// миниатюры соберутся заново в новый набор (старые emoji id к этому моменту уже
     /// мертвы, и экраны с ними не уходят).
     /// </summary>
-    public async Task CheckPacksAsync()
+    /// <param name="retryFailed">
+    /// Дать второй шанс миниатюрам, которые не собрались раньше. Делаем только в суточном
+    /// проходе: быстрые проходы после старта не должны бесконечно повторять одно и то же.
+    /// </param>
+    public async Task CheckPacksAsync(bool retryFailed = true)
     {
         if (!_inited)
             return;
@@ -221,7 +300,8 @@ public class EmojiPackService
 
         userContext.SaveChanges();
 
-        RetryFailedThumbnails();
+        if (retryFailed)
+            RetryFailedThumbnails();
     }
 
     /// <summary>
@@ -314,7 +394,11 @@ public class EmojiPackService
         var setName = EnsureSetName(owner);
 
         if (string.IsNullOrEmpty(setName))
+        {
+            // Пользователь пропал из базы — иначе догрузка крутилась бы на этой строке вечно
+            CountAttempt(mediaItem.MediaItemId, key, "the wish owner is not in the database");
             return false;
+        }
 
         try
         {
