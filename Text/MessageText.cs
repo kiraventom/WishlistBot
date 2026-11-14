@@ -401,15 +401,22 @@ public sealed class MessageText
     public MessageText RelativeDate(DateTime date, string text) => Date(date, "r", text);
 
     /// <summary>
-    /// Пояс, в котором считаем «начало дня» для дат без времени. День рождения — это
-    /// дата, а не момент, поэтому полночь берём московскую: с UTC клиент в МСК показывал
-    /// 03:00, а живущий западнее видел бы вообще предыдущий день. См. «Грабли»
-    /// в CONTEXT.md.
+    /// Пояс, к которому привязываем даты без времени (день рождения — дата, а не момент).
     /// </summary>
     private static readonly TimeSpan DateBaseOffset = TimeSpan.FromHours(3);
 
+    /// <summary>
+    /// Время суток для дат без времени — **полдень**, и именно московский.
+    /// У пояса пользователя мы не знаем (Telegram его ботам не отдаёт), а показывать
+    /// дату будет клиент в своём поясе — см. <see cref="DateAsText"/>. Полночь на краю
+    /// диапазона переезжает в соседний день: полночь UTC в МСК показывала 03:00,
+    /// полночь МСК в Калининграде — вчерашний день. Полдень МСК (09:00Z) остаётся тем же
+    /// календарным днём для поясов −9…+14, то есть почти для всех.
+    /// </summary>
+    private static readonly TimeOnly DateBaseTime = new(12, 0);
+
     private static long ToUnixTime(DateOnly date) =>
-        new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue), DateBaseOffset).ToUnixTimeSeconds();
+        new DateTimeOffset(date.ToDateTime(DateBaseTime), DateBaseOffset).ToUnixTimeSeconds();
 
     /// <summary>
     /// Перенос строки внутри ячейки таблицы: обычный <c>\n</c> разваливает таблицу,
