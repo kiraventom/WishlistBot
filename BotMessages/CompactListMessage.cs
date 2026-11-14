@@ -4,6 +4,7 @@ using WishlistBot.Queries.EditWish;
 using WishlistBot.Queries.Friends;
 using WishlistBot.QueryParameters;
 using WishlistBot.Text;
+using WishlistBot.Media;
 using WishlistBot.Model;
 using WishlistBot.Model.User;
 using Microsoft.EntityFrameworkCore;
@@ -64,10 +65,12 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             }
             else
             {
-                Keyboard
-                    .AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish)
-                    .NewRow()
-                    .AddButton<MainMenuQuery>("Назад");
+                // Пустой список — это ноль вишей, но предел проверяем одинаково во всех ветках:
+                // правило живёт в одном месте
+                if (!WishLimits.IsFull(totalCount))
+                    Keyboard.AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish);
+
+                Keyboard.NewRow().AddButton<MainMenuQuery>("Назад");
             }
 
             return Task.CompletedTask;
@@ -90,13 +93,16 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         else
             Text.Heading("Ваши виши");
 
-        // «Добавить виш» — над рядом листания, чтобы не искать её под «Назад»
+        // «Добавить виш» — над рядом листания, чтобы не искать её под «Назад».
+        // На пределе вишей кнопки нет: каждая картинка виша — ещё и стикер в наборе
+        // кастомных эмодзи, а у набора лимит 200 (см. WishLimits).
         if (!isReadOnly)
         {
             sender.CurrentWish = null;
-            Keyboard
-                .NewRow()
-                .AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish);
+            Keyboard.NewRow();
+
+            if (!WishLimits.IsFull(totalCount))
+                Keyboard.AddButton<SetWishNameQuery>($"{PlusEmoji} Добавить виш", QueryParameter.ForceNewWish);
         }
 
         // Куда ведёт «Назад»: свой список — в главное меню, чужой — в профиль друга,
@@ -179,13 +185,19 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
             if (page.PageIndex > 0)
                 AddRemainingRow(table, page.FirstIndex, showPrice);
 
+            // Миниатюры одним запросом на всю страницу: в ячейке рисуется стикер-эмодзи
+            var emojiIds = MediaStorage.GetEmojiIds(wishesOnPage.Select(wish => wish.MediaKey));
+
             foreach (var wish in wishesOnPage)
             {
                 var isBooked = wish.HasVisibleClaim && isReadOnly;
 
                 table.Row(cells =>
                 {
-                    cells.Add(cell => AddWishName(cell, userContext, wish, subscribeId, isBooked));
+                    // У виша без фото ключа нет — и словарь про null-ключ спрашивать нельзя
+                    var emojiId = wish.MediaKey is null ? null : emojiIds.GetValueOrDefault(wish.MediaKey);
+
+                    cells.Add(cell => AddWishName(cell, userContext, wish, subscribeId, isBooked, emojiId));
 
                     if (showPrice)
                         cells.Add(cell => cell.Verbatim(MessageTextUtils.PriceToShortString(wish.PriceRange)));
@@ -242,7 +254,7 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
     /// Название ссылкой. У забронированного виша над названием идёт слово БРОНЬ
     /// (ссылка на забронировавшего), а само название зачёркнуто.
     /// </summary>
-    private static void AddWishName(MessageText text, UserContext userContext, WishModel wish, string subscribeId, bool isBooked)
+    private static void AddWishName(MessageText text, UserContext userContext, WishModel wish, string subscribeId, bool isBooked, string emojiId)
     {
         if (isBooked)
         {
@@ -265,8 +277,9 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         if (!string.IsNullOrEmpty(wish.Description))
             text.Verbatim(" \U0001f4ac"); // speech bubble
 
+        // Картинка: миниатюра-эмодзи, а если её ещё нет — маркер 🖼️
         if (wish.MediaKey is not null)
-            text.Verbatim(" \U0001f5bc\ufe0f"); // picture
+            text.Verbatim(" ").MediaEmoji(emojiId);
 
         if (wish.Links.Any())
             text.Verbatim(" ").InlineUrl("\U0001f310", wish.Links.First().Url); // globe

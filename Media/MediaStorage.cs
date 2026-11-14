@@ -86,6 +86,9 @@ public class MediaStorage
         if (mediaItem?.Data is null)
             MarkForImport(fileId);
 
+        // Миниатюра для ячейки таблицы: соберём после коммита, когда у ключа точно есть хозяин
+        EmojiPackService.Instance.QueueThumbnail(fileId);
+
         return Task.FromResult(fileId);
     }
 
@@ -126,6 +129,39 @@ public class MediaStorage
 
         foreach (var key in TakeQueued(_releasedKeys))
             await DeleteIfUnused(key);
+
+        // Миниатюры вишей (стикеры кастомных эмодзи) — тоже только после коммита:
+        // сеть внутри транзакции апдейта не трогаем
+        await EmojiPackService.Instance.FlushAsync();
+    }
+
+    /// <summary>
+    /// id миниатюр (кастомных эмодзи) для картинок вишей — одним запросом на страницу списка.
+    /// Пустой словарь, если миниатюры выключены: тогда экран придёт с маркерами 🖼️.
+    /// </summary>
+    public static Dictionary<string, string> GetEmojiIds(IEnumerable<string> keys)
+    {
+        var result = new Dictionary<string, string>();
+
+        if (!EmojiPackService.Instance.Enabled)
+            return result;
+
+        var keyList = keys.Where(key => !string.IsNullOrEmpty(key)).Distinct().ToList();
+
+        if (keyList.Count == 0)
+            return result;
+
+        using var storageContext = MediaStorageContext.Create();
+
+        var emojiIds = storageContext.StoredMedia
+            .Where(m => m.CustomEmojiId != null && keyList.Contains(m.Key))
+            .Select(m => new { m.Key, m.CustomEmojiId })
+            .ToList();
+
+        foreach (var item in emojiIds)
+            result[item.Key] = item.CustomEmojiId;
+
+        return result;
     }
 
     private static List<(string Key, string FileId, int Width, int Height)> TakeQueuedUpgrades()
@@ -172,10 +208,10 @@ public class MediaStorage
     /// Удаляет блоб, если на ключ больше никто не ссылается: ни виши, ни черновики,
     /// ни рассылки. Вызывается после коммита апдейта, который мог удалить последнего хозяина.
     /// </summary>
-    public Task DeleteIfUnused(string key)
+    public async Task DeleteIfUnused(string key)
     {
         if (string.IsNullOrEmpty(key))
-            return Task.CompletedTask;
+            return;
 
         using (var userContext = UserContext.Create())
         {
@@ -184,21 +220,23 @@ public class MediaStorage
                 || userContext.Broadcasts.Any(b => b.MediaKey == key);
 
             if (isUsed)
-                return Task.CompletedTask;
+                return;
         }
 
         using var storageContext = MediaStorageContext.Create();
         var mediaItem = storageContext.StoredMedia.FirstOrDefault(m => m.Key == key);
 
         if (mediaItem is null)
-            return Task.CompletedTask;
+            return;
+
+        // Стикер-миниатюра живёт в наборе пользователя и сам не исчезнет: убираем его
+        // до того, как забудем file_id стикера вместе со строкой
+        await EmojiPackService.Instance.DeleteStickerAsync(mediaItem);
 
         storageContext.StoredMedia.Remove(mediaItem);
         storageContext.SaveChanges();
 
         _logger.Information("Dropped media '{key}': nothing references it anymore", key);
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -278,6 +316,9 @@ public class MediaStorage
             stored.ImportAttempts = 0;
 
             storageContext.SaveChanges();
+
+            // Блоб стал крупнее: миниатюра из превью могла не собраться — пробуем снова
+            EmojiPackService.Instance.QueueThumbnail(key);
 
             _logger.Information("Upgraded media '{key}': {oldWidth}x{oldHeight} → {width}x{height}, {size} bytes",
                 key, oldWidth, oldHeight, compressed.Width, compressed.Height, compressed.Data.Length);

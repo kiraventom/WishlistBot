@@ -62,6 +62,11 @@ public static class Program
       // Разовая починка легаси-превью: старый бот хранил file_id самого маленького размера
       MediaUpgradeService.Instance.Start(logger);
 
+      // Миниатюры вишей: фото → стикер 100×100 в наборе кастомных эмодзи пользователя.
+      // Без клиента сервис не работает — тогда экраны просто рисуют маркер 🖼️.
+      EmojiPackService.Instance.Init(logger, client);
+      EmojiPackMaintenanceService.Instance.Start(logger);
+
       NotificationService.Instance.Init(logger);
 
       NotificationDispatchService.Instance.Init(logger, client);

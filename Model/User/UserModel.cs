@@ -48,6 +48,9 @@ public class UserModel
 
     public WishlistFillStateModel WishlistFillState { get; set; }
 
+    /// <summary>Набор кастомных эмодзи с миниатюрами вишей (см. <see cref="WishEmojiPackModel"/>).</summary>
+    public WishEmojiPackModel EmojiPack { get; set; }
+
     [InverseProperty(nameof(WishModel.Owner))]
     public List<WishModel> Wishes { get; } = new();
 

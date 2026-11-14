@@ -64,6 +64,28 @@ public class MediaItemModel
     public int ImportAttempts { get; set; }
 
     /// <summary>
+    /// Id миниатюры виша в наборе кастомных эмодзи владельца: именно это число идёт
+    /// в разметку ячейки таблицы (<c>![](tg://emoji?id=...)</c>). null — миниатюры нет
+    /// (блоба ещё нет, он мелкий, или Telegram не дал создать стикер).
+    /// </summary>
+    public string CustomEmojiId { get; set; }
+
+    /// <summary>
+    /// Telegram file_id стикера. Хранится отдельно, потому что <c>deleteStickerFromSet</c>
+    /// принимает только file_id стикера, а не его emoji id.
+    /// </summary>
+    public string CustomEmojiFileId { get; set; }
+
+    /// <summary>Чей это набор — из него удалять стикер. null, пока миниатюры нет.</summary>
+    public int? EmojiOwnerUserId { get; set; }
+
+    /// <summary>
+    /// Сколько раз пробовали сделать миниатюру и не смогли: чтобы не долбить Telegram
+    /// на каждой правке виша с неподходящей картинкой.
+    /// </summary>
+    public int ThumbAttempts { get; set; }
+
+    /// <summary>
     /// Блоб проверен на «это превью?». Старый бот хранил file_id самого маленького размера,
     /// поэтому у легаси-картинок в базе лежит превью; <see cref="WishlistBot.Media.MediaUpgradeService"/>
     /// находит такие блобы и перекачивает их в полном размере один раз.

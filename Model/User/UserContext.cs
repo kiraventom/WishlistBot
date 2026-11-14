@@ -19,6 +19,7 @@ public class UserContext : DbContext
     public DbSet<ScheduledNotificationModel> ScheduledNotifications { get; set; }
     public DbSet<WishlistCleanupStateModel> WishlistCleanupStates { get; set; }
     public DbSet<WishlistFillStateModel> WishlistFillStates { get; set; }
+    public DbSet<WishEmojiPackModel> EmojiPacks { get; set; }
 
     public UserContext(DbContextOptions<UserContext> options) : base(options)
     {
@@ -68,6 +69,7 @@ public class UserContext : DbContext
             .Include(u => u.ListPositions)
             .Include(u => u.WishlistCleanupState)
             .Include(u => u.WishlistFillState)
+            .Include(u => u.EmojiPack)
             .FirstOrDefault(u => u.TelegramId == telegramId);
 
         if (userModel is null)
@@ -109,6 +111,9 @@ public class UserContext : DbContext
 
         if (userModel.WishlistFillState is null)
             userModel.WishlistFillState = new WishlistFillStateModel();
+
+        if (userModel.EmojiPack is null)
+            userModel.EmojiPack = new WishEmojiPackModel() { CreatedAt = DateTime.UtcNow };
 
         if (isNew)
         {
@@ -174,6 +179,12 @@ public class UserContext : DbContext
             .HasOne(e => e.WishlistFillState)
             .WithOne(e => e.User)
             .HasForeignKey<WishlistFillStateModel>(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserModel>()
+            .HasOne(e => e.EmojiPack)
+            .WithOne(e => e.User)
+            .HasForeignKey<WishEmojiPackModel>(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
