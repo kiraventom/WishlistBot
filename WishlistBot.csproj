@@ -5,6 +5,10 @@
       <TargetFramework>net10.0</TargetFramework>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>disable</Nullable>
+
+      <!-- RID, под который реально собирается приложение (Docker-образ — linux-x64).
+           Переопределяется при необходимости: dotnet build -p:DeploymentRid=win-x64 -->
+      <DeploymentRid Condition="'$(DeploymentRid)' == ''">linux-x64</DeploymentRid>
    </PropertyGroup>
 
    <ItemGroup>
@@ -22,4 +26,26 @@
       <PackageReference Include="Telegram.Bot" Version="22.10.4" />
    </ItemGroup>
 
+
+   <!-- Сборка framework-dependent (без -r), поэтому NuGet копирует в вывод нативные ассеты
+        ВСЕХ RID из пакетов SkiaSharp/SQLite: win-x86, win-x64, win-arm64, osx, maccatalyst
+        и остальные linux-* — это ~510 MiB на каждый bin и столько же в publish-образе,
+        при том что нужен только $(DeploymentRid) (~13 MiB: libSkiaSharp.so + libe_sqlite3.so).
+        Ассеты лишних RID выкидываем до копирования в выходной каталог. -->
+   <Target Name="TrimForeignRuntimeAssets" AfterTargets="ResolveReferences">
+      <ItemGroup>
+         <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)"
+            Condition="$([System.String]::Copy('%(ReferenceCopyLocalPaths.DestinationSubDirectory)').StartsWith('runtimes/')) And !$([System.String]::Copy('%(ReferenceCopyLocalPaths.DestinationSubDirectory)').StartsWith('runtimes/$(DeploymentRid)/'))" />
+      </ItemGroup>
+   </Target>
+
+   <!-- Для publish список файлов считается отдельно (ResolvedFileToPublish),
+        и правка ReferenceCopyLocalPaths на него не влияет — фильтруем такой же список RID.
+        Эта цель покрывает и `dotnet publish`, который делает Dockerfile. -->
+   <Target Name="TrimForeignRuntimeAssetsOnPublish" AfterTargets="ComputeFilesToPublish">
+      <ItemGroup>
+         <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+            Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').StartsWith('runtimes/')) And !$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').StartsWith('runtimes/$(DeploymentRid)/'))" />
+      </ItemGroup>
+   </Target>
 </Project>
