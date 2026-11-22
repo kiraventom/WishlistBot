@@ -20,7 +20,7 @@ public class ConfirmBroadcastMessage(ILogger logger) : BotMessage(logger)
 
         Text.Media(broadcast.MediaKey);
 
-        Text.ExpandableQuote(broadcast.Text);
+        Text.Quote(broadcast.Text);
 
         Keyboard
            .AddButton<FinishBroadcastQuery>("Send")

@@ -37,7 +37,7 @@ public class SetProfileNotesMessage(ILogger logger) : BotMessage(logger)
             }
             else
             {
-                Text.ExpandableQuote(user.Profile.Notes);
+                Text.Quote(user.Profile.Notes);
             }
 
             Text.BlockBreak().Verbatim("Введите новое значение:");

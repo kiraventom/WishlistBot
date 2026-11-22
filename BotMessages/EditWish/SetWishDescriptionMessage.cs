@@ -33,7 +33,7 @@ public class SetWishDescriptionMessage(ILogger logger) : BotMessage(logger)
             }
             else
             {
-                Text.ExpandableQuote(user.CurrentWish.Description);
+                Text.Quote(user.CurrentWish.Description);
             }
 
             // Убрать описание можно в окне виша («Удалить» у поля), здесь только правка
