@@ -121,7 +121,7 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
         if (target.Profile.Notes != null)
         {
             Text.BlockBreak().Verbatim(writingHand).Bold("Заметки:").BlockBreak();
-            Text.ExpandableQuote(target.Profile.Notes);
+            Text.Quote(target.Profile.Notes);
         }
 
         // Футер: ссылка на вишлист с кнопкой копирования

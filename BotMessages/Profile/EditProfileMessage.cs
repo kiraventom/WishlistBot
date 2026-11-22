@@ -70,7 +70,7 @@ public class EditProfileMessage(ILogger logger) : BotMessage(logger)
                 Keyboard.AddTextButton<EditProfileQuery>(parameters: new QueryParameter(QueryParameterType.ClearWishProperty, (int)WishPropertyType.Description)));
 
             Text.BlockBreak();
-            Text.ExpandableQuote(sender.Profile.Notes);
+            Text.Quote(sender.Profile.Notes);
         }
 
         Text.Divider();
