@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using WishlistBot.Queries.EditWish;
 using WishlistBot.Notification;
 using WishlistBot.BotMessages.Friends;
+using WishlistBot.Media;
 
 namespace WishlistBot.BotMessages;
 
@@ -318,47 +319,57 @@ $@"
         return newWish;
     }
 
+    /// <summary>
+    /// Применяет черновик к существующему вишу <b>на месте</b>.
+    ///
+    /// Виш — это его <see cref="WishModel.WishId"/>: по нему ходят все кнопки и ссылки,
+    /// которые бот уже выдал (кнопка «Перейти к вишу» в уведомлении, диплинк
+    /// <c>a=sw_…</c>, ссылка «Поделиться»). Раньше правка удаляла строку и создавала новую,
+    /// и виш получал новый идентификатор — после любого «Готово» (даже без единого
+    /// изменения) все ранее отправленные кнопки начинали говорить «Виш не найден!
+    /// Вероятно, он был удалён», хотя виш никуда не делся. Поэтому обновляем поля
+    /// у той же строки, а бронь и порядок в списке не трогаем вообще.
+    /// </summary>
     private async Task<WishModel> EditWish(UserContext userContext, UserModel user, WishDraftModel draft)
     {
         userContext.Entry(draft).Reference(d => d.Original).Load();
-        userContext.Entry(draft.Original).Collection(d => d.Links).Load();
 
-        var editedWish = WishModel.FromDraft(draft);
-
+        // Черновик без связи с вишем — это не правка, а новый виш (так ведёт себя
+        // легаси-черновик, у которого OriginalId пуст)
         if (draft.Original is null)
         {
-            Logger.Error("Draft {draftId} is not connected to original", draft.WishDraftId);
+            Logger.Error("Draft {draftId} is not connected to original, adding it as a new wish", draft.WishDraftId);
 
-            if (draft is null)
-            {
-                Logger.Error("[{uId}]: Edited wish is null", user.UserId);
-                throw new NotSupportedException("Edited wish is null");
-            }
+            var recoveredWish = WishModel.FromDraft(draft);
 
-            userContext.Wishes.Add(editedWish);
+            user.Wishes.Add(recoveredWish);
             userContext.SaveChanges();
-            return editedWish;
+            return recoveredWish;
         }
+
+        var editedWish = draft.Original;
+
+        userContext.Entry(editedWish).Collection(w => w.Links).Load();
 
         var wishPropertyType = WishPropertyType.None;
 
-        if (draft.Original.Name != draft.Name)
+        if (editedWish.Name != draft.Name)
             wishPropertyType |= WishPropertyType.Name;
 
-        if (draft.Original.Description != draft.Description)
+        if (editedWish.Description != draft.Description)
             wishPropertyType |= WishPropertyType.Description;
 
-        if (!draft.Original.Links.SequenceEqual(draft.Links))
+        if (!editedWish.Links.SequenceEqual(draft.Links))
             wishPropertyType |= WishPropertyType.Links;
 
-        if (draft.Original.MediaKey != draft.MediaKey)
+        if (editedWish.MediaKey != draft.MediaKey)
             wishPropertyType |= WishPropertyType.Media;
 
         // О смене типа виша сообщаем отдельно: только когда виш стал постоянным
-        var becamePermanent = draft.IsPermanent && !draft.Original.IsPermanent;
+        var becamePermanent = draft.IsPermanent && !editedWish.IsPermanent;
 
-        DeleteWish(userContext, user, draft.Original);
-        user.Wishes.Add(editedWish);
+        ApplyDraft(userContext, editedWish, draft);
+
         userContext.SaveChanges();
 
         if (wishPropertyType != WishPropertyType.None)
@@ -389,5 +400,46 @@ $@"
         }
 
         return editedWish;
+    }
+
+    /// <summary>
+    /// Переносит поля черновика в виш. Бронь (<see cref="WishModel.ClaimerId"/>) и порядок
+    /// в списке (<see cref="WishModel.Order"/>) не трогаем: правка не должна ни снимать бронь,
+    /// ни переставлять виш в чужом вишлисте.
+    /// </summary>
+    private static void ApplyDraft(UserContext userContext, WishModel wish, WishDraftModel draft)
+    {
+        // Картинка могла смениться. Старый блоб и его стикер-миниатюру освобождаем так же,
+        // как при удалении виша: после коммита MediaStorage удалит то, на что никто
+        // больше не ссылается (см. UserContext.SaveChanges)
+        if (!string.Equals(wish.MediaKey, draft.MediaKey, StringComparison.Ordinal))
+            MediaStorage.ReleaseLater([wish.MediaKey]);
+
+        wish.Name = draft.Name;
+        wish.Description = draft.Description;
+        wish.MediaKey = draft.MediaKey;
+        wish.PriceRange = draft.PriceRange;
+        wish.IsPermanent = draft.IsPermanent;
+
+        RewriteLinks(userContext, wish, draft);
+    }
+
+    /// <summary>
+    /// Ссылки виша приводим к набору из черновика. Сравнение — по Url
+    /// (<see cref="LinkModel.Equals"/>), у самих строк другой идентификатор.
+    /// </summary>
+    private static void RewriteLinks(UserContext userContext, WishModel wish, WishDraftModel draft)
+    {
+        if (wish.Links.SequenceEqual(draft.Links))
+            return;
+
+        foreach (var link in wish.Links.ToList())
+        {
+            wish.Links.Remove(link);
+            userContext.Links.Remove(link);
+        }
+
+        foreach (var draftLink in draft.Links)
+            wish.Links.Add(new LinkModel { Url = draftLink.Url });
     }
 }
