@@ -464,14 +464,20 @@ public sealed class MessageText
 
         EnsureBlockStart();
 
-        var lines = text.Split('\n');
+        // \r\n — чтобы хвост \r не оказался между текстом и жёстким переносом
+        var lines = text.Replace("\r\n", "\n").Split('\n');
+
         for (var i = 0; i < lines.Length; ++i)
         {
             _sb.Append("> ");
             Verbatim(lines[i]);
 
+            // Одиночный \n в Rich Markdown — это пробел, поэтому строки цитаты склеились
+            // бы в одну («Пункт один Пункт два» — проверено живой отправкой:
+            // rich-probe/quote_linebreak_probe.py). Значит перенос жёсткий, как в абзацах.
+            // Пустая строка так тоже работает: «>   » с переносом = абзац внутри цитаты.
             if (i < lines.Length - 1)
-                _sb.Append('\n');
+                _sb.Append(HardBreak);
         }
 
         return BlockBreak();
