@@ -55,10 +55,43 @@ public abstract class BotMessage(ILogger logger)
     /// <summary>
     /// Пояснение про постоянный виш. Держим в одном месте: текст уходит в алерт
     /// (<c>AnswerCallbackQuery</c>), а там лимит Telegram — 200 символов.
+    /// Это вариант про <b>свой</b> виш (окно правки и своё окно виша): человек читает
+    /// про себя, поэтому «вы рады всегда».
     /// </summary>
     protected const string PermanentWishHelp =
         "Постоянный виш — подарок, которому вы рады всегда (любимое вино, хорошая книга, сертификат). " +
         "Он не бронируется — его смогут подарить несколько друзей.";
+
+    /// <summary>
+    /// То же пояснение, но про <b>чужой</b> виш: вместо «вы рады всегда» подставляется имя
+    /// владельца вишлиста — «&lt;имя&gt; всегда обрадуется».
+    /// Имя влезает не всегда: у алерта жёсткий лимит <see cref="MaxAlertLength"/> (иначе
+    /// <c>Bad Request: MESSAGE_TOO_LONG</c> и человек не увидит ничего), поэтому слишком
+    /// длинное имя режем по границе символов и закрываем многоточием. Режем именно имя,
+    /// а не текст: обрезанный конец фразы («...сертификат») читался бы как баг.
+    /// Пустое имя — не наш случай, но тогда отдаём вариант без имени, чтобы не рисовать
+    /// «… всегда обрадуется».
+    /// </summary>
+    protected static string PermanentWishHelpFor(string ownerName)
+    {
+        const string beforeName = "Постоянный виш — подарок, которому ";
+        const string afterName = " всегда обрадуется (любимое вино, хорошая книга, сертификат). " +
+                                 "Его можно дарить без брони.";
+
+        if (string.IsNullOrWhiteSpace(ownerName))
+            return PermanentWishHelp;
+
+        var maxNameLength = MaxAlertLength - beforeName.Length - afterName.Length;
+        var name = ownerName.Trim();
+
+        if (name.Length > maxNameLength)
+        {
+            var cut = maxNameLength > 1 ? name[..(maxNameLength - 1)].TrimEnd() : string.Empty;
+            name = cut.Length == 0 ? "…" : cut + "…";
+        }
+
+        return beforeName + name + afterName;
+    }
 
     public bool ForceNewMessage { get; private set; }
 
