@@ -148,18 +148,23 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
 
         if (wish.IsPermanent)
         {
-            Text.BlockBreak().Verbatim("\u2b50 Постоянный виш ");
+            Text.BlockBreak().Verbatim("\u2b50 Постоянный виш");
 
-            // WishId передаём явно: его вынули из параметров в начале InitInternal,
-            // и без него кнопка открывала «Виш не найден»
-            Text.Button("Что это?", Keyboard.AddTextButton<ShowWishQuery>(
-                parameters: [new QueryParameter(QueryParameterType.WishId, wish.WishId), QueryParameter.ShowHelp]),
-                style: "primary");
+            // «Что это?» — только в чужом окне: у своего виша пояснения нет, свои
+            // постоянные виши объясняет окно редактирования (кнопка под «Цена»).
+            if (readOnly)
+            {
+                // WishId передаём явно: его вынули из параметров в начале InitInternal,
+                // и без него кнопка открывала «Виш не найден»
+                Text.Verbatim(" ").Button("Что это?", Keyboard.AddTextButton<ShowWishQuery>(
+                    parameters: [new QueryParameter(QueryParameterType.WishId, wish.WishId), QueryParameter.ShowHelp]),
+                    style: "primary");
 
-            // Про чужой виш рассказываем в третьем лице, с именем владельца вишлиста:
-            // «которому <имя> всегда обрадуется». Свой виш — по-прежнему «вы рады всегда».
-            if (showHelp)
-                AlertText = readOnly ? PermanentWishHelpFor(target.FirstName) : PermanentWishHelp;
+                // Про чужой виш рассказываем в третьем лице, с именем владельца вишлиста:
+                // «которому <имя> всегда обрадуется»
+                if (showHelp)
+                    AlertText = PermanentWishHelpFor(target.FirstName);
+            }
         }
 
         if (readOnly && !wish.IsPermanent)
