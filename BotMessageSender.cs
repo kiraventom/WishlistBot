@@ -70,7 +70,9 @@ public class BotMessageSender(ILogger logger, ITelegramBotClient client)
             var keyboardMarkup = botMessage.Keyboard.ToInlineKeyboardMarkup();
 
             var shouldSendNewMessage =
-                userModel.LastBotMessageId < 0
+                // null — у человека ещё нет ни одного сообщения от бота (первый заход
+                // по ссылке): это тоже «слать новое», иначе ниже падает `.Value`
+                userModel.LastBotMessageId is null or < 0
                 || botMessage.ForceNewMessage
                 || forceNewMessage
                 // Между экраном и этим вводом приходило уведомление: экран остаётся выше него,
