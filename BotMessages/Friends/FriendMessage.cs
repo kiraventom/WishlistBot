@@ -56,26 +56,30 @@ public class FriendMessage(ILogger logger) : UserBotMessage(logger)
                .NewRow();
         }
 
-        if (!isSelf)
-        {
-            if (isFriend)
-                Keyboard.AddButton<ConfirmRemoveFriendQuery>("Удалить из друзей");
-            else
-                Keyboard.AddButton<AddFriendQuery>();
-
-            // «К друзьям» — отдельной строкой: две кнопки в ряд не помещались
-            Keyboard.NewRow();
-        }
-
         const string link = "\U0001f517";
 
         Keyboard.AddButton<MyFriendsQuery>("К друзьям");
 
-        // Имя — заголовком экрана: в MarkdownV2 заголовков не было, имя было просто жирным
+        // Имя — заголовком экрана: в MarkdownV2 заголовков не было, имя было просто жирным.
+        // Кнопка дружбы живёт в тексте, справа от имени: красная «Удалить из друзей»,
+        // зелёная «Добавить в друзья». В клавиатуре её нет — там остаются только действия
+        // экрана («Открыть вишлист», «К друзьям»).
         if (isSelf)
+        {
             Text.Heading("Это вы");
+        }
         else
-            Text.Heading(text => text.InlineMention(target));
+        {
+            Text.Heading(text =>
+            {
+                text.InlineMention(target).Verbatim(" ");
+
+                if (isFriend)
+                    text.Button("Удалить из друзей", Keyboard.AddTextButton<ConfirmRemoveFriendQuery>(), style: "danger");
+                else
+                    text.Button("Добавить в друзья", Keyboard.AddTextButton<AddFriendQuery>(), style: "success");
+            });
+        }
 
         // Аватарка — картинкой под заголовком, как фото виша в окне виша. Нет аватарки
         // (или блоб ещё не сохранён) — блока просто не будет
