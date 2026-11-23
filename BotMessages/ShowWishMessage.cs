@@ -156,8 +156,10 @@ public class ShowWishMessage(ILogger logger) : UserBotMessage(logger)
                 parameters: [new QueryParameter(QueryParameterType.WishId, wish.WishId), QueryParameter.ShowHelp]),
                 style: "primary");
 
+            // Про чужой виш рассказываем в третьем лице, с именем владельца вишлиста:
+            // «которому <имя> всегда обрадуется». Свой виш — по-прежнему «вы рады всегда».
             if (showHelp)
-                AlertText = PermanentWishHelp;
+                AlertText = readOnly ? PermanentWishHelpFor(target.FirstName) : PermanentWishHelp;
         }
 
         if (readOnly && !wish.IsPermanent)
