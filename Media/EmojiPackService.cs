@@ -41,6 +41,15 @@ public class EmojiPackService
     private readonly object _queueLock = new();
     private readonly List<string> _queuedKeys = [];
 
+    /// <summary>
+    /// Пользователи, от которых Telegram ответил 403 Forbidden: человек заблокировал бота
+    /// (или удалил аккаунт). Повторять для них бессмысленно, поэтому попытки считаются
+    /// исчерпанными сразу, а остальные картинки того же человека в этом проходе даже
+    /// не пробуются. Метка живёт до суточной сверки задач: если бота разблокируют,
+    /// миниатюры соберутся сами (<see cref="RetryFailedThumbnails"/>).
+    /// </summary>
+    private readonly HashSet<int> _blockedOwners = [];
+
     private bool _inited;
     private ILogger _logger;
     private ITelegramBotClient _client;
@@ -311,6 +320,10 @@ public class EmojiPackService
     /// </summary>
     private void RetryFailedThumbnails()
     {
+        // Единственный момент, когда снова пробуем тех, кто заблокировал бота:
+        // за сутки человек мог его разблокировать
+        ForgetBlocked();
+
         using var storageContext = MediaStorageContext.Create();
 
         var failed = storageContext.StoredMedia
@@ -374,6 +387,13 @@ public class EmojiPackService
 
         var owner = FindOwner(key);
 
+        // Человек заблокировал бота: попытки уже исчерпаны, к Telegram не ходим
+        if (owner is not null && IsBlocked(owner.UserId))
+        {
+            ExhaustAttempts(mediaItem.MediaItemId);
+            return false;
+        }
+
         // Ключ не у виша и не у черновика (например, картинка рассылки) — миниатюра
         // не нужна. Считаем попытку, иначе фоновый догрузчик выбирал бы этот ключ
         // в каждой пачке и крутился бы вечно.
@@ -433,6 +453,20 @@ public class EmojiPackService
                 key, sticker.CustomEmojiId, setName);
 
             return true;
+        }
+        // 403 Forbidden — бот заблокирован пользователем (или аккаунт удалён). Это не «не
+        // вышло сейчас», а «не выйдет, пока не разблокируют»: исчерпываем попытки сразу,
+        // иначе три быстрые попытки на каждую картинку только засоряют лог, а суточный
+        // сброс всё равно вернёт те же строки в очередь
+        catch (ApiRequestException e) when (e.ErrorCode == 403)
+        {
+            if (RememberBlocked(owner.UserId))
+                _logger?.Warning(
+                    "Thumbnails of user [{userId}] (telegram [{telegramId}]) are skipped: the bot is blocked by the user ({error})",
+                    owner.UserId, owner.TelegramId, e.Message);
+
+            ExhaustAttempts(mediaItem.MediaItemId);
+            return false;
         }
         catch (Exception e)
         {
@@ -572,6 +606,45 @@ public class EmojiPackService
             item.ThumbAttempts = 0;
         }
 
+        storageContext.SaveChanges();
+    }
+
+    /// <summary>Запомнили ли, что человек заблокировал бота.</summary>
+    private bool IsBlocked(int userId)
+    {
+        lock (_blockedOwners)
+            return _blockedOwners.Contains(userId);
+    }
+
+    /// <summary>
+    /// Запоминает, что человек заблокировал бота: остальные картинки того же человека
+    /// в этом проходе даже не пробуем.
+    /// </summary>
+    /// <returns>true — это первый раз за проход (тогда пишем в лог одну строку).</returns>
+    private bool RememberBlocked(int userId)
+    {
+        lock (_blockedOwners)
+            return _blockedOwners.Add(userId);
+    }
+
+    /// <summary>Забывает всех заблокировавших: новый проход — новый шанс.</summary>
+    private void ForgetBlocked()
+    {
+        lock (_blockedOwners)
+            _blockedOwners.Clear();
+    }
+
+    /// <summary>
+    /// Сразу исчерпывает попытки: строка выпадает из очереди догрузки до суточной сверки.
+    /// Нужно, когда причина не временная (человек заблокировал бота) — считать такие
+    /// неудачи трижды незачем.
+    /// </summary>
+    private void ExhaustAttempts(int mediaItemId)
+    {
+        using var storageContext = MediaStorageContext.Create();
+
+        var stored = storageContext.StoredMedia.First(m => m.MediaItemId == mediaItemId);
+        stored.ThumbAttempts = MaxThumbAttempts;
         storageContext.SaveChanges();
     }
 
