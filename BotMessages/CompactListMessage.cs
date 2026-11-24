@@ -259,7 +259,13 @@ public class CompactListMessage(ILogger logger) : UserBotMessage(logger)
         if (isBooked)
         {
             userContext.Entry(wish).Reference(w => w.Claimer).Load();
-            text.Verbatim("\U0001f512 ").InlineMention("БРОНЬ", wish.Claimer.TelegramId).CellLineBreak();
+
+            // Метку ведём через InlineMention(UserModel): он берёт ссылку по тегу, а по
+            // id — только как запасной вариант. Ссылка tg://user.id разворачивается
+            // в упоминание не для всякого пользователя (аккаунт удалён, давно не заходил),
+            // и тогда Telegram молча оставляет голый текст: в одной таблице часть меток
+            // оказывалась ссылками, а часть — нет. Тег так не отваливается.
+            text.Verbatim("\U0001f512 ").InlineMention(wish.Claimer, "БРОНЬ").CellLineBreak();
         }
 
         // Миниатюра — перед названием: так картинки выстраиваются столбцом и название
